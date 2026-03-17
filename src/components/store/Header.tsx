@@ -29,7 +29,7 @@ export default function Header({ cartCount }: { cartCount: number }) {
         isHome ? (scrolled ? 'bg-white/80 backdrop-blur-md' : 'bg-transparent') : 'bg-white/80 backdrop-blur-md',
       ].join(' ')}
     >
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto p-2">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">

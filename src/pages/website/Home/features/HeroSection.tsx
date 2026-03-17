@@ -1,10 +1,16 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ShoppingCart, ArrowRight, Sun, PanelTop, Sparkles } from "lucide-react";
+import {
+  ShoppingCart,
+  ArrowRight,
+  Sun,
+  PanelTop,
+  Sparkles,
+} from "lucide-react";
 
 export function HeroSection() {
   return (
-    <section className="relative -mt-16 pt-6 min-h-[100vh] w-full bg-gradient-to-b from-[#cfeaff] via-[#eaf6ff] to-white overflow-hidden flex items-center">
+    <section className="relative -mt-20 pt-8 min-h-[100vh] w-full bg-gradient-to-b from-[#cfeaff] via-[#eaf6ff] to-white overflow-hidden flex items-center">
       <div className="absolute inset-0">
         <div className="absolute -top-40 -right-40 w-[520px] h-[520px] bg-[#FF7A00]/15 rounded-full blur-3xl" />
         <div className="absolute top-24 left-10 w-[420px] h-[420px] bg-[#0B2A4A]/10 rounded-full blur-3xl" />
@@ -13,7 +19,7 @@ export function HeroSection() {
 
       {/* Decorative shapes (gives the “reference” card feel without copying) */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[96%] max-w-7xl h-[82%] rounded-[36px] bg-white/70 backdrop-blur-md border border-white shadow-[0_45px_150px_rgba(11,42,74,0.14)]" />
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[100%] h-[85%] rounded-[36px] backdrop-blur-md border border-white" />
         <div className="absolute top-[22%] right-[10%] w-20 h-20 rounded-2xl bg-[#FF7A00]/15 rotate-12" />
         <div className="absolute bottom-[18%] left-[12%] w-16 h-16 rounded-2xl bg-[#0B2A4A]/10 -rotate-6" />
       </div>
@@ -33,7 +39,7 @@ export function HeroSection() {
         <PanelTop className="w-24 h-24 text-[#0B2A4A]/12" />
       </motion.div>
       <div className="container mx-auto px-4 relative z-10">
-        <div className="w-full max-w-7xl mx-auto">
+        <div className="w-full mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center py-20">
             {/* Left: copy inside “card” */}
             <div className="px-6 md:px-10">
@@ -42,10 +48,12 @@ export function HeroSection() {
                 Custom solar solutions for Pakistan
               </div>
               <h1 className="hero-title text-4xl md:text-6xl font-extrabold tracking-tight text-[#0B2A4A] leading-[1.05]">
-                Power Your Future With <span className="text-[#FF7A00]">Clean Solar</span> Energy
+                Power Your Future With{" "}
+                <span className="text-[#FF7A00]">Clean Solar</span> Energy
               </h1>
               <p className="hero-subtitle text-lg md:text-xl text-gray-600 mt-5 max-w-xl">
-                Custom solar solutions designed to lower energy costs and power your home more efficiently.
+                Custom solar solutions designed to lower energy costs and power
+                your home more efficiently.
               </p>
               <div className="hero-cta flex flex-col sm:flex-row gap-3 mt-7">
                 <Link to="/shop">
@@ -84,7 +92,9 @@ export function HeroSection() {
 
                 <div className="relative p-8 md:p-10">
                   <div className="flex items-center justify-between mb-6">
-                    <div className="text-xs font-semibold text-[#0B2A4A]/70 tracking-wide">HYBRID SOLAR INVERTER</div>
+                    <div className="text-xs font-semibold text-[#0B2A4A]/70 tracking-wide">
+                      HYBRID SOLAR INVERTER
+                    </div>
                     <div className="px-3 py-1 rounded-full bg-white/80 border border-white text-xs font-semibold text-[#0B2A4A]">
                       Top seller
                     </div>
@@ -96,7 +106,11 @@ export function HeroSection() {
                       alt="Hybrid solar inverter"
                       className="w-full max-w-[300px] md:max-w-[350px] drop-shadow-[0_22px_40px_rgba(11,42,74,0.20)]"
                       animate={{ y: [0, -8, 0] }}
-                      transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
+                      transition={{
+                        duration: 4.5,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
                     />
                     <div className="absolute -bottom-6 w-[70%] h-10 bg-[#0B2A4A]/10 blur-2xl rounded-full" />
                   </div>
@@ -107,9 +121,16 @@ export function HeroSection() {
                       { label: "Hybrid", value: "Smart" },
                       { label: "Support", value: "Expert" },
                     ].map((k) => (
-                      <div key={k.label} className="bg-white/70 rounded-2xl border border-white px-3 py-4">
-                        <div className="text-lg font-extrabold text-[#0B2A4A]">{k.value}</div>
-                        <div className="text-xs text-gray-600 mt-1">{k.label}</div>
+                      <div
+                        key={k.label}
+                        className="bg-white/70 rounded-2xl border border-white px-3 py-4"
+                      >
+                        <div className="text-lg font-extrabold text-[#0B2A4A]">
+                          {k.value}
+                        </div>
+                        <div className="text-xs text-gray-600 mt-1">
+                          {k.label}
+                        </div>
                       </div>
                     ))}
                   </div>
