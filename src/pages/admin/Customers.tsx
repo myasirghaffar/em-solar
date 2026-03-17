@@ -12,8 +12,8 @@ export default function AdminCustomers() {
 
   const fetchCustomers = async () => {
     try {
-      const res = await fetch('/api/customers');
-      const data = await res.json();
+      const { fetchCustomers: apiFetchCustomers } = await import('../../lib/api');
+      const data = await apiFetchCustomers();
       setCustomers(data);
     } catch (err) {
       console.error('Fetch error:', err);

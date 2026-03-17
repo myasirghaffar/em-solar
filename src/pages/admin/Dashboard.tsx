@@ -26,8 +26,8 @@ export default function AdminDashboard() {
 
   const fetchAnalytics = async () => {
     try {
-      const res = await fetch('/api/analytics');
-      const data = await res.json();
+      const { fetchAnalytics: apiFetchAnalytics } = await import('../../lib/api');
+      const data = await apiFetchAnalytics();
       setAnalytics(data);
     } catch (err) {
       console.error('Fetch error:', err);
@@ -38,8 +38,8 @@ export default function AdminDashboard() {
 
   const fetchRecentOrders = async () => {
     try {
-      const res = await fetch('/api/orders');
-      const data = await res.json();
+      const { fetchOrders } = await import('../../lib/api');
+      const data = await fetchOrders();
       setRecentOrders(data.slice(0, 5));
     } catch (err) {
       console.error('Fetch error:', err);
@@ -180,8 +180,8 @@ export default function AdminDashboard() {
                       {order.order_status || 'pending'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(order.created_at).toLocaleDateString()}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {order.created_at ? new Date(order.created_at).toLocaleDateString() : '-'}
                   </td>
                 </tr>
               ))}

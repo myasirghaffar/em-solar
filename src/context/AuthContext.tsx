@@ -33,22 +33,38 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
+    const trySupabase = async (): Promise<boolean> => {
+      const url = import.meta.env.VITE_SUPABASE_URL;
+      const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      if (!url || !key) return false;
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(url, key);
+      const { data } = await supabase.rpc('auth_login', { user_email: email, user_password: password });
+      if (data && data.length > 0) {
+        const user = { id: data[0].id, email: data[0].email };
+        setUser(user);
+        localStorage.setItem(AUTH_KEY, JSON.stringify({ user }));
+        return true;
+      }
+      return false;
+    };
+
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
-      const data = await res.json();
-      if (res.ok && data.success && data.user) {
-        setUser(data.user);
-        localStorage.setItem(AUTH_KEY, JSON.stringify({ user: data.user }));
-        return true;
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.user) {
+          setUser(data.user);
+          localStorage.setItem(AUTH_KEY, JSON.stringify({ user: data.user }));
+          return true;
+        }
       }
-      return false;
-    } catch {
-      return false;
-    }
+    } catch {}
+    return trySupabase();
   };
 
   const logout = () => {

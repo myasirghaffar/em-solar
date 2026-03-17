@@ -13,8 +13,8 @@ export default function AdminConsultations() {
 
   const fetchConsultations = async () => {
     try {
-      const res = await fetch('/api/consultations');
-      const data = await res.json();
+      const { fetchConsultations: apiFetchConsultations } = await import('../../lib/api');
+      const data = await apiFetchConsultations();
       setConsultations(data);
     } catch (err) {
       console.error('Fetch error:', err);
@@ -25,11 +25,8 @@ export default function AdminConsultations() {
 
   const updateStatus = async (id: number, status: string) => {
     try {
-      await fetch('/api/consultations', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, status })
-      });
+      const { updateConsultationStatus } = await import('../../lib/api');
+      await updateConsultationStatus(id, status);
       fetchConsultations();
     } catch (err) {
       console.error('Error:', err);

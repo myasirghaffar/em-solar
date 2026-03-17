@@ -15,3 +15,13 @@ body {
 #root {
   min-height: 100vh;
 }
+
+/* Infinite marquee for Trusted Brands */
+@keyframes brands-marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}

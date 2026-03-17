@@ -3,13 +3,13 @@ import { useState, useEffect } from 'react';
 import Header from './components/store/Header';
 import Footer from './components/store/Footer';
 import ScrollToTop from './components/ScrollToTop';
-import Home from './pages/store/Home';
-import About from './pages/store/About';
-import Contact from './pages/store/Contact';
-import Shop from './pages/store/Shop';
-import ProductDetail from './pages/store/ProductDetail';
-import Cart from './pages/store/Cart';
-import Checkout from './pages/store/Checkout';
+import Home from './pages/website/Home';
+import About from './pages/website/About';
+import Contact from './pages/website/Contact';
+import Shop from './pages/website/Shop';
+import ProductDetail from './pages/website/ProductDetail';
+import Cart from './pages/website/Cart';
+import Checkout from './pages/website/Checkout';
 import Login from './pages/Login';
 import AdminLayout from './components/admin/AdminLayout';
 import AdminDashboard from './pages/admin/Dashboard';
@@ -17,6 +17,8 @@ import AdminProducts from './pages/admin/Products';
 import AdminOrders from './pages/admin/Orders';
 import AdminCustomers from './pages/admin/Customers';
 import AdminConsultations from './pages/admin/Consultations';
+import AdminSettings from './pages/admin/Settings';
+import AdminProfile from './pages/admin/Profile';
 import ProtectedRoute from './components/ProtectedRoute';
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
@@ -95,6 +97,8 @@ function App() {
             <Route path="/admin/orders" element={<ProtectedRoute><AdminLayout><AdminOrders /></AdminLayout></ProtectedRoute>} />
             <Route path="/admin/customers" element={<ProtectedRoute><AdminLayout><AdminCustomers /></AdminLayout></ProtectedRoute>} />
             <Route path="/admin/consultations" element={<ProtectedRoute><AdminLayout><AdminConsultations /></AdminLayout></ProtectedRoute>} />
+            <Route path="/admin/settings" element={<ProtectedRoute><AdminLayout><AdminSettings /></AdminLayout></ProtectedRoute>} />
+            <Route path="/admin/profile" element={<ProtectedRoute><AdminLayout><AdminProfile /></AdminLayout></ProtectedRoute>} />
           </Routes>
         </BrowserRouter>
       </CartProvider>

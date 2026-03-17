@@ -26,8 +26,8 @@ export default function AdminProducts() {
 
   const fetchProducts = async () => {
     try {
-      const res = await fetch('/api/products');
-      const data = await res.json();
+      const { fetchProducts: apiFetchProducts } = await import('../../lib/api');
+      const data = await apiFetchProducts();
       setProducts(data);
     } catch (err) {
       console.error('Fetch error:', err);
@@ -47,18 +47,11 @@ export default function AdminProducts() {
         specifications: { Power: '550W', Type: 'Monocrystalline' }
       };
 
+      const { updateProduct, createProduct } = await import('../../lib/api');
       if (editingProduct) {
-        await fetch('/api/products', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: editingProduct.id, ...payload })
-        });
+        await updateProduct(editingProduct.id, payload);
       } else {
-        await fetch('/api/products', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
+        await createProduct(payload);
       }
       
       setShowModal(false);
@@ -87,11 +80,8 @@ export default function AdminProducts() {
   const handleDelete = async (id: number) => {
     if (confirm('Are you sure you want to delete this product?')) {
       try {
-        await fetch('/api/products', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id })
-        });
+        const { deleteProduct } = await import('../../lib/api');
+        await deleteProduct(id);
         fetchProducts();
       } catch (err) {
         console.error('Error:', err);
@@ -178,7 +168,7 @@ export default function AdminProducts() {
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-3">
                         <img
-                          src={product.images?.[0] || '/placeholder.jpg'}
+                          src={product.images?.[0] || '/placeholder-product.jpg'}
                           alt={product.name}
                           className="w-12 h-12 object-cover rounded-lg"
                         />

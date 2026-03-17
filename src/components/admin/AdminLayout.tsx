@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Package, ShoppingCart, Users, MessageSquare, Settings, Menu, X, Sun, LogOut } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, Users, MessageSquare, Settings, Menu, X, Sun, LogOut, UserCircle2 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -86,9 +86,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <h1 className="text-xl font-bold text-[#0B2A4A] hidden sm:block">EnergyMart Admin</h1>
           <div className="flex items-center space-x-4">
             <span className="text-sm text-gray-600 hidden sm:inline">{user?.email}</span>
-            <div className="w-10 h-10 bg-[#FF7A00] rounded-full flex items-center justify-center text-white font-bold">
-              {user?.email?.charAt(0).toUpperCase() || 'A'}
-            </div>
+            <Link
+              to="/admin/profile"
+              className="w-10 h-10 bg-[#FF7A00] rounded-full flex items-center justify-center text-white font-bold hover:bg-[#FF7A00]/90 transition-colors"
+              title="Profile"
+            >
+              <span className="sr-only">Profile</span>
+              <UserCircle2 className="w-6 h-6" />
+            </Link>
           </div>
         </header>
 

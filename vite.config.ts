@@ -10,5 +10,15 @@ export default defineConfig(async () => {
     const m = await import('./.vite-source-tags.js');
     plugins.push(m.sourceTags());
   } catch {}
-  return { plugins };
+  return {
+    plugins,
+    server: {
+      proxy: {
+        '/api': {
+          target: 'https://em-solar-yasir-senew-techcs-projects.vercel.app',
+          changeOrigin: true,
+        },
+      },
+    },
+  };
 })

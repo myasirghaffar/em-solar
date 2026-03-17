@@ -14,8 +14,8 @@ export default function AdminOrders() {
 
   const fetchOrders = async () => {
     try {
-      const res = await fetch('/api/orders');
-      const data = await res.json();
+      const { fetchOrders: apiFetchOrders } = await import('../../lib/api');
+      const data = await apiFetchOrders();
       setOrders(data);
     } catch (err) {
       console.error('Fetch error:', err);
@@ -26,11 +26,8 @@ export default function AdminOrders() {
 
   const updateOrderStatus = async (id: number, status: string) => {
     try {
-      await fetch('/api/orders', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, order_status: status })
-      });
+      const { updateOrderStatus: apiUpdateOrderStatus } = await import('../../lib/api');
+      await apiUpdateOrderStatus(id, status);
       fetchOrders();
     } catch (err) {
       console.error('Error:', err);
