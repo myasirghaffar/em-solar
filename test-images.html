@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+        .test { margin: 20px 0; padding: 20px; background: white; border-radius: 8px; }
+        img { max-width: 300px; border: 2px solid #ddd; }
+    </style>
+</head>
+<body>
+    <h1>Image Test Page</h1>
+    
+    <div class="test">
+        <h2>Test 1: Absolute path with leading slash</h2>
+        <img src="/images/solar-panel-1.jpg" alt="Solar Panel 1" onerror="this.style.display='none'; this.parentElement.innerHTML='<p style=color:red>FAILED: /images/solar-panel-1.jpg</p>'">
+        <img src="/images/solar-panel-2.jpg" alt="Solar Panel 2" onerror="this.style.display='none'; this.parentElement.innerHTML='<p style=color:red>FAILED</p>'">
+    </div>
+    
+    <div class="test">
+        <h2>Test 2: Relative path</h2>
+        <img src="images/solar-panel-3.jpg" alt="Solar Panel 3" onerror="this.style.display='none'; this.parentElement.innerHTML='<p style=color:red>FAILED: images/solar-panel-3.jpg</p>'">
+    </div>
+    
+    <div class="test">
+        <h2>Test 3: Battery</h2>
+        <img src="/images/battery-1.jpg" alt="Battery" onerror="this.style.display='none'; this.parentElement.innerHTML='<p style=color:red>FAILED: /images/battery-1.jpg</p>'">
+    </div>
+    
+    <div class="test">
+        <h2>Test 4: Inverter</h2>
+        <img src="/images/inverter-1.jpg" alt="Inverter" onerror="this.style.display='none'; this.parentElement.innerHTML='<p style=color:red>FAILED: /images/inverter-1.jpg</p>'">
+    </div>
+    
+    <div class="test">
+        <h2>Test 5: Placeholder</h2>
+        <img src="/placeholder-product.jpg" alt="Placeholder" onerror="this.style.display='none'; this.parentElement.innerHTML='<p style=color:red>FAILED: /placeholder-product.jpg</p>'">
+    </div>
+</body>
+</html>
