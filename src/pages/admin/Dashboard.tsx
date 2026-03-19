@@ -106,7 +106,7 @@ export default function AdminDashboard() {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl shadow-md p-6">
+        <div className="bg-white rounded-xl shadow-md p-4 sm:p-6">
           <h2 className="text-lg font-bold text-[#0B2A4A] mb-4">Monthly Sales</h2>
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={salesData}>
@@ -125,7 +125,7 @@ export default function AdminDashboard() {
             </AreaChart>
           </ResponsiveContainer>
         </div>
-        <div className="bg-white rounded-xl shadow-md p-6">
+        <div className="bg-white rounded-xl shadow-md p-4 sm:p-6">
           <h2 className="text-lg font-bold text-[#0B2A4A] mb-4">Orders Growth</h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={ordersData}>
@@ -147,19 +147,19 @@ export default function AdminDashboard() {
       </div>
 
       {/* Recent Orders */}
-      <div className="bg-white rounded-xl shadow-md overflow-hidden">
-        <div className="p-6 border-b">
+      <div className="bg-white rounded-xl shadow-md">
+        <div className="p-4 sm:p-6 border-b">
           <h2 className="text-lg font-bold text-[#0B2A4A]">Recent Orders</h2>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="overflow-x-auto touch-pan-x w-full">
+          <table className="w-max">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Order ID</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Customer</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Total</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Date</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -200,9 +200,9 @@ export default function AdminDashboard() {
 
 function StatCard({ title, value, icon: Icon, trend, trendUp }: any) {
   return (
-    <div className="bg-white rounded-xl shadow-md p-6">
+    <div className="bg-white rounded-xl shadow-md p-4 sm:p-6">
       <div className="flex items-center justify-between mb-4">
-        <div className="w-12 h-12 bg-[#FF7A00]/10 rounded-lg flex items-center justify-center">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#FF7A00]/10 rounded-lg flex items-center justify-center">
           <Icon className="w-6 h-6 text-[#FF7A00]" />
         </div>
         <div className={`flex items-center space-x-1 ${

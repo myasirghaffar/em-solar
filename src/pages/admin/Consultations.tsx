@@ -91,18 +91,18 @@ export default function AdminConsultations() {
       </div>
 
       {/* Consultations Table */}
-      <div className="bg-white rounded-xl shadow-md overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
+      <div className="bg-white rounded-xl shadow-md">
+        <div className="overflow-x-auto touch-pan-x w-full">
+          <table className="w-max">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lead</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monthly Bill</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Message</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Lead</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Contact</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Monthly Bill</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Message</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Date</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -118,13 +118,13 @@ export default function AdminConsultations() {
                   const Icon = config.icon;
                   return (
                     <tr key={consultation.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center space-x-3">
                           <div className={`w-10 h-10 rounded-full flex items-center justify-center ${config.bgColor}`}>
                             <Icon className={`w-5 h-5 ${config.color}`} />
                           </div>
                           <div>
-                            <p className="font-medium text-[#0B2A4A]">{consultation.name}</p>
+                            <p className="font-medium text-[#0B2A4A] whitespace-nowrap">{consultation.name}</p>
                             <div className="flex items-center space-x-1 text-sm text-gray-500">
                               <MapPin className="w-3 h-3" />
                               <span>{consultation.city}</span>
@@ -132,7 +132,7 @@ export default function AdminConsultations() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <div className="space-y-1">
                           <div className="flex items-center space-x-2 text-sm text-gray-700">
                             <Phone className="w-4 h-4 text-gray-400" />
@@ -149,7 +149,7 @@ export default function AdminConsultations() {
                           <p className="text-sm text-gray-700 max-w-xs line-clamp-2">{consultation.message}</p>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <select
                           value={consultation.status || 'new'}
                           onChange={(e) => updateStatus(consultation.id, e.target.value)}
@@ -164,7 +164,7 @@ export default function AdminConsultations() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(consultation.created_at).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <a
                           href={`tel:${consultation.phone}`}
                           className="inline-flex items-center space-x-1 px-3 py-1 bg-[#FF7A00] text-white text-sm rounded-lg hover:bg-[#FF7A00]/90 transition-colors"

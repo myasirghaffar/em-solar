@@ -51,15 +51,15 @@ export default function AdminCustomers() {
       </div>
 
       {/* Customers Table */}
-      <div className="bg-white rounded-xl shadow-md overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
+      <div className="bg-white rounded-xl shadow-md">
+        <div className="overflow-x-auto touch-pan-x w-full">
+          <table className="w-max">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Customer</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Contact</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Location</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Joined</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -72,17 +72,17 @@ export default function AdminCustomers() {
               ) : filteredCustomers.length > 0 ? (
                 filteredCustomers.map(customer => (
                   <tr key={customer.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-[#FF7A00]/10 rounded-full flex items-center justify-center text-[#FF7A00] font-bold">
                           {customer.name?.charAt(0) || 'C'}
                         </div>
                         <div>
-                          <p className="font-medium text-[#0B2A4A]">{customer.name}</p>
+                          <p className="font-medium text-[#0B2A4A] whitespace-nowrap">{customer.name}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <div className="space-y-1">
                         <div className="flex items-center space-x-2 text-sm text-gray-700">
                           <Mail className="w-4 h-4 text-gray-400" />
@@ -94,7 +94,7 @@ export default function AdminCustomers() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center space-x-2 text-sm text-gray-700">
                         <MapPin className="w-4 h-4 text-gray-400" />
                         <span>{customer.city}</span>
