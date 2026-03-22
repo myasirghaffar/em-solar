@@ -8,6 +8,10 @@ export default async function handler(req, res) {
   });
   if (req.method === 'OPTIONS') return res.status(204).end();
 
+  if (!supabase) {
+    return res.status(503).json({ error: 'Supabase not configured. Add NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in Vercel Environment Variables.' });
+  }
+
   try {
     if (req.method === 'GET') {
       // Get total sales
