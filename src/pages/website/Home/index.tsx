@@ -39,16 +39,37 @@ export default function Home() {
   useEffect(() => {
     const ctx = gsap.context(() => {
       if (heroRef.current) {
-        gsap.timeline({ defaults: { ease: "power3.out" } })
-          .fromTo(".hero-title", { y: 80, opacity: 0 }, { y: 0, opacity: 1, duration: 1 })
-          .fromTo(".hero-subtitle", { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.9 }, "-=0.7")
-          .fromTo(".hero-cta", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, stagger: 0.15 }, "-=0.5");
+        gsap.timeline({ defaults: { ease: "power2.out", overwrite: "auto" } })
+          .fromTo(".hero-title", { y: 48, opacity: 0 }, { y: 0, opacity: 1, duration: 1.1 })
+          .fromTo(".hero-subtitle", { y: 32, opacity: 0 }, { y: 0, opacity: 1, duration: 1 }, "-=0.6")
+          .fromTo(".hero-cta", { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.9, stagger: 0.12 }, "-=0.5");
       }
-      gsap.utils.toArray<HTMLElement>(".scroll-reveal").forEach((elem) => {
-        gsap.fromTo(elem, { y: 60, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: "power3.out", clearProps: "transform,opacity", scrollTrigger: { trigger: elem, start: "top 90%", toggleActions: "play none none none", invalidateOnRefresh: true } });
+      gsap.set(".scroll-reveal", { y: 36 });
+      ScrollTrigger.batch(".scroll-reveal", {
+        start: "top 88%",
+        onEnter: (batch) =>
+          gsap.to(batch, {
+            y: 0,
+            opacity: 1,
+            duration: 1,
+            stagger: { each: 0.08, from: "start" },
+            ease: "power2.out",
+            overwrite: true,
+          }),
       });
       if (statsRef.current) {
-        gsap.fromTo(".stat-number", { scale: 0.8, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.8, stagger: 0.12, ease: "back.out(1.4)", scrollTrigger: { trigger: statsRef.current, start: "top 82%", toggleActions: "play none none none" } });
+        gsap.fromTo(
+          ".stat-number",
+          { scale: 0.92, opacity: 0 },
+          {
+            scale: 1,
+            opacity: 1,
+            duration: 1,
+            stagger: 0.15,
+            ease: "power2.out",
+            scrollTrigger: { trigger: statsRef.current, start: "top 85%", toggleActions: "play none none none" },
+          }
+        );
       }
     });
     return () => ctx.revert();

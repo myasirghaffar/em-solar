@@ -31,7 +31,7 @@ const categories = [
 
 export function CategoriesSection() {
   return (
-    <section id="categories" className="py-20 bg-gray-50">
+    <section id="categories" className="py-40 bg-gray-50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12 scroll-reveal">
           <h2 className="text-3xl md:text-4xl font-bold text-[#0B2A4A] mb-4">
@@ -42,14 +42,13 @@ export function CategoriesSection() {
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {categories.map((category, index) => {
+          {categories.map((category) => {
             const Icon = category.icon;
             return (
               <Link
                 key={category.name}
                 to={`/shop?category=${encodeURIComponent(category.slug)}`}
                 className="scroll-reveal group"
-                style={{ transitionDelay: `${index * 100}ms` }}
               >
                 <motion.div
                   whileHover={{ y: -10 }}

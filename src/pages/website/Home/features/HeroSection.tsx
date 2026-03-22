@@ -21,7 +21,7 @@ export function HeroSection() {
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[100%] h-[85%] rounded-[36px] backdrop-blur-md border border-white" />
         <div className="absolute top-[22%] right-[10%] w-20 h-20 rounded-2xl bg-[#FF7A00]/15 rotate-12" />
-        <div className="absolute bottom-[18%] left-[12%] w-16 h-16 rounded-2xl bg-[#0B2A4A]/10 -rotate-6" />
+        {/* <div className="absolute bottom-[18%] left-[12%] w-16 h-16 rounded-2xl bg-[#0B2A4A]/10 -rotate-6" /> */}
       </div>
 
       <motion.div
@@ -47,15 +47,15 @@ export function HeroSection() {
                 <Sparkles className="w-4 h-4 text-[#FF7A00]" />
                 Custom solar solutions for Pakistan
               </div>
-              <h1 className="hero-title text-4xl md:text-6xl font-extrabold tracking-tight text-[#0B2A4A] leading-[1.05]">
+              <h1 className="hero-title text-4xl md:text-6xl font-extrabold tracking-tight text-[#0B2A4A] leading-[1.05] opacity-0">
                 Power Your Future With{" "}
                 <span className="text-[#FF7A00]">Clean Solar</span> Energy
               </h1>
-              <p className="hero-subtitle text-lg md:text-xl text-gray-600 mt-5 max-w-xl">
+              <p className="hero-subtitle text-lg md:text-xl text-gray-600 mt-5 max-w-xl opacity-0">
                 Custom solar solutions designed to lower energy costs and power
                 your home more efficiently.
               </p>
-              <div className="hero-cta flex flex-col sm:flex-row gap-3 mt-7">
+              <div className="hero-cta flex flex-col sm:flex-row gap-3 mt-7 opacity-0">
                 <Link to="/shop">
                   <button className="bg-[#0B2A4A] text-white px-7 py-4 rounded-full font-semibold text-base hover:bg-[#0B2A4A]/90 transition-all flex items-center justify-center">
                     <ShoppingCart className="w-5 h-5 mr-2" />

@@ -65,7 +65,7 @@ export default function AdminDashboard() {
   })) || [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0 w-full max-w-full">
       {/* Page Title */}
       <div>
         <h1 className="text-2xl font-bold text-[#0B2A4A]">Dashboard Overview</h1>
@@ -73,7 +73,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 min-w-0">
         <StatCard
           title="Total Sales"
           value={`Rs. ${(analytics?.totalSales || 0).toLocaleString()}`}
@@ -105,7 +105,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-w-0">
         <div className="bg-white rounded-xl shadow-md p-4 sm:p-6">
           <h2 className="text-lg font-bold text-[#0B2A4A] mb-4">Monthly Sales</h2>
           <ResponsiveContainer width="100%" height={300}>
@@ -147,12 +147,12 @@ export default function AdminDashboard() {
       </div>
 
       {/* Recent Orders */}
-      <div className="bg-white rounded-xl shadow-md">
+      <div className="bg-white rounded-xl shadow-md min-w-0 overflow-hidden">
         <div className="p-4 sm:p-6 border-b">
           <h2 className="text-lg font-bold text-[#0B2A4A]">Recent Orders</h2>
         </div>
-        <div className="overflow-x-auto touch-pan-x w-full">
-          <table className="w-max">
+        <div className="overflow-x-auto overflow-y-visible touch-pan-x min-w-0 admin-table-scroll">
+          <table className="w-full min-w-full">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Order ID</th>
@@ -200,7 +200,7 @@ export default function AdminDashboard() {
 
 function StatCard({ title, value, icon: Icon, trend, trendUp }: any) {
   return (
-    <div className="bg-white rounded-xl shadow-md p-4 sm:p-6">
+    <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 min-w-0">
       <div className="flex items-center justify-between mb-4">
         <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#FF7A00]/10 rounded-lg flex items-center justify-center">
           <Icon className="w-6 h-6 text-[#FF7A00]" />

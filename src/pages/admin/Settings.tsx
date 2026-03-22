@@ -17,13 +17,13 @@ export default function AdminSettings() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0 w-full max-w-full">
       <div>
         <h1 className="text-2xl font-bold text-[#0B2A4A]">Settings</h1>
         <p className="text-gray-600">Manage store preferences and admin options.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-w-0">
         <div className="bg-white rounded-xl shadow-md p-6 lg:col-span-2">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-full bg-[#FF7A00]/10 flex items-center justify-center">

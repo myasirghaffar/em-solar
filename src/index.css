@@ -16,6 +16,45 @@ body {
   min-height: 100vh;
 }
 
+/* Prevent FOUC for scroll-reveal elements before GSAP runs */
+.scroll-reveal {
+  opacity: 0;
+}
+
+/* Admin table horizontal scroll - ensure scrollbar is visible */
+.admin-table-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+.admin-table-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+.admin-table-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+.admin-table-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+/* Featured products carousel */
+.featured-products-carousel {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+.featured-products-carousel::-webkit-scrollbar {
+  height: 6px;
+}
+.featured-products-carousel::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+.featured-products-carousel::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
 /* Infinite marquee for Trusted Brands */
 @keyframes brands-marquee {
   0% {

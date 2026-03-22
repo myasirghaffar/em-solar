@@ -113,7 +113,7 @@ export default function AdminProducts() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0 w-full max-w-full">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -148,9 +148,9 @@ export default function AdminProducts() {
       </div>
 
       {/* Products Table */}
-      <div className="bg-white rounded-xl shadow-md">
-        <div className="overflow-x-auto touch-pan-x w-full">
-          <table className="w-max">
+      <div className="bg-white rounded-xl shadow-md min-w-0 overflow-hidden">
+        <div className="overflow-x-auto overflow-y-visible touch-pan-x min-w-0 admin-table-scroll">
+          <table className="w-full min-w-full">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">

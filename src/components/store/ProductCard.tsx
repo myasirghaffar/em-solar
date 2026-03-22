@@ -14,9 +14,10 @@ interface ProductCardProps {
     category: string;
   };
   onAddToCart?: (product: any) => void;
+  className?: string;
 }
 
-export default function ProductCard({ product, onAddToCart }: ProductCardProps) {
+export default function ProductCard({ product, onAddToCart, className = "" }: ProductCardProps) {
   const [imageError, setImageError] = useState(false);
   
   // Get image URL with fallback
@@ -32,9 +33,9 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
   };
 
   return (
-    <Card hover className="group">
-      <Link to={`/product/${product.id}`}>
-        <div className="relative overflow-hidden aspect-square bg-gray-200">
+    <Card hover className={`group h-full flex flex-col ${className}`}>
+      <Link to={`/product/${product.id}`} className="flex-shrink-0">
+        <div className="relative overflow-hidden aspect-square bg-gray-200 w-full">
           <img
             src={getImageUrl()}
             alt={product.name}
@@ -47,14 +48,14 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
           </div>
         </div>
       </Link>
-      <div className="p-4">
+      <div className="p-4 flex-1 flex flex-col">
         <Link to={`/product/${product.id}`}>
           <h3 className="font-semibold text-lg text-[#0B2A4A] mb-2 group-hover:text-[#FF7A00] transition-colors line-clamp-2">
             {product.name}
           </h3>
         </Link>
-        <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
-        <div className="flex items-center justify-between">
+        <p className="text-gray-600 text-sm mb-3 line-clamp-2 flex-1">{product.description}</p>
+        <div className="flex items-center justify-between mt-auto">
           <div>
             <p className="text-2xl font-bold text-[#FF7A00]">Rs. {product.price.toLocaleString()}</p>
             <div className="flex items-center space-x-1">

@@ -11,7 +11,7 @@ export default function AdminProfile() {
   }, [user?.email]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0 w-full max-w-full">
       <div>
         <h1 className="text-2xl font-bold text-[#0B2A4A]">Profile</h1>
         <p className="text-gray-600">Your admin account details.</p>

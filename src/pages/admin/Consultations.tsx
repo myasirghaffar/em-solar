@@ -50,7 +50,7 @@ export default function AdminConsultations() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0 w-full max-w-full">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-[#0B2A4A]">Consultation Leads</h1>
@@ -58,7 +58,7 @@ export default function AdminConsultations() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 min-w-0">
         <StatCard title="New Leads" count={consultations.filter(c => c.status === 'new').length} color="blue" />
         <StatCard title="Contacted" count={consultations.filter(c => c.status === 'contacted').length} color="yellow" />
         <StatCard title="Converted" count={consultations.filter(c => c.status === 'converted').length} color="green" />
@@ -91,9 +91,9 @@ export default function AdminConsultations() {
       </div>
 
       {/* Consultations Table */}
-      <div className="bg-white rounded-xl shadow-md">
-        <div className="overflow-x-auto touch-pan-x w-full">
-          <table className="w-max">
+      <div className="bg-white rounded-xl shadow-md min-w-0 overflow-hidden">
+        <div className="overflow-x-auto overflow-y-visible touch-pan-x min-w-0 admin-table-scroll">
+          <table className="w-full min-w-full">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Lead</th>
@@ -198,7 +198,7 @@ function StatCard({ title, count, color }: { title: string; count: number; color
   };
   
   return (
-    <div className="bg-white rounded-xl shadow-md p-6">
+    <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 min-w-0">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-gray-500 text-sm font-medium mb-1">{title}</p>
