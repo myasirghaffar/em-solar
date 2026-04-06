@@ -19,7 +19,11 @@ export default function Home() {
   const statsRef = useRef<HTMLDivElement>(null);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ products: 0, customers: 0, installations: 0 });
+  const [stats, setStats] = useState({
+    products: 0,
+    customers: 0,
+    installations: 0,
+  });
 
   useEffect(() => {
     (async () => {
@@ -27,7 +31,11 @@ export default function Home() {
         const { fetchProducts } = await import("../../../lib/api");
         const data = await fetchProducts();
         setProducts(data.slice(0, 8));
-        setStats({ products: data.length + 5000, customers: 1200, installations: 350 });
+        setStats({
+          products: data.length + 5000,
+          customers: 1200,
+          installations: 350,
+        });
       } catch (err) {
         console.error("Fetch error:", err);
       } finally {
@@ -39,10 +47,25 @@ export default function Home() {
   useEffect(() => {
     const ctx = gsap.context(() => {
       if (heroRef.current) {
-        gsap.timeline({ defaults: { ease: "power2.out", overwrite: "auto" } })
-          .fromTo(".hero-title", { y: 48, opacity: 0 }, { y: 0, opacity: 1, duration: 1.1 })
-          .fromTo(".hero-subtitle", { y: 32, opacity: 0 }, { y: 0, opacity: 1, duration: 1 }, "-=0.6")
-          .fromTo(".hero-cta", { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.9, stagger: 0.12 }, "-=0.5");
+        gsap
+          .timeline({ defaults: { ease: "power2.out", overwrite: "auto" } })
+          .fromTo(
+            ".hero-title",
+            { y: 48, opacity: 0 },
+            { y: 0, opacity: 1, duration: 1.1 },
+          )
+          .fromTo(
+            ".hero-subtitle",
+            { y: 32, opacity: 0 },
+            { y: 0, opacity: 1, duration: 1 },
+            "-=0.6",
+          )
+          .fromTo(
+            ".hero-cta",
+            { y: 24, opacity: 0 },
+            { y: 0, opacity: 1, duration: 0.9, stagger: 0.12 },
+            "-=0.5",
+          );
       }
       gsap.set(".scroll-reveal", { y: 36 });
       ScrollTrigger.batch(".scroll-reveal", {
@@ -67,8 +90,12 @@ export default function Home() {
             duration: 1,
             stagger: 0.15,
             ease: "power2.out",
-            scrollTrigger: { trigger: statsRef.current, start: "top 85%", toggleActions: "play none none none" },
-          }
+            scrollTrigger: {
+              trigger: statsRef.current,
+              start: "top 85%",
+              toggleActions: "play none none none",
+            },
+          },
         );
       }
     });
@@ -89,12 +116,17 @@ export default function Home() {
       </div>
       <CategoriesSection />
       <FeaturedProducts products={products} loading={loading} />
-      <div ref={statsRef}>
-        <StatsSection products={stats.products} customers={stats.customers} installations={stats.installations} />
-      </div>
+
       <WhyChooseUs />
       <TestimonialsSection />
       <TrustedBrandsSection />
+      <div ref={statsRef}>
+        <StatsSection
+          products={stats.products}
+          customers={stats.customers}
+          installations={stats.installations}
+        />
+      </div>
       <CTASection />
     </>
   );

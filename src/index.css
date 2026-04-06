@@ -38,21 +38,33 @@ body {
   border-radius: 4px;
 }
 
-/* Featured products carousel */
+/* Featured products carousel — hide scrollbar (still scrollable) */
 .featured-products-carousel {
-  scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 transparent;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 .featured-products-carousel::-webkit-scrollbar {
-  height: 6px;
+  display: none;
+  width: 0;
+  height: 0;
 }
-.featured-products-carousel::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 3px;
+
+/* Why choose us mobile carousel */
+.why-choose-carousel {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
-.featured-products-carousel::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
+.why-choose-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+/* Categories mobile carousel */
+.categories-carousel {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.categories-carousel::-webkit-scrollbar {
+  display: none;
 }
 
 /* Infinite marquee for Trusted Brands */

@@ -1,13 +1,59 @@
 const brands = [
-  "Longi",
-  "Jinko",
-  "Trina",
-  "Canadian",
-  "Huawei",
-  "Growatt",
-  "Tesla",
-  "LG",
+  {
+    name: "LONGi",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/4/48/LONGi_logo.svg",
+  },
+  {
+    name: "Jinko",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/8/89/JinkoSolar_logo.svg",
+  },
+  {
+    name: "Trina",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/0/0d/Trina_Solar_logo.svg",
+  },
+  {
+    name: "Huawei",
+    logo: "https://upload.wikimedia.org/wikipedia/en/0/04/Huawei_Standard_logo.svg",
+  },
+  {
+    name: "Growatt",
+    logo: "https://www.ginverter.com/upload/logo.png",
+  },
+  {
+    name: "Sungrow",
+    logo: "https://en.sungrowpower.com/templates/default/images/logo.svg",
+  },
+  {
+    name: "JA Solar",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/7/74/JA_Solar_logo.svg",
+  },
+  {
+    name: "Canadian Solar",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/e/e7/Canadian_Solar_logo.svg",
+  },
+  {
+    name: "Tesla",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/b/bd/Tesla_Motors.svg",
+  },
+  {
+    name: "LG",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/2/20/LG_symbol.svg",
+  },
 ];
+
+function BrandCard({ brand }: { brand: { name: string; logo: string } }) {
+  return (
+    <div className="flex-shrink-0 w-[160px] md:w-[180px] bg-white rounded-xl shadow-md hover:shadow-lg border border-gray-100 px-5 py-4 flex items-center justify-center min-h-[100px] transition-shadow">
+      <img
+        src={brand.logo}
+        alt={`${brand.name} logo`}
+        loading="lazy"
+        className="max-h-12 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-300"
+        referrerPolicy="no-referrer"
+      />
+    </div>
+  );
+}
 
 export function TrustedBrandsSection() {
   return (
@@ -27,14 +73,7 @@ export function TrustedBrandsSection() {
             style={{ animation: "brands-marquee 30s linear infinite" }}
           >
             {[...brands, ...brands].map((brand, i) => (
-              <div
-                key={`${brand}-${i}`}
-                className="flex-shrink-0 w-[140px] md:w-[160px] bg-white rounded-xl shadow-md hover:shadow-lg border border-gray-100 p-6 flex items-center justify-center min-h-[100px] transition-shadow"
-              >
-                <span className="text-lg md:text-xl font-bold text-[#0B2A4A] text-center">
-                  {brand}
-                </span>
-              </div>
+              <BrandCard key={`${brand.name}-${i}`} brand={brand} />
             ))}
           </div>
         </div>

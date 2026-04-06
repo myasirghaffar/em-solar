@@ -35,11 +35,14 @@ export function WhyChooseUs() {
             We're committed to providing the best solar solutions
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="why-choose-carousel flex overflow-x-auto snap-x snap-mandatory gap-4 pb-2 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-8 md:overflow-visible md:snap-none">
           {features.map((feature) => {
             const Icon = feature.icon;
             return (
-              <div key={feature.title} className="scroll-reveal text-center">
+              <div
+                key={feature.title}
+                className="scroll-reveal text-center snap-start min-w-[78%] sm:min-w-[58%] md:min-w-0 bg-white/60 rounded-2xl px-5 py-6 md:bg-transparent md:rounded-none md:px-0 md:py-0"
+              >
                 <div className="w-20 h-20 bg-[#FF7A00]/10 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Icon className="w-10 h-10 text-[#FF7A00]" />
                 </div>
