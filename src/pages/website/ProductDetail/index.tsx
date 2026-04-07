@@ -18,11 +18,20 @@ export default function ProductDetail() {
     (async () => {
       try {
         const { fetchProducts } = await import("../../../lib/api");
+        const { withStoreProductFallback } = await import(
+          "../../../data/dummyProducts"
+        );
         const data = await fetchProducts();
-        const found = data.find((p: any) => p.id === parseInt(id || "0"));
+        const list = withStoreProductFallback(data);
+        const pid = parseInt(id || "0", 10);
+        const found = list.find((p: any) => p.id === pid);
         setProduct(found);
         if (found) {
-          const related = data.filter((p: any) => p.category === found.category && p.id !== found.id).slice(0, 4);
+          const related = list
+            .filter(
+              (p: any) => p.category === found.category && p.id !== found.id,
+            )
+            .slice(0, 4);
           setRelatedProducts(related);
         }
       } catch (err) {

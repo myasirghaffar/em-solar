@@ -16,11 +16,6 @@ body {
   min-height: 100vh;
 }
 
-/* Prevent FOUC for scroll-reveal elements before GSAP runs */
-.scroll-reveal {
-  opacity: 0;
-}
-
 /* Admin table horizontal scroll - ensure scrollbar is visible */
 .admin-table-scroll {
   scrollbar-width: thin;
@@ -44,6 +39,17 @@ body {
   -ms-overflow-style: none;
 }
 .featured-products-carousel::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* Latest news carousel — hide scrollbar (still scrollable) */
+.latest-news-carousel {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.latest-news-carousel::-webkit-scrollbar {
   display: none;
   width: 0;
   height: 0;

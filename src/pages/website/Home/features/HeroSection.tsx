@@ -128,7 +128,8 @@ export function HeroSection() {
                           src={slide.image}
                           alt={slide.title}
                           className="w-full h-full object-contain"
-                          loading="lazy"
+                          loading={idx === 0 ? "eager" : "lazy"}
+                          fetchPriority={idx === 0 ? "high" : undefined}
                         />
                       </div>
                     </div>
@@ -154,7 +155,8 @@ export function HeroSection() {
                         src={slide.image}
                         alt={slide.title}
                         className="w-full h-full object-contain"
-                        loading="lazy"
+                        loading={idx === 0 ? "eager" : "lazy"}
+                        fetchPriority={idx === 0 ? "high" : undefined}
                       />
                     </div>
                   </div>

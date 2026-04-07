@@ -20,8 +20,11 @@ export default function Shop() {
     (async () => {
       try {
         const { fetchProducts } = await import("../../../lib/api");
+        const { withStoreProductFallback } = await import(
+          "../../../data/dummyProducts"
+        );
         const data = await fetchProducts();
-        setProducts(data);
+        setProducts(withStoreProductFallback(data));
       } catch (err) {
         console.error("Fetch error:", err);
       } finally {
