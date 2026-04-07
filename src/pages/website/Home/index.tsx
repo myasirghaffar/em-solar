@@ -51,7 +51,8 @@ export default function Home() {
 
       <WhyChooseUs />
       <TestimonialsSection />
-      <LatestNewsSection />
+
+      <TrustedBrandsSection />
       <StatsSection
         products={stats.products}
         customers={stats.customers}
@@ -59,7 +60,8 @@ export default function Home() {
       />
 
       <CompanyCultureSection />
-      <TrustedBrandsSection />
+
+      <LatestNewsSection />
       <CTASection />
     </>
   );

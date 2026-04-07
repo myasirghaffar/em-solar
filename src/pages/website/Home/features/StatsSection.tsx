@@ -37,7 +37,6 @@ export function StatsSection({
 
   return (
     <section className="relative overflow-hidden bg-[#0B2A4A] text-white py-20 md:py-24">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(59,130,246,0.28),transparent_42%),radial-gradient(circle_at_88%_24%,rgba(255,255,255,0.12),transparent_30%),radial-gradient(circle_at_82%_76%,rgba(37,99,235,0.22),transparent_34%)]" />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#070e18]/20 to-[#070e18]/60" />
 
       <div className="container relative z-10 mx-auto px-4">

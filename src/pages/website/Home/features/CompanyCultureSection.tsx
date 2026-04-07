@@ -1,3 +1,5 @@
+import { Diamond } from "lucide-react";
+
 const tiles = [
   {
     title: "Mission",
@@ -34,17 +36,26 @@ export function CompanyCultureSection() {
         <div className="min-h-[350px] flex-[0_0_42%] sm:flex-[0_0_38%] bg-[#f4f6f8]" />
         <div className="flex-1 bg-[#0B2A4A]" />
       </div>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(59,130,246,0.2),transparent_40%)] opacity-90 pointer-events-none" />
 
-      <div className="relative z-10 mx-auto max-w-[1720px] px-4 sm:px-6 lg:px-10 pb-16 pt-14 md:pb-24 md:pt-20">
+      <div className="relative z-10 mx-auto max-w-[1720px] px-4 sm:px-6 lg:px-10 pb-16 pt-14 md:py-24 flex flex-col items-center gap-2">
+        <div className="mb-3 inline-flex items-center gap-2 text-[#FF7A00]">
+          <Diamond
+            className="h-3 w-3 shrink-0 fill-[#FF7A00] text-[#FF7A00]"
+            strokeWidth={2}
+            aria-hidden
+          />
+          <span className="text-xs font-bold uppercase tracking-[0.2em] sm:text-sm">
+            Company Values
+          </span>
+        </div>
         <h2
           id="company-culture-heading"
-          className="scroll-reveal text-[clamp(1.75rem,2.5vw,2.5rem)] font-bold uppercase tracking-tight text-white"
+          className="scroll-reveal text-[clamp(1.75rem,2.5vw,2.5rem)] font-bold uppercase tracking-tight text-[#0B2A4A]"
         >
           Company Culture
         </h2>
 
-        <div className="scroll-reveal mt-8 md:mt-10 mx-auto max-w-7xl rounded-3xl border border-white/20 bg-white/[0.07] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_24px_60px_rgba(11,42,74,0.18)] backdrop-blur-xl sm:p-4 md:p-5">
+        <div className="scroll-reveal mt-8 md:mt-10 mx-auto max-w-7xl  sm:p-4 md:p-5">
           <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-3">
             {tiles.map((tile) => (
               <article

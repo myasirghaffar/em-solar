@@ -4,6 +4,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Diamond,
+  ArrowRight,
   Tag,
 } from "lucide-react";
 import { LATEST_NEWS } from "../../../../data/latestNews";
@@ -34,10 +35,9 @@ export function LatestNewsSection() {
     if (!el || count < 2 || jumpLockRef.current || setWidth <= 0) return;
 
     const { scrollLeft } = el;
+    const maxScrollLeft = el.scrollWidth - el.clientWidth;
 
-    const rightEdge = scrollLeft + el.clientWidth;
-
-    if (rightEdge >= 2 * setWidth - LOOP_JUMP_THRESHOLD) {
+    if (scrollLeft >= maxScrollLeft - LOOP_JUMP_THRESHOLD) {
       jumpLockRef.current = true;
       el.scrollLeft = scrollLeft - setWidth;
       requestAnimationFrame(() => {
@@ -122,14 +122,14 @@ export function LatestNewsSection() {
           </div>
           <h2
             id="latest-news-heading"
-            className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl md:text-[clamp(2rem,3vw,2.75rem)]"
+            className="text-3xl font-bold tracking-tight text-[#0B2A4A] sm:text-4xl md:text-[clamp(2rem,3vw,2.75rem)]"
           >
             Our Latest News
           </h2>
         </div>
       </div>
 
-      <div className="mx-auto max-w-[1460px] overflow-hidden px-4 sm:px-6 lg:px-8">
+      <div className="w-full overflow-hidden">
         {count === 0 ? (
           <p className="text-gray-500 px-4 py-8">No news to show.</p>
         ) : (
@@ -191,6 +191,13 @@ export function LatestNewsSection() {
                           {item.tag}
                         </span>
                       </div>
+                      <button
+                        type="button"
+                        className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#FF7A00] px-4 py-2 text-sm font-semibold text-white opacity-0 translate-y-1 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100"
+                      >
+                        Read more
+                        <ArrowRight className="h-4 w-4" aria-hidden />
+                      </button>
                     </div>
                   </div>
                 </article>
@@ -202,7 +209,7 @@ export function LatestNewsSection() {
 
       {count > 1 && (
         <div
-          className="mx-auto mt-8 flex max-w-[1460px] items-center justify-center gap-3 px-4 sm:px-6 lg:px-8"
+          className="mt-8 flex w-full items-center justify-center gap-3"
           role="group"
           aria-label="News carousel controls"
         >

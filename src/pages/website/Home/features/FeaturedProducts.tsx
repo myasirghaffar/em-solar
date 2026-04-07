@@ -1,6 +1,6 @@
 import { useRef, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Diamond } from "lucide-react";
 
 interface FeaturedProductsProps {
   products: any[];
@@ -73,9 +73,21 @@ export function FeaturedProducts({ products, loading }: FeaturedProductsProps) {
       {/* Header row — mirrors .wp + .hd */}
       <div className="max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-10">
         <div className="flex items-center justify-between gap-4 pb-6 md:pb-8">
+          <div className="flex flex-col items-start gap-2">
+          <div className="flex flex-row items-center gap-2 text-[#FF7A00]">
+            <Diamond
+              className="h-3 w-3 shrink-0 fill-[#FF7A00] text-[#FF7A00]"
+              strokeWidth={2}
+              aria-hidden
+            />
+            <span className="text-xs font-bold uppercase tracking-[0.2em] sm:text-sm">
+              Shop
+            </span>
+          </div>
           <h2 className="text-[clamp(1.75rem,2.5vw,2.5rem)] font-bold tracking-tight text-white uppercase">
             Products
           </h2>
+          </div>
           <div
             className="flex items-center gap-3 shrink-0 arrow-product"
             role="group"
