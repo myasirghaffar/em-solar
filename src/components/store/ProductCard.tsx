@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ShoppingCart, Star } from 'lucide-react';
 import Card from '../ui/Card';
-import { motion } from 'framer-motion';
 import { useState } from 'react';
 
 interface ProductCardProps {
@@ -65,15 +64,13 @@ export default function ProductCard({ product, onAddToCart, className = "" }: Pr
               <span className="text-sm text-gray-500 ml-1">(4.5)</span>
             </div>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+          <button
             onClick={() => onAddToCart?.(product)}
             className="bg-[#0B2A4A] text-white p-3 rounded-full hover:bg-[#FF7A00] transition-colors"
             aria-label="Add to cart"
           >
             <ShoppingCart className="w-5 h-5" />
-          </motion.button>
+          </button>
         </div>
       </div>
     </Card>

@@ -1,4 +1,5 @@
 export { HeroSection } from "./HeroSection";
+export { default as AboutSection } from "./AboutSection";
 export { CategoriesSection } from "./CategoriesSection";
 export { FeaturedProducts } from "./FeaturedProducts";
 export { StatsSection } from "./StatsSection";

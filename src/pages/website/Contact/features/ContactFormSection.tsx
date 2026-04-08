@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { Send } from "lucide-react";
 
 export function ContactFormSection() {
@@ -14,7 +13,7 @@ export function ContactFormSection() {
   };
 
   return (
-    <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+    <div>
       <div className="bg-white rounded-2xl shadow-lg p-8">
         <h2 className="text-2xl font-bold text-[#0B2A4A] mb-6">Send us a Message</h2>
         {submitted ? (
@@ -56,6 +55,6 @@ export function ContactFormSection() {
           </form>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }

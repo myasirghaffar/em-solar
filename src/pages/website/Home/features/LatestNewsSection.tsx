@@ -1,7 +1,6 @@
 import { useRef, useEffect, useCallback, type MouseEvent } from "react";
 import {
   Calendar,
-  ChevronLeft,
   ChevronRight,
   Diamond,
   ArrowRight,
@@ -68,10 +67,6 @@ export function LatestNewsSection() {
     }, 2600);
     return () => window.clearInterval(timer);
   }, [count]);
-
-  const scrollPrev = () => {
-    trackRef.current?.scrollBy({ left: -SLIDE_STEP, behavior: "smooth" });
-  };
 
   const scrollNext = () => {
     trackRef.current?.scrollBy({ left: SLIDE_STEP, behavior: "smooth" });
@@ -213,14 +208,6 @@ export function LatestNewsSection() {
           role="group"
           aria-label="News carousel controls"
         >
-          <button
-            type="button"
-            onClick={scrollPrev}
-            aria-label="Previous news"
-            className="flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-800 shadow-sm transition hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF7A00]/40"
-          >
-            <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" strokeWidth={2.2} />
-          </button>
           <button
             type="button"
             onClick={scrollNext}

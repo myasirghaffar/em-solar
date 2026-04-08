@@ -1,11 +1,10 @@
-import { motion } from "framer-motion";
 import { MapPin } from "lucide-react";
 
 export function MapSection() {
   return (
     <section className="py-20 bg-white">
       <div className="container mx-auto px-4">
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="text-center">
+        <div className="text-center">
           <h2 className="text-3xl font-bold text-[#0B2A4A] mb-6">Find Us</h2>
           <div className="bg-gray-200 rounded-2xl overflow-hidden h-96 flex items-center justify-center">
             <div className="text-center">
@@ -14,7 +13,7 @@ export function MapSection() {
               <p className="text-gray-500">123 Solar Street, Gulberg III, Lahore, Pakistan</p>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import { PanelTop, Plug, Battery, Zap } from "lucide-react";
 
 const categories = [
@@ -50,10 +49,7 @@ export function CategoriesSection() {
                 to={`/shop?category=${encodeURIComponent(category.slug)}`}
                 className="scroll-reveal group snap-start min-w-[82%] sm:min-w-[58%] md:min-w-0"
               >
-                <motion.div
-                  whileHover={{ y: -10 }}
-                  className="bg-white p-8 rounded-xl min-h-[320px] md:min-h-[250px] shadow-md hover:shadow-xl transition-all duration-300 text-center group-hover:border-[#FF7A00] border-2 border-transparent"
-                >
+                <div className="bg-white p-8 rounded-xl min-h-[320px] md:min-h-[250px] shadow-md hover:shadow-xl transition-all duration-300 text-center group-hover:border-[#FF7A00] border-2 border-transparent">
                   <div className="w-20 h-20 md:w-16 md:h-16 bg-[#FF7A00]/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-[#FF7A00] transition-colors">
                     <Icon className="w-10 h-10 md:w-8 md:h-8 text-[#FF7A00] group-hover:text-white transition-colors" />
                   </div>
@@ -63,7 +59,7 @@ export function CategoriesSection() {
                   <p className="text-gray-600 text-sm">
                     {category.description}
                   </p>
-                </motion.div>
+                </div>
               </Link>
             );
           })}

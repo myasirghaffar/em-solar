@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   HeroSection,
+  AboutSection,
   CategoriesSection,
   FeaturedProducts,
   StatsSection,
@@ -46,6 +47,7 @@ export default function Home() {
   return (
     <>
       <HeroSection />
+      <AboutSection />
       <CategoriesSection />
       <FeaturedProducts products={products} loading={loading} />
 

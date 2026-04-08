@@ -1,3 +1,5 @@
+import { useRef, useEffect, useCallback } from "react";
+
 const brands = [
   {
     name: "LONGi",
@@ -41,14 +43,22 @@ const brands = [
   },
 ];
 
+const SLIDE_WIDTH = 220;
+const SLIDE_GAP = 16;
+const SLIDE_STEP = SLIDE_WIDTH + SLIDE_GAP;
+const LOOP_JUMP_THRESHOLD = 120;
+
 function BrandCard({ brand }: { brand: { name: string; logo: string } }) {
   return (
-    <div className="flex-shrink-0 w-[160px] md:w-[180px] bg-white rounded-xl shadow-md hover:shadow-lg border border-gray-100 px-5 py-4 flex items-center justify-center min-h-[100px] transition-shadow">
+    <div
+      className="flex-shrink-0 rounded-xl border border-gray-100 bg-white px-5 py-4 shadow-md"
+      style={{ width: SLIDE_WIDTH, minHeight: 100 }}
+    >
       <img
         src={brand.logo}
         alt={`${brand.name} logo`}
         loading="lazy"
-        className="max-h-12 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-300"
+        className="mx-auto max-h-12 w-auto object-contain grayscale"
         referrerPolicy="no-referrer"
       />
     </div>
@@ -56,9 +66,62 @@ function BrandCard({ brand }: { brand: { name: string; logo: string } }) {
 }
 
 export function TrustedBrandsSection() {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const jumpLockRef = useRef(false);
+  const autoPlayPausedRef = useRef(false);
+
+  const logicalBrands =
+    brands.length > 0 && brands.length < 8 ? [...brands, ...brands] : brands;
+  const count = logicalBrands.length;
+  const setWidth = count > 0 ? count * SLIDE_STEP - SLIDE_GAP : 0;
+
+  const handleScroll = useCallback(() => {
+    const el = trackRef.current;
+    if (!el || count < 2 || jumpLockRef.current || setWidth <= 0) return;
+
+    const { scrollLeft } = el;
+    const maxScrollLeft = el.scrollWidth - el.clientWidth;
+
+    if (scrollLeft >= maxScrollLeft - LOOP_JUMP_THRESHOLD) {
+      jumpLockRef.current = true;
+      el.scrollLeft = scrollLeft - setWidth;
+      requestAnimationFrame(() => {
+        jumpLockRef.current = false;
+      });
+    } else if (scrollLeft <= LOOP_JUMP_THRESHOLD) {
+      jumpLockRef.current = true;
+      el.scrollLeft = scrollLeft + setWidth;
+      requestAnimationFrame(() => {
+        jumpLockRef.current = false;
+      });
+    }
+  }, [count, setWidth]);
+
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el || count < 2) return;
+    requestAnimationFrame(() => {
+      el.scrollLeft = setWidth;
+    });
+  }, [count, setWidth]);
+
+  useEffect(() => {
+    if (count < 2) return;
+    const timer = window.setInterval(() => {
+      if (autoPlayPausedRef.current) return;
+      trackRef.current?.scrollBy({ left: SLIDE_STEP, behavior: "smooth" });
+    }, 2200);
+    return () => window.clearInterval(timer);
+  }, [count]);
+
+  const loopSlides =
+    count > 1
+      ? [...logicalBrands, ...logicalBrands, ...logicalBrands]
+      : logicalBrands;
+
   return (
     <section className="py-40 bg-gray-50">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 mb-10">
         <div className="text-center mb-12 scroll-reveal">
           <h2 className="text-3xl md:text-4xl font-bold text-[#0B2A4A] mb-4">
             Trusted Brands
@@ -67,15 +130,34 @@ export function TrustedBrandsSection() {
             We partner with the world's leading solar manufacturers
           </p>
         </div>
-        <div className="scroll-reveal">
-          <div
-            className="flex gap-4 w-max h-36 items-center"
-            style={{ animation: "brands-marquee 30s linear infinite" }}
-          >
-            {[...brands, ...brands].map((brand, i) => (
-              <BrandCard key={`${brand.name}-${i}`} brand={brand} />
-            ))}
-          </div>
+      </div>
+
+      <div className="scroll-reveal w-full overflow-hidden">
+        <div
+          ref={trackRef}
+          role="region"
+          aria-roledescription="carousel"
+          aria-label="Trusted brands"
+          onScroll={handleScroll}
+          onMouseEnter={() => {
+            autoPlayPausedRef.current = true;
+          }}
+          onMouseLeave={() => {
+            autoPlayPausedRef.current = false;
+          }}
+          onTouchStart={() => {
+            autoPlayPausedRef.current = true;
+          }}
+          onTouchEnd={() => {
+            autoPlayPausedRef.current = false;
+          }}
+          className="trusted-brands-carousel flex overflow-x-auto overflow-y-hidden pl-4 pr-4 sm:pl-6 sm:pr-6 lg:pl-8 lg:pr-8"
+        >
+          {loopSlides.map((brand, i) => (
+            <div key={`${brand.name}-${i}`} className="mr-4 flex-shrink-0">
+              <BrandCard brand={brand} />
+            </div>
+          ))}
         </div>
       </div>
     </section>

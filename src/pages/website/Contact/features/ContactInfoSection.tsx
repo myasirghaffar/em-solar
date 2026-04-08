@@ -1,9 +1,8 @@
-import { motion } from "framer-motion";
 import { Mail, Phone, MapPin, Clock, Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
 
 export function ContactInfoSection() {
   return (
-    <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+    <div>
       <h2 className="text-2xl font-bold text-[#0B2A4A] mb-6">Get in Touch</h2>
       <div className="space-y-6 mb-8">
         {[
@@ -37,6 +36,6 @@ export function ContactInfoSection() {
           ))}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
