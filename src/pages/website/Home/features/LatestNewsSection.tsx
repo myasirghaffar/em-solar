@@ -104,7 +104,7 @@ export function LatestNewsSection() {
       aria-labelledby="latest-news-heading"
     >
       <div className="relative max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-10">
-        <div className="pb-8 text-center md:pb-10">
+        <div className="pb-8 text-center md:pb-10" data-aos="fade-up">
           <div className="mb-3 inline-flex items-center gap-2 text-[#FF7A00]">
             <Diamond
               className="h-3 w-3 shrink-0 fill-[#FF7A00] text-[#FF7A00]"
@@ -124,7 +124,7 @@ export function LatestNewsSection() {
         </div>
       </div>
 
-      <div className="w-full overflow-hidden">
+      <div className="w-full overflow-hidden" data-aos="fade-up" data-aos-delay="100">
         {count === 0 ? (
           <p className="text-gray-500 px-4 py-8">No news to show.</p>
         ) : (
@@ -207,6 +207,8 @@ export function LatestNewsSection() {
           className="mt-8 flex w-full items-center justify-center gap-3"
           role="group"
           aria-label="News carousel controls"
+          data-aos="fade-up"
+          data-aos-delay="140"
         >
           <button
             type="button"

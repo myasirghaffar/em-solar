@@ -32,7 +32,7 @@ export function CategoriesSection() {
   return (
     <section id="categories" className="py-40 bg-gray-50">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12 scroll-reveal">
+        <div className="text-center mb-12 scroll-reveal" data-aos="fade-up">
           <h2 className="text-3xl md:text-4xl font-bold text-[#0B2A4A] mb-4">
             Shop by Category
           </h2>
@@ -41,13 +41,15 @@ export function CategoriesSection() {
           </p>
         </div>
         <div className="categories-carousel flex overflow-x-auto snap-x snap-mandatory gap-4 pb-2 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-6 md:overflow-visible md:snap-none">
-          {categories.map((category) => {
+          {categories.map((category, index) => {
             const Icon = category.icon;
             return (
               <Link
                 key={category.name}
                 to={`/shop?category=${encodeURIComponent(category.slug)}`}
                 className="scroll-reveal group snap-start min-w-[82%] sm:min-w-[58%] md:min-w-0"
+                data-aos="fade-up"
+                data-aos-delay={index * 80}
               >
                 <div className="bg-white p-8 rounded-xl min-h-[320px] md:min-h-[250px] shadow-md hover:shadow-xl transition-all duration-300 text-center group-hover:border-[#FF7A00] border-2 border-transparent">
                   <div className="w-20 h-20 md:w-16 md:h-16 bg-[#FF7A00]/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-[#FF7A00] transition-colors">

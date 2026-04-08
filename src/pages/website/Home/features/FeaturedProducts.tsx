@@ -72,7 +72,7 @@ export function FeaturedProducts({ products, loading }: FeaturedProductsProps) {
     <section className="scroll-reveal bg-[#0B2A4A] text-white py-20">
       {/* Header row — mirrors .wp + .hd */}
       <div className="max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-10">
-        <div className="flex items-center justify-between gap-4 pb-6 md:pb-8">
+        <div className="flex items-center justify-between gap-4 pb-6 md:pb-8" data-aos="fade-up">
           <div className="flex flex-col items-start gap-2">
           <div className="flex flex-row items-center gap-2 text-[#FF7A00]">
             <Diamond
@@ -122,7 +122,7 @@ export function FeaturedProducts({ products, loading }: FeaturedProductsProps) {
       </div>
 
       {/* Track — mirrors .wp-offset padding-left: 171px (responsive) */}
-      <div className="pl-6 sm:pl-10 md:pl-16 lg:pl-[171px] overflow-hidden">
+      <div className="pl-6 sm:pl-10 md:pl-16 lg:pl-[171px] overflow-hidden" data-aos="fade-up" data-aos-delay="100">
         {loading ? (
           <div className="flex gap-5 overflow-hidden pr-4">
             {[...Array(5)].map((_, i) => (
@@ -191,7 +191,7 @@ export function FeaturedProducts({ products, loading }: FeaturedProductsProps) {
         )}
       </div>
 
-      <div className="max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-10 mt-10 text-center">
+      <div className="max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-10 mt-10 text-center" data-aos="fade-up" data-aos-delay="150">
         <Link to="/shop">
           <span className="inline-flex items-center justify-center rounded-sm border border-white/25 bg-transparent px-8 py-3 text-sm font-semibold text-white transition hover:border-white/60 hover:bg-white/5">
             View all products

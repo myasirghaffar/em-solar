@@ -41,7 +41,7 @@ export function StatsSection({
 
       <div className="container relative z-10 mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] items-center gap-12 lg:gap-6">
-          <div className="scroll-reveal">
+          <div className="scroll-reveal" data-aos="fade-right">
             <h2 className="text-3xl sm:text-4xl font-bold uppercase">
               About Us
             </h2>
@@ -73,16 +73,18 @@ export function StatsSection({
             </div>
           </div>
 
-          <div className="scroll-reveal relative flex w-full justify-center lg:justify-end [perspective:1000px]">
+          <div className="scroll-reveal relative flex w-full justify-center lg:justify-end [perspective:1000px]" data-aos="fade-left" data-aos-delay="100">
             <div className="group w-full max-w-[min(100%,380px)] sm:max-w-[460px] [transform-style:preserve-3d] transition-transform duration-500 ease-out hover:[transform:rotateX(4deg)_rotateY(-7deg)]">
               <div
                 className="grid aspect-square grid-cols-2 gap-3 sm:gap-4 rounded-3xl border border-white/25 bg-gradient-to-br from-white/10 to-white/[0.03] p-3 sm:p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_0_48px_rgba(58,118,255,0.22)] backdrop-blur-2xl"
                 aria-label="Company statistics"
               >
-                {statTiles.map((tile) => (
+                {statTiles.map((tile, index) => (
                   <div
                     key={tile.label}
                     className="relative flex flex-col items-center justify-center rounded-2xl border border-white/20 bg-white/[0.07] px-2 py-5 sm:py-6 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] backdrop-blur-md transition-transform duration-300 ease-out will-change-transform hover:z-10 hover:scale-[1.05]"
+                    data-aos="zoom-in"
+                    data-aos-delay={index * 80}
                   >
                     <p
                       className={`stat-number font-bold tabular-nums ${tile.valueClass}`}

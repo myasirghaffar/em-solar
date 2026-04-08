@@ -66,6 +66,24 @@ body {
   height: 0;
 }
 
+.trusted-brands-track {
+  animation: trusted-brands-marquee 28s linear infinite;
+  will-change: transform;
+}
+
+.trusted-brands-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes trusted-brands-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-50%));
+  }
+}
+
 /* Why choose us mobile carousel */
 .why-choose-carousel {
   scrollbar-width: none;

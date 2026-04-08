@@ -1,5 +1,3 @@
-import { useRef, useEffect, useCallback } from "react";
-
 const brands = [
   {
     name: "LONGi",
@@ -44,9 +42,6 @@ const brands = [
 ];
 
 const SLIDE_WIDTH = 220;
-const SLIDE_GAP = 16;
-const SLIDE_STEP = SLIDE_WIDTH + SLIDE_GAP;
-const LOOP_JUMP_THRESHOLD = 120;
 
 function BrandCard({ brand }: { brand: { name: string; logo: string } }) {
   return (
@@ -66,63 +61,12 @@ function BrandCard({ brand }: { brand: { name: string; logo: string } }) {
 }
 
 export function TrustedBrandsSection() {
-  const trackRef = useRef<HTMLDivElement>(null);
-  const jumpLockRef = useRef(false);
-  const autoPlayPausedRef = useRef(false);
-
-  const logicalBrands =
-    brands.length > 0 && brands.length < 8 ? [...brands, ...brands] : brands;
-  const count = logicalBrands.length;
-  const setWidth = count > 0 ? count * SLIDE_STEP - SLIDE_GAP : 0;
-
-  const handleScroll = useCallback(() => {
-    const el = trackRef.current;
-    if (!el || count < 2 || jumpLockRef.current || setWidth <= 0) return;
-
-    const { scrollLeft } = el;
-    const maxScrollLeft = el.scrollWidth - el.clientWidth;
-
-    if (scrollLeft >= maxScrollLeft - LOOP_JUMP_THRESHOLD) {
-      jumpLockRef.current = true;
-      el.scrollLeft = scrollLeft - setWidth;
-      requestAnimationFrame(() => {
-        jumpLockRef.current = false;
-      });
-    } else if (scrollLeft <= LOOP_JUMP_THRESHOLD) {
-      jumpLockRef.current = true;
-      el.scrollLeft = scrollLeft + setWidth;
-      requestAnimationFrame(() => {
-        jumpLockRef.current = false;
-      });
-    }
-  }, [count, setWidth]);
-
-  useEffect(() => {
-    const el = trackRef.current;
-    if (!el || count < 2) return;
-    requestAnimationFrame(() => {
-      el.scrollLeft = setWidth;
-    });
-  }, [count, setWidth]);
-
-  useEffect(() => {
-    if (count < 2) return;
-    const timer = window.setInterval(() => {
-      if (autoPlayPausedRef.current) return;
-      trackRef.current?.scrollBy({ left: SLIDE_STEP, behavior: "smooth" });
-    }, 2200);
-    return () => window.clearInterval(timer);
-  }, [count]);
-
-  const loopSlides =
-    count > 1
-      ? [...logicalBrands, ...logicalBrands, ...logicalBrands]
-      : logicalBrands;
+  const loopSlides = [...brands, ...brands];
 
   return (
     <section className="py-40 bg-gray-50">
       <div className="container mx-auto px-4 mb-10">
-        <div className="text-center mb-12 scroll-reveal">
+        <div className="text-center mb-12 scroll-reveal" data-aos="fade-up">
           <h2 className="text-3xl md:text-4xl font-bold text-[#0B2A4A] mb-4">
             Trusted Brands
           </h2>
@@ -132,26 +76,16 @@ export function TrustedBrandsSection() {
         </div>
       </div>
 
-      <div className="scroll-reveal w-full overflow-hidden">
+      <div
+        className="scroll-reveal w-full overflow-hidden py-3"
+        data-aos="fade-up"
+        data-aos-delay="100"
+      >
         <div
-          ref={trackRef}
           role="region"
           aria-roledescription="carousel"
           aria-label="Trusted brands"
-          onScroll={handleScroll}
-          onMouseEnter={() => {
-            autoPlayPausedRef.current = true;
-          }}
-          onMouseLeave={() => {
-            autoPlayPausedRef.current = false;
-          }}
-          onTouchStart={() => {
-            autoPlayPausedRef.current = true;
-          }}
-          onTouchEnd={() => {
-            autoPlayPausedRef.current = false;
-          }}
-          className="trusted-brands-carousel flex overflow-x-auto overflow-y-hidden pl-4 pr-4 sm:pl-6 sm:pr-6 lg:pl-8 lg:pr-8"
+          className="trusted-brands-carousel trusted-brands-track flex w-max pl-4 pr-4 sm:pl-6 sm:pr-6 lg:pl-8 lg:pr-8"
         >
           {loopSlides.map((brand, i) => (
             <div key={`${brand.name}-${i}`} className="mr-4 flex-shrink-0">

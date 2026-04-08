@@ -108,18 +108,29 @@ export function HeroSection() {
               <div key={`${slide.id}-${idx}`} className="min-w-full">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center py-20">
                   <div className="px-6 md:px-10 order-1 lg:order-1 text-center lg:text-left">
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0B2A4A]/90 text-white text-xs sm:text-sm font-medium mb-5 mx-auto lg:mx-0">
+                    <div
+                      data-aos="fade-up"
+                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0B2A4A]/90 text-white text-xs sm:text-sm font-medium mb-5 mx-auto lg:mx-0"
+                    >
                       <Sparkles className="w-4 h-4 text-[#FF7A00]" />
                       {slide.badgeText}
                     </div>
-                    <h1 className="hero-title text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tight text-[#0B2A4A] leading-[1.08] sm:leading-[1.05]">
+                    <h1
+                      data-aos="fade-up"
+                      data-aos-delay="80"
+                      className="hero-title text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tight text-[#0B2A4A] leading-[1.08] sm:leading-[1.05]"
+                    >
                       {slide.headingTop}{" "}
                       <span className="text-[#FF7A00]">
                         {slide.headingAccent}
                       </span>{" "}
                       {slide.headingBottom}
                     </h1>
-                    <p className="hero-subtitle text-base sm:text-lg md:text-xl text-gray-600 mt-5 max-w-xl mx-auto lg:mx-0">
+                    <p
+                      data-aos="fade-up"
+                      data-aos-delay="140"
+                      className="hero-subtitle text-base sm:text-lg md:text-xl text-gray-600 mt-5 max-w-xl mx-auto lg:mx-0"
+                    >
                       {slide.subtitle}
                     </p>
                     <div className="lg:hidden mt-5">
@@ -133,7 +144,11 @@ export function HeroSection() {
                         />
                       </div>
                     </div>
-                    <div className="hero-cta hidden lg:flex flex-col sm:flex-row gap-3 mt-7 justify-center lg:justify-start items-center">
+                    <div
+                      data-aos="fade-up"
+                      data-aos-delay="200"
+                      className="hero-cta hidden lg:flex flex-col sm:flex-row gap-3 mt-7 justify-center lg:justify-start items-center"
+                    >
                       <Link to="/shop" className="w-[260px]">
                         <button className="w-full h-14 bg-[#0B2A4A] text-white px-7 py-4 rounded-full font-semibold text-sm sm:text-base hover:bg-[#0B2A4A]/90 transition-all flex items-center justify-center">
                           <ShoppingCart className="w-5 h-5 mr-2" />
@@ -149,7 +164,11 @@ export function HeroSection() {
                     </div>
                   </div>
 
-                  <div className="px-6 md:px-10 order-2 lg:order-2 hidden lg:block">
+                  <div
+                    data-aos="zoom-in"
+                    data-aos-delay="160"
+                    className="px-6 md:px-10 order-2 lg:order-2 hidden lg:block"
+                  >
                     <div className="mx-auto w-[50%] sm:w-[42%] lg:w-full max-w-[560px] aspect-square lg:h-[560px] lg:aspect-auto flex items-center justify-center">
                       <img
                         src={slide.image}

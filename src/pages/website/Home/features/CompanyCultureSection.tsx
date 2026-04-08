@@ -51,16 +51,19 @@ export function CompanyCultureSection() {
         <h2
           id="company-culture-heading"
           className="scroll-reveal text-[clamp(1.75rem,2.5vw,2.5rem)] font-bold uppercase tracking-tight text-[#0B2A4A]"
+          data-aos="fade-up"
         >
           Company Culture
         </h2>
 
-        <div className="scroll-reveal mt-8 md:mt-10 mx-auto max-w-7xl  sm:p-4 md:p-5">
+        <div className="scroll-reveal mt-8 md:mt-10 mx-auto max-w-7xl  sm:p-4 md:p-5" data-aos="fade-up" data-aos-delay="100">
           <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-3">
-            {tiles.map((tile) => (
+            {tiles.map((tile, index) => (
               <article
                 key={`${tile.title}-${tile.image}`}
                 className="group relative min-h-[260px] overflow-hidden rounded-2xl border border-white/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] transition-transform duration-300 ease-out will-change-transform hover:z-10 hover:scale-[1.02] md:min-h-[300px]"
+                data-aos="zoom-in-up"
+                data-aos-delay={index * 80}
               >
                 <div
                   className="absolute inset-0 scale-105 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
