@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Search, Eye } from 'lucide-react';
+import { AdminPageHeader, AdminPanel, AdminTableShell, StatusPill } from '../../components/admin/AdminUI';
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState<any[]>([]);
@@ -53,13 +54,10 @@ export default function AdminOrders() {
   return (
     <div className="space-y-6 min-w-0 w-full max-w-full">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-[#0B2A4A]">Orders</h1>
-        <p className="text-gray-600">Manage customer orders</p>
-      </div>
+      <AdminPageHeader title="Orders" subtitle="Manage customer orders" />
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-md p-4 flex flex-col sm:flex-row gap-4">
+      <AdminPanel className="p-4 flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
           <input
@@ -67,13 +65,13 @@ export default function AdminOrders() {
             placeholder="Search orders..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A00]"
+            className="w-full h-11 pl-10 pr-4 border border-gray-200 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-gray-200"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A00]"
+          className="px-4 py-2 border border-gray-200 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-gray-200"
         >
           <option value="">All Status</option>
           <option value="pending">Pending</option>
@@ -82,13 +80,13 @@ export default function AdminOrders() {
           <option value="delivered">Delivered</option>
           <option value="cancelled">Cancelled</option>
         </select>
-      </div>
+      </AdminPanel>
 
       {/* Orders Table */}
-      <div className="bg-white rounded-xl shadow-md min-w-0 overflow-hidden">
+      <AdminTableShell>
         <div className="overflow-x-auto overflow-y-visible touch-pan-x min-w-0 admin-table-scroll">
           <table className="w-full min-w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-50/80">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Order ID</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Customer</th>
@@ -111,26 +109,25 @@ export default function AdminOrders() {
                 filteredOrders.map(order => (
                   <tr key={order.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="font-medium text-[#0B2A4A]">#{order.id}</span>
+                      <span className="font-medium text-slate-900">#{order.id}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <p className="font-medium text-[#0B2A4A]">{order.customer_name}</p>
+                        <p className="font-medium text-slate-900">{order.customer_name}</p>
                         <p className="text-sm text-gray-500">{order.customer_phone}</p>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                       {Array.isArray(order.products) ? order.products.length : 0} items
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-[#FF7A00]">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-indigo-600">
                       Rs. {order.total_price?.toLocaleString() || 0}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        order.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {order.payment_status || 'pending'}
-                      </span>
+                      <StatusPill
+                        label={order.payment_status || 'pending'}
+                        variant={order.payment_status === 'paid' ? 'success' : 'warning'}
+                      />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <select
@@ -166,14 +163,14 @@ export default function AdminOrders() {
             </tbody>
           </table>
         </div>
-      </div>
+      </AdminTableShell>
 
       {/* Order Detail Modal */}
       {selectedOrder && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl border border-gray-200 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b flex items-center justify-between">
-              <h2 className="text-xl font-bold text-[#0B2A4A]">Order #{selectedOrder.id}</h2>
+              <h2 className="text-xl font-bold text-slate-900">Order #{selectedOrder.id}</h2>
               <button
                 onClick={() => setSelectedOrder(null)}
                 className="text-gray-400 hover:text-gray-600 text-2xl"
@@ -184,7 +181,7 @@ export default function AdminOrders() {
             <div className="p-6 space-y-6">
               {/* Customer Info */}
               <div>
-                <h3 className="font-semibold text-[#0B2A4A] mb-3">Customer Information</h3>
+                <h3 className="font-semibold text-slate-900 mb-3">Customer Information</h3>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <p className="text-gray-500">Name</p>
@@ -211,7 +208,7 @@ export default function AdminOrders() {
 
               {/* Products */}
               <div>
-                <h3 className="font-semibold text-[#0B2A4A] mb-3">Products</h3>
+                <h3 className="font-semibold text-slate-900 mb-3">Products</h3>
                 <div className="space-y-3">
                   {Array.isArray(selectedOrder.products) && selectedOrder.products.map((item: any, index: number) => (
                     <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
@@ -219,7 +216,7 @@ export default function AdminOrders() {
                         <p className="font-medium">{item.name}</p>
                         <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
                       </div>
-                      <p className="font-semibold text-[#FF7A00]">Rs. {(item.price * item.quantity).toLocaleString()}</p>
+                      <p className="font-semibold text-indigo-600">Rs. {(item.price * item.quantity).toLocaleString()}</p>
                     </div>
                   ))}
                 </div>
@@ -227,7 +224,7 @@ export default function AdminOrders() {
 
               {/* Order Summary */}
               <div className="border-t pt-4">
-                <div className="flex justify-between text-lg font-bold text-[#0B2A4A]">
+                <div className="flex justify-between text-lg font-bold text-slate-900">
                   <span>Total</span>
                   <span>Rs. {selectedOrder.total_price?.toLocaleString() || 0}</span>
                 </div>
@@ -236,7 +233,7 @@ export default function AdminOrders() {
               {/* Notes */}
               {selectedOrder.notes && (
                 <div>
-                  <h3 className="font-semibold text-[#0B2A4A] mb-2">Notes</h3>
+                  <h3 className="font-semibold text-slate-900 mb-2">Notes</h3>
                   <p className="text-gray-600">{selectedOrder.notes}</p>
                 </div>
               )}

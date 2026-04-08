@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Search, Phone, MapPin, FileText, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { AdminPageHeader, AdminPanel, AdminTableShell } from '../../components/admin/AdminUI';
 
 export default function AdminConsultations() {
   const [consultations, setConsultations] = useState<any[]>([]);
@@ -52,10 +53,10 @@ export default function AdminConsultations() {
   return (
     <div className="space-y-6 min-w-0 w-full max-w-full">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-[#0B2A4A]">Consultation Leads</h1>
-        <p className="text-gray-600">Manage solar consultation requests</p>
-      </div>
+      <AdminPageHeader
+        title="Consultation Leads"
+        subtitle="Manage solar consultation requests"
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 min-w-0">
@@ -66,7 +67,7 @@ export default function AdminConsultations() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-md p-4 flex flex-col sm:flex-row gap-4">
+      <AdminPanel className="p-4 flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
           <input
@@ -74,13 +75,13 @@ export default function AdminConsultations() {
             placeholder="Search leads..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A00]"
+            className="w-full h-11 pl-10 pr-4 border border-gray-200 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-gray-200"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A00]"
+          className="px-4 py-2 border border-gray-200 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-gray-200"
         >
           <option value="">All Status</option>
           <option value="new">New</option>
@@ -88,13 +89,13 @@ export default function AdminConsultations() {
           <option value="converted">Converted</option>
           <option value="closed">Closed</option>
         </select>
-      </div>
+      </AdminPanel>
 
       {/* Consultations Table */}
-      <div className="bg-white rounded-xl shadow-md min-w-0 overflow-hidden">
+      <AdminTableShell>
         <div className="overflow-x-auto overflow-y-visible touch-pan-x min-w-0 admin-table-scroll">
           <table className="w-full min-w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-50/80">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Lead</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Contact</th>
@@ -124,7 +125,7 @@ export default function AdminConsultations() {
                             <Icon className={`w-5 h-5 ${config.color}`} />
                           </div>
                           <div>
-                            <p className="font-medium text-[#0B2A4A] whitespace-nowrap">{consultation.name}</p>
+                            <p className="font-medium text-slate-900 whitespace-nowrap">{consultation.name}</p>
                             <div className="flex items-center space-x-1 text-sm text-gray-500">
                               <MapPin className="w-3 h-3" />
                               <span>{consultation.city}</span>
@@ -167,7 +168,7 @@ export default function AdminConsultations() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <a
                           href={`tel:${consultation.phone}`}
-                          className="inline-flex items-center space-x-1 px-3 py-1 bg-[#FF7A00] text-white text-sm rounded-lg hover:bg-[#FF7A00]/90 transition-colors"
+                          className="inline-flex items-center space-x-1 px-3 py-1 bg-indigo-500 text-white text-sm rounded-[10px] hover:bg-indigo-600 transition-colors"
                         >
                           <Phone className="w-4 h-4" />
                           <span>Call</span>
@@ -184,7 +185,7 @@ export default function AdminConsultations() {
             </tbody>
           </table>
         </div>
-      </div>
+      </AdminTableShell>
     </div>
   );
 }
@@ -198,11 +199,11 @@ function StatCard({ title, count, color }: { title: string; count: number; color
   };
   
   return (
-    <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 min-w-0">
+    <div className="bg-white rounded-2xl border border-gray-200/60 p-4 sm:p-[17px] min-w-0">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-gray-500 text-sm font-medium mb-1">{title}</p>
-          <p className="text-2xl font-bold text-[#0B2A4A]">{count}</p>
+          <p className="text-2xl font-bold text-slate-900">{count}</p>
         </div>
         <div className={`w-12 h-12 ${colors[color]} rounded-lg flex items-center justify-center`}>
           <FileText className="w-6 h-6 text-white" />

@@ -11,6 +11,7 @@ import {
   Tooltip,
   ResponsiveContainer
 } from 'recharts';
+import { AdminPageHeader, AdminPanel, AdminTableShell, StatusPill } from '../../components/admin/AdminUI';
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -66,14 +67,13 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6 min-w-0 w-full max-w-full">
-      {/* Page Title */}
-      <div>
-        <h1 className="text-2xl font-bold text-[#0B2A4A]">Dashboard Overview</h1>
-        <p className="text-gray-600">Welcome back! Here's what's happening with your store.</p>
-      </div>
+      <AdminPageHeader
+        title="Dashboard Overview"
+        subtitle="Welcome back! Here's what's happening with your store."
+      />
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 min-w-0">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 min-w-0">
         <StatCard
           title="Total Sales"
           value={`Rs. ${(analytics?.totalSales || 0).toLocaleString()}`}
@@ -105,9 +105,9 @@ export default function AdminDashboard() {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-w-0">
-        <div className="bg-white rounded-xl shadow-md p-4 sm:p-6">
-          <h2 className="text-lg font-bold text-[#0B2A4A] mb-4">Monthly Sales</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 min-w-0">
+        <AdminPanel>
+          <h2 className="text-base font-bold text-slate-900 mb-4">Monthly Sales</h2>
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={salesData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -115,18 +115,18 @@ export default function AdminDashboard() {
               <YAxis stroke="#666" />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#0B2A4A',
+                  backgroundColor: '#111827',
                   border: 'none',
                   borderRadius: '8px'
                 }}
                 itemStyle={{ color: '#fff' }}
               />
-              <Area type="monotone" dataKey="sales" stroke="#FF7A00" fill="#FF7A00" fillOpacity={0.3} />
+              <Area type="monotone" dataKey="sales" stroke="#6366f1" fill="#6366f1" fillOpacity={0.3} />
             </AreaChart>
           </ResponsiveContainer>
-        </div>
-        <div className="bg-white rounded-xl shadow-md p-4 sm:p-6">
-          <h2 className="text-lg font-bold text-[#0B2A4A] mb-4">Orders Growth</h2>
+        </AdminPanel>
+        <AdminPanel>
+          <h2 className="text-base font-bold text-slate-900 mb-4">Orders Growth</h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={ordersData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -134,26 +134,26 @@ export default function AdminDashboard() {
               <YAxis stroke="#666" />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#0B2A4A',
+                  backgroundColor: '#111827',
                   border: 'none',
                   borderRadius: '8px'
                 }}
                 itemStyle={{ color: '#fff' }}
               />
-              <Bar dataKey="orders" fill="#0B2A4A" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="orders" fill="#6366f1" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-        </div>
+        </AdminPanel>
       </div>
 
       {/* Recent Orders */}
-      <div className="bg-white rounded-xl shadow-md min-w-0 overflow-hidden">
-        <div className="p-4 sm:p-6 border-b">
-          <h2 className="text-lg font-bold text-[#0B2A4A]">Recent Orders</h2>
+      <AdminTableShell>
+        <div className="p-4 sm:p-6 border-b border-gray-200">
+          <h2 className="text-base font-bold text-slate-900">Recent Orders</h2>
         </div>
         <div className="overflow-x-auto overflow-y-visible touch-pan-x min-w-0 admin-table-scroll">
           <table className="w-full min-w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-50/80">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Order ID</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Customer</th>
@@ -165,20 +165,24 @@ export default function AdminDashboard() {
             <tbody className="divide-y divide-gray-200">
               {recentOrders.map(order => (
                 <tr key={order.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#0B2A4A]">#{order.id}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">#{order.id}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{order.customer_name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-[#FF7A00]">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-indigo-600">
                     Rs. {order.total_price?.toLocaleString() || 0}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      order.order_status === 'delivered' ? 'bg-green-100 text-green-800' :
-                      order.order_status === 'shipped' ? 'bg-blue-100 text-blue-800' :
-                      order.order_status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {order.order_status || 'pending'}
-                    </span>
+                    <StatusPill
+                      label={order.order_status || 'pending'}
+                      variant={
+                        order.order_status === 'delivered'
+                          ? 'success'
+                          : order.order_status === 'shipped'
+                          ? 'info'
+                          : order.order_status === 'processing'
+                          ? 'warning'
+                          : 'default'
+                      }
+                    />
                   </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {order.created_at ? new Date(order.created_at).toLocaleDateString() : '-'}
@@ -193,27 +197,27 @@ export default function AdminDashboard() {
             </tbody>
           </table>
         </div>
-      </div>
+      </AdminTableShell>
     </div>
   );
 }
 
 function StatCard({ title, value, icon: Icon, trend, trendUp }: any) {
   return (
-    <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 min-w-0">
+    <div className="min-w-0 overflow-hidden bg-white rounded-2xl border border-gray-200/60 p-[17px]">
       <div className="flex items-center justify-between mb-4">
-        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#FF7A00]/10 rounded-lg flex items-center justify-center">
-          <Icon className="w-6 h-6 text-[#FF7A00]" />
+        <div className="w-10 h-10 rounded-[10px] bg-indigo-500/10 flex items-center justify-center">
+          <Icon className="w-5 h-5 text-indigo-500" />
         </div>
-        <div className={`flex items-center space-x-1 ${
+        <div className={`flex items-center space-x-1 text-xs ${
           trendUp ? 'text-green-600' : 'text-red-600'
         }`}>
           <TrendingUp className={`w-4 h-4 ${!trendUp && 'rotate-180'}`} />
-          <span className="text-sm font-medium">{trend}</span>
+          <span className="font-medium">{trend}</span>
         </div>
       </div>
-      <h3 className="text-gray-500 text-sm font-medium mb-1">{title}</h3>
-      <p className="text-2xl font-bold text-[#0B2A4A]">{value}</p>
+      <p className="text-2xl font-bold text-slate-900">{value}</p>
+      <h3 className="text-gray-500 text-sm font-medium mt-2">{title}</h3>
     </div>
   );
 }

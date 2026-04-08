@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Plus, Search, Edit, Trash2 } from "lucide-react";
 import Input from "../../components/ui/Input";
+import { AdminPageHeader, AdminPanel, AdminTableShell, StatusPill } from "../../components/admin/AdminUI";
 
 export default function AdminProducts() {
   const [products, setProducts] = useState<any[]>([]);
@@ -115,43 +116,43 @@ export default function AdminProducts() {
   return (
     <div className="space-y-6 min-w-0 w-full max-w-full">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-[#0B2A4A]">Products</h1>
-          <p className="text-gray-600">Manage your product inventory</p>
-        </div>
-        <button
-          onClick={() => {
-            resetForm();
-            setEditingProduct(null);
-            setShowModal(true);
-          }}
-          className="bg-[#FF7A00] text-white px-4 py-2 rounded-lg font-semibold hover:bg-[#FF7A00]/90 transition-colors flex items-center space-x-2"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Add Product</span>
-        </button>
-      </div>
+      <AdminPageHeader
+        title="Products"
+        subtitle="Manage your product inventory"
+        action={
+          <button
+            onClick={() => {
+              resetForm();
+              setEditingProduct(null);
+              setShowModal(true);
+            }}
+            className="inline-flex items-center gap-2 h-11 rounded-[10px] bg-indigo-500 px-4 text-sm font-bold text-white hover:bg-indigo-600"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Add Product</span>
+          </button>
+        }
+      />
 
       {/* Search & Filters */}
-      <div className="bg-white rounded-xl shadow-md p-4">
+      <AdminPanel className="p-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
           <input
             type="text"
             placeholder="Search products..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A00]"
+            className="w-full h-11 pl-10 pr-4 rounded-[10px] border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-200"
           />
         </div>
-      </div>
+      </AdminPanel>
 
       {/* Products Table */}
-      <div className="bg-white rounded-xl shadow-md min-w-0 overflow-hidden">
+      <AdminTableShell>
         <div className="overflow-x-auto overflow-y-visible touch-pan-x min-w-0 admin-table-scroll">
           <table className="w-full min-w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-50/80">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   Product
@@ -193,7 +194,7 @@ export default function AdminProducts() {
                           className="w-12 h-12 object-cover rounded-lg"
                         />
                         <div>
-                          <p className="font-medium text-[#0B2A4A] whitespace-nowrap">
+                          <p className="font-medium text-slate-900 whitespace-nowrap">
                             {product.name}
                           </p>
                           <p className="text-sm text-gray-500 whitespace-nowrap">
@@ -205,22 +206,14 @@ export default function AdminProducts() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                       {product.category}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-[#FF7A00]">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-indigo-600">
                       Rs. {product.price?.toLocaleString() || 0}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                       {product.stock || 0}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          product.status === "active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {product.status || "active"}
-                      </span>
+                      <StatusPill label={product.status || "active"} variant={product.status === "active" ? "success" : "danger"} />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex space-x-2">
@@ -253,14 +246,14 @@ export default function AdminProducts() {
             </tbody>
           </table>
         </div>
-      </div>
+      </AdminTableShell>
 
       {/* Add/Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl border border-gray-200 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b flex items-center justify-between">
-              <h2 className="text-xl font-bold text-[#0B2A4A]">
+              <h2 className="text-xl font-bold text-slate-900">
                 {editingProduct ? "Edit Product" : "Add New Product"}
               </h2>
               <button
@@ -289,7 +282,7 @@ export default function AdminProducts() {
                     onChange={(e) =>
                       setFormData({ ...formData, category: e.target.value })
                     }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A00]"
+                    className="w-full px-4 py-2 border border-gray-200 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-gray-200"
                     required
                   >
                     {categories.map((cat) => (
@@ -337,7 +330,7 @@ export default function AdminProducts() {
                     setFormData({ ...formData, description: e.target.value })
                   }
                   rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A00]"
+                  className="w-full px-4 py-2 border border-gray-200 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-gray-200"
                   required
                 />
               </div>
@@ -351,7 +344,7 @@ export default function AdminProducts() {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-[#FF7A00] text-white rounded-lg hover:bg-[#FF7A00]/90 transition-colors"
+                  className="px-6 py-2 bg-indigo-500 text-white rounded-[10px] hover:bg-indigo-600 transition-colors"
                 >
                   {editingProduct ? "Update Product" : "Add Product"}
                 </button>
