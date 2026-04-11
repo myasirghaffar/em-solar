@@ -25,6 +25,8 @@ export function humanizeApiError(code: string, message: string): string {
     ORDER_NOT_FOUND: "That order could not be found.",
     CONSULTATION_NOT_FOUND: "That consultation could not be found.",
     TIMEOUT: "The request timed out. Try again in a moment.",
+    DATABASE_NOT_CONFIGURED:
+      "The live API is not connected to the database yet. Add DATABASE_URL (or Hyperdrive) on the Cloudflare Worker.",
   };
   return byCode[code] ?? (message || "Something went wrong. Please try again.");
 }
