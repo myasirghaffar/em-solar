@@ -1,24 +1,37 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from "react";
+import { validateLogin, DUMMY_ADMIN_EMAIL, type AuthUser, type UserRole } from "../data/dummyAuth";
 
-interface User {
-  id: number;
-  email: string;
-}
+export type { AuthUser, UserRole };
 
 interface AuthContextType {
-  user: User | null;
+  user: AuthUser | null;
   isAuthenticated: boolean;
+  isAdmin: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<AuthUser | null>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const AUTH_KEY = 'energymart-auth';
+const AUTH_KEY = "energymart-auth";
+
+function coerceStoredUser(u: Record<string, unknown>): AuthUser {
+  const email = String(u.email || "");
+  const id = typeof u.id === "number" ? u.id : Number(u.id) || 0;
+  let role = u.role as UserRole | undefined;
+  if (role !== "admin" && role !== "user") {
+    role = email.trim().toLowerCase() === DUMMY_ADMIN_EMAIL.toLowerCase() ? "admin" : "user";
+  }
+  const name =
+    typeof u.name === "string" ? u.name : role === "admin" ? "Administrator" : "Customer";
+  const phone = typeof u.phone === "string" ? u.phone : undefined;
+  const city = typeof u.city === "string" ? u.city : undefined;
+  return { id, email, role, name, phone, city };
+}
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -26,45 +39,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
-        if (parsed?.user?.email) setUser(parsed.user);
-      } catch {}
+        if (parsed?.user?.email) {
+          setUser(coerceStoredUser(parsed.user as Record<string, unknown>));
+        }
+      } catch {
+        /* ignore */
+      }
     }
     setIsLoading(false);
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    const trySupabase = async (): Promise<boolean> => {
-      const url = import.meta.env.VITE_SUPABASE_URL;
-      const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      if (!url || !key) return false;
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabase = createClient(url, key);
-      const { data } = await supabase.rpc('auth_login', { user_email: email, user_password: password });
-      if (data && data.length > 0) {
-        const user = { id: data[0].id, email: data[0].email };
-        setUser(user);
-        localStorage.setItem(AUTH_KEY, JSON.stringify({ user }));
-        return true;
-      }
-      return false;
-    };
-
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success && data.user) {
-          setUser(data.user);
-          localStorage.setItem(AUTH_KEY, JSON.stringify({ user: data.user }));
-          return true;
-        }
-      }
-    } catch {}
-    return trySupabase();
+  const login = async (email: string, password: string): Promise<AuthUser | null> => {
+    const result = validateLogin(email, password);
+    if (!result.ok || !result.user) return null;
+    setUser(result.user);
+    localStorage.setItem(AUTH_KEY, JSON.stringify({ user: result.user }));
+    return result.user;
   };
 
   const logout = () => {
@@ -77,9 +67,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       value={{
         user,
         isAuthenticated: !!user,
+        isAdmin: user?.role === "admin",
         isLoading,
         login,
-        logout
+        logout,
       }}
     >
       {children}
@@ -89,6 +80,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within AuthProvider');
+  if (!context) throw new Error("useAuth must be used within AuthProvider");
   return context;
 };

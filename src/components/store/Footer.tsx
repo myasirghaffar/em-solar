@@ -1,7 +1,11 @@
-import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin, Sun } from 'lucide-react';
+import { Facebook, Instagram, Linkedin, Mail, Phone, MapPin, Sun } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { STORE_GOOGLE_MAPS_URL } from '../../constants/storeMapsUrl';
+import { SOCIAL_LINKS } from '../../constants/socialLinks';
 
 export default function Footer() {
+  const { isAuthenticated, isAdmin } = useAuth();
   return (
     <footer className="bg-[#0B2A4A] text-white pt-16 pb-8">
       <div className="container mx-auto px-4">
@@ -16,17 +20,32 @@ export default function Footer() {
               Pakistan's leading solar energy e-commerce platform. Quality products, expert consultation, and reliable service.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="p-2 bg-white/10 rounded-full hover:bg-[#FF7A00] transition-colors">
-                <Facebook className="w-5 h-5" />
+              <a
+                href={SOCIAL_LINKS.facebook}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-full bg-white/10 p-2 transition-colors hover:bg-[#FF7A00]"
+                aria-label="EnergyMart on Facebook"
+              >
+                <Facebook className="h-5 w-5" />
               </a>
-              <a href="#" className="p-2 bg-white/10 rounded-full hover:bg-[#FF7A00] transition-colors">
-                <Twitter className="w-5 h-5" />
+              <a
+                href={SOCIAL_LINKS.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-full bg-white/10 p-2 transition-colors hover:bg-[#FF7A00]"
+                aria-label="EnergyMart on Instagram"
+              >
+                <Instagram className="h-5 w-5" />
               </a>
-              <a href="#" className="p-2 bg-white/10 rounded-full hover:bg-[#FF7A00] transition-colors">
-                <Instagram className="w-5 h-5" />
-              </a>
-              <a href="#" className="p-2 bg-white/10 rounded-full hover:bg-[#FF7A00] transition-colors">
-                <Linkedin className="w-5 h-5" />
+              <a
+                href={SOCIAL_LINKS.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-full bg-white/10 p-2 transition-colors hover:bg-[#FF7A00]"
+                aria-label="EnergyMart on LinkedIn"
+              >
+                <Linkedin className="h-5 w-5" />
               </a>
             </div>
           </div>
@@ -38,26 +57,52 @@ export default function Footer() {
               <li><Link to="/shop" className="text-gray-300 hover:text-[#FF7A00] transition-colors">Shop All Products</Link></li>
               <li><Link to="/about" className="text-gray-300 hover:text-[#FF7A00] transition-colors">About Us</Link></li>
               <li><Link to="/contact" className="text-gray-300 hover:text-[#FF7A00] transition-colors">Contact Us</Link></li>
-              <li><Link to="/login" className="text-gray-300 hover:text-[#FF7A00] transition-colors">Login</Link></li>
-              <li><Link to="/admin" className="text-gray-300 hover:text-[#FF7A00] transition-colors">Admin Panel</Link></li>
+              {!isAuthenticated && (
+                <li><Link to="/login" className="text-gray-300 hover:text-[#FF7A00] transition-colors">Login</Link></li>
+              )}
+              {isAuthenticated && isAdmin && (
+                <li><Link to="/admin" className="text-gray-300 hover:text-[#FF7A00] transition-colors">Dashboard</Link></li>
+              )}
+              {isAuthenticated && !isAdmin && (
+                <li><Link to="/profile" className="text-gray-300 hover:text-[#FF7A00] transition-colors">My account</Link></li>
+              )}
             </ul>
           </div>
 
           {/* Contact Info */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Contact Us</h3>
-            <ul className="space-y-3">
-              <li className="flex items-start space-x-3">
-                <MapPin className="w-5 h-5 text-[#FF7A00] mt-1 flex-shrink-0" />
-                <span className="text-gray-300">123 Solar Street, Lahore, Pakistan</span>
+            <ul className="space-y-4">
+              <li className="flex items-start gap-3">
+                <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-[#FF7A00]" aria-hidden />
+                <a
+                  href={STORE_GOOGLE_MAPS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-300 transition-colors hover:text-[#FF7A00]"
+                >
+                  Shop 64, Lalazar Commercial Market, Raiwind
+                  <br />
+                  Road - Lahore
+                </a>
               </li>
-              <li className="flex items-center space-x-3">
-                <Phone className="w-5 h-5 text-[#FF7A00] flex-shrink-0" />
-                <span className="text-gray-300">+92 300 1234567</span>
+              <li className="flex items-start gap-3">
+                <Phone className="mt-0.5 h-5 w-5 shrink-0 text-[#FF7A00]" aria-hidden />
+                <div className="text-gray-300">
+                  <p className="text-sm text-gray-400">Open a chat or give us a call</p>
+                  <a href="tel:+923014756516" className="mt-0.5 inline-block hover:text-[#FF7A00] transition-colors">
+                    +92 301 4756516
+                  </a>
+                </div>
               </li>
-              <li className="flex items-center space-x-3">
-                <Mail className="w-5 h-5 text-[#FF7A00] flex-shrink-0" />
-                <span className="text-gray-300">info@energymart.pk</span>
+              <li className="flex items-start gap-3">
+                <Mail className="mt-0.5 h-5 w-5 shrink-0 text-[#FF7A00]" aria-hidden />
+                <div className="text-gray-300">
+                  <p className="text-sm text-gray-400">Send mail to</p>
+                  <a href="mailto:info@energymart.pk" className="mt-0.5 inline-block hover:text-[#FF7A00] transition-colors">
+                    info@energymart.pk
+                  </a>
+                </div>
               </li>
             </ul>
           </div>

@@ -72,7 +72,7 @@ export default function AdminCustomers() {
                   <tr key={customer.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-indigo-500/10 rounded-full flex items-center justify-center text-indigo-500 font-bold">
+                        <div className="w-10 h-10 bg-[#FF7A00]/10 rounded-full flex items-center justify-center text-[#FF7A00] font-bold">
                           {customer.name?.charAt(0) || 'C'}
                         </div>
                         <div>

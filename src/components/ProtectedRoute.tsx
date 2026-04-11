@@ -1,8 +1,15 @@
-import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import type { UserRole } from "../data/dummyAuth";
 
-export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+type ProtectedRouteProps = {
+  children: React.ReactNode;
+  /** If set, only these roles may access the route. */
+  allowedRoles?: UserRole[];
+};
+
+export default function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
+  const { isAuthenticated, isLoading, user } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -15,6 +22,13 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
 
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (allowedRoles?.length && user && !allowedRoles.includes(user.role)) {
+    if (user.role === "user") {
+      return <Navigate to="/profile" replace />;
+    }
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;

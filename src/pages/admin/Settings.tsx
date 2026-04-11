@@ -27,8 +27,8 @@ export default function AdminSettings() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-w-0">
         <AdminPanel className="lg:col-span-2">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center">
-              <Store className="w-5 h-5 text-indigo-500" />
+            <div className="w-10 h-10 rounded-full bg-[#FF7A00]/10 flex items-center justify-center">
+              <Store className="w-5 h-5 text-[#FF7A00]" />
             </div>
             <h2 className="text-xl font-bold text-slate-900">Store</h2>
           </div>
@@ -39,7 +39,7 @@ export default function AdminSettings() {
               <input
                 value={settings.storeName}
                 onChange={(e) => setSettings((s) => ({ ...s, storeName: e.target.value }))}
-                className="w-full px-4 py-3 border border-gray-200 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-gray-200"
+                className="w-full px-4 py-3 border border-gray-200 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#FF7A00]/35"
               />
             </div>
             <div>
@@ -47,7 +47,7 @@ export default function AdminSettings() {
               <input
                 value={settings.supportEmail}
                 onChange={(e) => setSettings((s) => ({ ...s, supportEmail: e.target.value }))}
-                className="w-full px-4 py-3 border border-gray-200 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-gray-200"
+                className="w-full px-4 py-3 border border-gray-200 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#FF7A00]/35"
               />
             </div>
           </div>
@@ -56,7 +56,7 @@ export default function AdminSettings() {
             <button
               onClick={onSave}
               disabled={saving}
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-[10px] bg-indigo-500 text-white font-semibold hover:bg-indigo-600 disabled:opacity-60"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-[10px] bg-[#FF7A00] text-white font-semibold hover:bg-[#e86e00] disabled:opacity-60"
             >
               <Save className="w-5 h-5" />
               {saving ? "Saving..." : "Save changes"}
@@ -66,8 +66,8 @@ export default function AdminSettings() {
 
         <AdminPanel className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center">
-              <Bell className="w-5 h-5 text-indigo-500" />
+            <div className="w-10 h-10 rounded-full bg-[#FF7A00]/10 flex items-center justify-center">
+              <Bell className="w-5 h-5 text-[#FF7A00]" />
             </div>
             <h2 className="text-xl font-bold text-slate-900">Notifications</h2>
           </div>
@@ -79,7 +79,7 @@ export default function AdminSettings() {
               onChange={(e) =>
                 setSettings((s) => ({ ...s, orderNotifications: e.target.checked }))
               }
-              className="mt-1 w-4 h-4 accent-indigo-500"
+              className="mt-1 w-4 h-4 accent-[#FF7A00]"
             />
             <div>
               <p className="font-semibold text-slate-900">Order notifications</p>
@@ -94,7 +94,7 @@ export default function AdminSettings() {
               onChange={(e) =>
                 setSettings((s) => ({ ...s, lowStockAlerts: e.target.checked }))
               }
-              className="mt-1 w-4 h-4 accent-indigo-500"
+              className="mt-1 w-4 h-4 accent-[#FF7A00]"
             />
             <div>
               <p className="font-semibold text-slate-900">Low stock alerts</p>
@@ -104,7 +104,7 @@ export default function AdminSettings() {
 
           <div className="pt-2 border-t">
             <div className="flex items-center gap-3 mb-3">
-              <Shield className="w-5 h-5 text-indigo-500" />
+              <Shield className="w-5 h-5 text-[#FF7A00]" />
               <p className="font-bold text-slate-900">Security</p>
             </div>
             <p className="text-sm text-gray-600">

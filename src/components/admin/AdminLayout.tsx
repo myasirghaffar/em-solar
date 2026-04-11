@@ -39,7 +39,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       >
         <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
           <Link to="/admin" className="flex items-center space-x-2">
-            <div className="w-9 h-9 rounded-[10px] bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-[10px] bg-[#FF7A00]/10 text-[#FF7A00] flex items-center justify-center">
               <LayoutDashboard className="w-5 h-5" />
             </div>
             <span className="text-lg font-bold">Admin Dashboard</span>
@@ -62,7 +62,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 to={item.path}
                 className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${
                   isActive
-                    ? "bg-indigo-500 text-white"
+                    ? "bg-[#FF7A00] text-white"
                     : "text-gray-500 hover:bg-gray-50 hover:text-slate-900"
                 }`}
               >
@@ -108,7 +108,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <span className="text-sm text-gray-600 hidden sm:inline">{user?.email}</span>
             <Link
               to="/admin/profile"
-              className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-white font-bold hover:bg-indigo-600 transition-colors"
+              className="w-10 h-10 bg-[#FF7A00] rounded-full flex items-center justify-center text-white font-bold hover:bg-[#e86e00] transition-colors"
               title="Profile"
             >
               <span className="sr-only">Profile</span>

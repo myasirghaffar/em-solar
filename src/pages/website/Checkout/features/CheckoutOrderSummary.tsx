@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { useCart } from "../../../../context/CartContext";
 
 interface CartItem {
   id: number;
@@ -17,6 +17,7 @@ interface CheckoutOrderSummaryProps {
 }
 
 export function CheckoutOrderSummary({ cartItems, subtotal, shipping, total, loading }: CheckoutOrderSummaryProps) {
+  const { openCart } = useCart();
   return (
     <div>
       <div className="bg-white rounded-xl shadow-md p-6 sticky top-24">
@@ -50,7 +51,13 @@ export function CheckoutOrderSummary({ cartItems, subtotal, shipping, total, loa
         <button type="submit" disabled={loading} className="w-full mt-6 bg-[#FF7A00] text-white py-3 rounded-lg font-semibold hover:bg-[#FF7A00]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
           {loading ? "Processing..." : "Place Order"}
         </button>
-        <Link to="/cart" className="block mt-4 text-center text-[#0B2A4A] hover:text-[#FF7A00] transition-colors">← Back to Cart</Link>
+        <button
+          type="button"
+          onClick={openCart}
+          className="block w-full mt-4 text-center text-sm text-[#0B2A4A] hover:text-[#FF7A00] transition-colors"
+        >
+          View cart
+        </button>
       </div>
     </div>
   );

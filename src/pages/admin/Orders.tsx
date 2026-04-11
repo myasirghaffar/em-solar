@@ -1,6 +1,18 @@
 import { useEffect, useState } from 'react';
 import { Search, Eye } from 'lucide-react';
 import { AdminPageHeader, AdminPanel, AdminTableShell, StatusPill } from '../../components/admin/AdminUI';
+import Select from '../../components/ui/Select';
+
+const ORDER_STATUS_FILTER_OPTIONS = [
+  { value: '', label: 'All Status' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'processing', label: 'Processing' },
+  { value: 'shipped', label: 'Shipped' },
+  { value: 'delivered', label: 'Delivered' },
+  { value: 'cancelled', label: 'Cancelled' },
+];
+
+const ORDER_STATUS_ROW_OPTIONS = ORDER_STATUS_FILTER_OPTIONS.filter((o) => o.value !== '');
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState<any[]>([]);
@@ -46,7 +58,7 @@ export default function AdminOrders() {
   const statusColors: Record<string, string> = {
     pending: 'bg-yellow-100 text-yellow-800',
     processing: 'bg-blue-100 text-blue-800',
-    shipped: 'bg-purple-100 text-purple-800',
+    shipped: 'bg-[#FF7A00]/15 text-[#b45309]',
     delivered: 'bg-green-100 text-green-800',
     cancelled: 'bg-red-100 text-red-800'
   };
@@ -65,21 +77,17 @@ export default function AdminOrders() {
             placeholder="Search orders..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full h-11 pl-10 pr-4 border border-gray-200 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-gray-200"
+            className="w-full h-11 pl-10 pr-4 border border-gray-200 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#FF7A00]/35"
           />
         </div>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2 border border-gray-200 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-gray-200"
-        >
-          <option value="">All Status</option>
-          <option value="pending">Pending</option>
-          <option value="processing">Processing</option>
-          <option value="shipped">Shipped</option>
-          <option value="delivered">Delivered</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
+        <div className="w-full sm:w-52 shrink-0">
+          <Select
+            options={ORDER_STATUS_FILTER_OPTIONS}
+            value={statusFilter}
+            onChange={setStatusFilter}
+            placeholder="All Status"
+          />
+        </div>
       </AdminPanel>
 
       {/* Orders Table */}
@@ -120,7 +128,7 @@ export default function AdminOrders() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                       {Array.isArray(order.products) ? order.products.length : 0} items
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-indigo-600">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-[#FF7A00]">
                       Rs. {order.total_price?.toLocaleString() || 0}
                     </td>
                     <td className="px-6 py-4">
@@ -129,18 +137,15 @@ export default function AdminOrders() {
                         variant={order.payment_status === 'paid' ? 'success' : 'warning'}
                       />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <select
+                    <td className="relative z-20 min-w-[9.5rem] overflow-visible px-6 py-4 whitespace-nowrap">
+                      <Select
+                        size="sm"
+                        dropdownPosition="above"
+                        options={ORDER_STATUS_ROW_OPTIONS}
                         value={order.order_status || 'pending'}
-                        onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                        className={`px-2 py-1 text-xs font-medium rounded-full border-0 ${statusColors[order.order_status || 'pending']}`}
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="processing">Processing</option>
-                        <option value="shipped">Shipped</option>
-                        <option value="delivered">Delivered</option>
-                        <option value="cancelled">Cancelled</option>
-                      </select>
+                        onChange={(v) => updateOrderStatus(order.id, v)}
+                        triggerClassName={`rounded-full border-0 shadow-none ring-0 ${statusColors[order.order_status || 'pending']}`}
+                      />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(order.created_at).toLocaleDateString()}
@@ -148,7 +153,7 @@ export default function AdminOrders() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
                         onClick={() => setSelectedOrder(order)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        className="p-2 text-[#FF7A00] hover:bg-[#FF7A00]/10 rounded-lg transition-colors"
                       >
                         <Eye className="w-4 h-4" />
                       </button>
@@ -216,7 +221,7 @@ export default function AdminOrders() {
                         <p className="font-medium">{item.name}</p>
                         <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
                       </div>
-                      <p className="font-semibold text-indigo-600">Rs. {(item.price * item.quantity).toLocaleString()}</p>
+                      <p className="font-semibold text-[#FF7A00]">Rs. {(item.price * item.quantity).toLocaleString()}</p>
                     </div>
                   ))}
                 </div>

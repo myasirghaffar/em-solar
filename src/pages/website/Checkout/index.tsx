@@ -25,7 +25,9 @@ export default function Checkout() {
     e.preventDefault();
     setLoading(true);
     try {
-      await fetch("/api/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...formData, products: cartItems, total_price: total }) });
+      const { createOrder } = await import("../../../lib/api");
+      const ok = await createOrder({ ...formData, products: cartItems, total_price: total });
+      if (!ok) throw new Error("createOrder failed");
       clearCart();
       navigate("/");
       alert("Order placed successfully!");

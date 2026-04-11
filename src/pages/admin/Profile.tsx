@@ -7,22 +7,22 @@ export default function AdminProfile() {
   const { user } = useAuth();
 
   const initials = useMemo(() => {
-    const email = user?.email || "Admin";
-    return email.charAt(0).toUpperCase();
-  }, [user?.email]);
+    const basis = user?.name || user?.email || "A";
+    return basis.charAt(0).toUpperCase();
+  }, [user?.email, user?.name]);
 
   return (
     <div className="space-y-6 min-w-0 w-full max-w-full">
       <AdminPageHeader title="Profile" subtitle="Your admin account details." />
 
       <AdminPanel className="p-0 overflow-hidden">
-        <div className="p-6 bg-gradient-to-r from-indigo-500 to-violet-500 text-white">
+        <div className="p-6 bg-gradient-to-r from-[#FF7A00] to-[#ff9429] text-white">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
               <span className="text-2xl font-bold">{initials}</span>
             </div>
             <div>
-              <p className="text-lg font-semibold">Administrator</p>
+              <p className="text-lg font-semibold">{user?.name || "Administrator"}</p>
               <p className="text-white/80">{user?.email}</p>
             </div>
           </div>
@@ -31,7 +31,7 @@ export default function AdminProfile() {
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="rounded-xl border border-gray-100 p-5">
             <div className="flex items-center gap-3 mb-3">
-              <UserCircle2 className="w-5 h-5 text-indigo-500" />
+              <UserCircle2 className="w-5 h-5 text-[#FF7A00]" />
               <p className="font-bold text-slate-900">Role</p>
             </div>
             <p className="text-gray-700">Admin</p>
@@ -40,7 +40,7 @@ export default function AdminProfile() {
 
           <div className="rounded-xl border border-gray-100 p-5">
             <div className="flex items-center gap-3 mb-3">
-              <Mail className="w-5 h-5 text-indigo-500" />
+              <Mail className="w-5 h-5 text-[#FF7A00]" />
               <p className="font-bold text-slate-900">Email</p>
             </div>
             <p className="text-gray-700">{user?.email}</p>
@@ -49,7 +49,7 @@ export default function AdminProfile() {
 
           <div className="rounded-xl border border-gray-100 p-5 md:col-span-2">
             <div className="flex items-center gap-3 mb-3">
-              <ShieldCheck className="w-5 h-5 text-indigo-500" />
+              <ShieldCheck className="w-5 h-5 text-[#FF7A00]" />
               <p className="font-bold text-slate-900">Security</p>
             </div>
             <p className="text-gray-700">Session-based authentication</p>

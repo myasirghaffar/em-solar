@@ -1,4 +1,4 @@
-/** Shown on the storefront when the API/database returns no products. Admin uses raw fetch only. */
+/** Fallback catalog used by the storefront when merging with `fetchProducts()` (in-memory demo store). */
 export const DUMMY_PRODUCTS = [
   {
     id: 9901,

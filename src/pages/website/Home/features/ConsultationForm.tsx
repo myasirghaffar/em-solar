@@ -7,7 +7,8 @@ export function ConsultationForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await fetch("/api/consultations", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(formData) });
+      const { createConsultation } = await import("../../../../lib/api");
+      await createConsultation(formData);
       setSubmitted(true);
       setFormData({ name: "", phone: "", city: "", monthly_bill: "", message: "" });
       setTimeout(() => setSubmitted(false), 3000);

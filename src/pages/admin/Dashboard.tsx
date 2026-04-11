@@ -115,13 +115,15 @@ export default function AdminDashboard() {
               <YAxis stroke="#666" />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#111827',
-                  border: 'none',
-                  borderRadius: '8px'
+                  backgroundColor: '#ffffff',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 14px rgba(15, 23, 42, 0.08)',
                 }}
-                itemStyle={{ color: '#fff' }}
+                itemStyle={{ color: '#0f172a' }}
+                labelStyle={{ color: '#64748b' }}
               />
-              <Area type="monotone" dataKey="sales" stroke="#6366f1" fill="#6366f1" fillOpacity={0.3} />
+              <Area type="monotone" dataKey="sales" stroke="#FF7A00" fill="#FF7A00" fillOpacity={0.28} />
             </AreaChart>
           </ResponsiveContainer>
         </AdminPanel>
@@ -134,13 +136,15 @@ export default function AdminDashboard() {
               <YAxis stroke="#666" />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#111827',
-                  border: 'none',
-                  borderRadius: '8px'
+                  backgroundColor: '#ffffff',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 14px rgba(15, 23, 42, 0.08)',
                 }}
-                itemStyle={{ color: '#fff' }}
+                itemStyle={{ color: '#0f172a' }}
+                labelStyle={{ color: '#64748b' }}
               />
-              <Bar dataKey="orders" fill="#6366f1" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="orders" fill="#FF7A00" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </AdminPanel>
@@ -167,7 +171,7 @@ export default function AdminDashboard() {
                 <tr key={order.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">#{order.id}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{order.customer_name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-indigo-600">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-[#FF7A00]">
                     Rs. {order.total_price?.toLocaleString() || 0}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -206,8 +210,8 @@ function StatCard({ title, value, icon: Icon, trend, trendUp }: any) {
   return (
     <div className="min-w-0 overflow-hidden bg-white rounded-2xl border border-gray-200/60 p-[17px]">
       <div className="flex items-center justify-between mb-4">
-        <div className="w-10 h-10 rounded-[10px] bg-indigo-500/10 flex items-center justify-center">
-          <Icon className="w-5 h-5 text-indigo-500" />
+        <div className="w-10 h-10 rounded-[10px] bg-[#FF7A00]/10 flex items-center justify-center">
+          <Icon className="w-5 h-5 text-[#FF7A00]" />
         </div>
         <div className={`flex items-center space-x-1 text-xs ${
           trendUp ? 'text-green-600' : 'text-red-600'

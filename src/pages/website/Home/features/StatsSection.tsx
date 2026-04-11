@@ -43,16 +43,15 @@ export function StatsSection({
         <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] items-center gap-12 lg:gap-6">
           <div className="scroll-reveal" data-aos="fade-right">
             <h2 className="text-3xl sm:text-4xl font-bold uppercase">
-              About Us
+              Company Statistics
             </h2>
             <h4 className="mt-5 text-2xl sm:text-3xl font-medium leading-[1.25] text-white/90 max-w-2xl">
-              EnergyMart was founded in <b className="text-[#4da3ff]">2018</b>,
-              and has delivered trusted solar systems across Pakistan for years.
+              We are a leading solar energy e-commerce platform, empowering
+              homes and businesses with clean, renewable energy solutions.
             </h4>
             <p className="mt-4 text-white/85 text-base sm:text-lg max-w-2xl">
-              As one of Pakistan's fast-growing solar suppliers, we provide
-              complete solar solutions including panels, inverters, batteries,
-              and installation support.
+              Our mission is to make clean, renewable energy accessible to
+              everyone.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -73,7 +72,11 @@ export function StatsSection({
             </div>
           </div>
 
-          <div className="scroll-reveal relative flex w-full justify-center lg:justify-end [perspective:1000px]" data-aos="fade-left" data-aos-delay="100">
+          <div
+            className="scroll-reveal relative flex w-full justify-center lg:justify-end [perspective:1000px]"
+            data-aos="fade-left"
+            data-aos-delay="100"
+          >
             <div className="group w-full max-w-[min(100%,380px)] sm:max-w-[460px] [transform-style:preserve-3d] transition-transform duration-500 ease-out hover:[transform:rotateX(4deg)_rotateY(-7deg)]">
               <div
                 className="grid aspect-square grid-cols-2 gap-3 sm:gap-4 rounded-3xl border border-white/25 bg-gradient-to-br from-white/10 to-white/[0.03] p-3 sm:p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_0_48px_rgba(58,118,255,0.22)] backdrop-blur-2xl"

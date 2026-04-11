@@ -1,60 +1,74 @@
-import { Zap, Shield, Award, Truck } from "lucide-react";
-
 const features = [
   {
-    icon: Zap,
-    title: "High Efficiency",
-    description: "Premium solar products with up to 22% efficiency",
+    index: "01",
+    title: "Wholesale Pricing",
+    description:
+      "Direct from source pricing that maximizes your margins and keeps your projects competitive.",
   },
   {
-    icon: Shield,
-    title: "Certified Equipment",
-    description: "All products are certified and warranty-backed",
+    index: "02",
+    title: "Original Stock with Warranty",
+    description:
+      "100% genuine products backed by manufacturer warranties you can trust.",
   },
   {
-    icon: Award,
-    title: "Warranty Support",
-    description: "Comprehensive warranty on all products",
+    index: "03",
+    title: "Installer & EPC Focused",
+    description:
+      "Built specifically for professionals who demand reliability and support at every stage.",
   },
   {
-    icon: Truck,
-    title: "Fast Delivery",
-    description: "Quick delivery across Pakistan",
+    index: "04",
+    title: "Fast Delivery Across Pakistan",
+    description:
+      "Strategic logistics ensuring your projects stay on schedule, wherever you are.",
   },
 ];
 
 export function WhyChooseUs() {
   return (
-    <section id="about" className="py-40 bg-gray-50">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12 scroll-reveal" data-aos="fade-up">
-          <h2 className="text-3xl md:text-4xl font-bold text-[#0B2A4A] mb-4">
-            Why Choose EnergyMart?
+    <section
+      id="why-energy-mart"
+      className="scroll-reveal bg-[#f5f6f8] py-16 md:py-24"
+      aria-labelledby="why-energy-mart-heading"
+    >
+      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-12 text-center md:mb-14" data-aos="fade-up">
+          <h2
+            id="why-energy-mart-heading"
+            className="text-3xl font-bold tracking-tight text-[#0B2A4A] md:text-4xl"
+          >
+            Why Choose EnergyMart.pk?
           </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            We're committed to providing the best solar solutions
+          <p className="mx-auto mt-3 max-w-2xl text-base text-gray-500 md:text-lg">
+            We are a leading solar energy e-commerce platform, empowering homes
+            and businesses with clean, renewable energy solutions.
           </p>
         </div>
-        <div className="why-choose-carousel flex overflow-x-auto snap-x snap-mandatory gap-4 pb-2 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-8 md:overflow-visible md:snap-none">
-          {features.map((feature, index) => {
-            const Icon = feature.icon;
-            return (
-              <div
-                key={feature.title}
-                className="scroll-reveal text-center snap-start min-w-[78%] sm:min-w-[58%] md:min-w-0 bg-white/60 rounded-2xl px-5 py-6 md:bg-transparent md:rounded-none md:px-0 md:py-0"
-                data-aos="fade-up"
-                data-aos-delay={index * 80}
-              >
-                <div className="w-20 h-20 bg-[#FF7A00]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Icon className="w-10 h-10 text-[#FF7A00]" />
-                </div>
-                <h3 className="text-xl font-semibold text-[#0B2A4A] mb-2">
-                  {feature.title}
-                </h3>
-                <p className="text-gray-600">{feature.description}</p>
-              </div>
-            );
-          })}
+
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
+          {features.map((feature, i) => (
+            <article
+              key={feature.index}
+              data-aos="fade-up"
+              data-aos-delay={i * 80}
+              className="group relative flex flex-col rounded-2xl border border-gray-200/90 bg-white p-6 shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[#FF7A00] hover:shadow-[0_16px_48px_rgba(11,42,74,0.12)] focus-within:ring-2 focus-within:ring-[#FF7A00]/30 focus-within:ring-offset-2 md:p-7"
+            >
+              <span className="text-sm font-semibold tabular-nums text-[#FF7A00] transition-colors duration-300 group-hover:text-[#0B2A4A]">
+                {feature.index}
+              </span>
+              <span
+                className="mt-3 block h-1 w-10 rounded-full bg-[#FF7A00] transition-all duration-300 group-hover:w-14 group-hover:bg-[#0B2A4A]"
+                aria-hidden
+              />
+              <h3 className="mt-5 text-lg font-bold leading-snug text-[#0B2A4A] md:text-xl">
+                {feature.title}
+              </h3>
+              <p className="mt-3 flex-1 text-sm leading-relaxed text-gray-600 md:text-[15px]">
+                {feature.description}
+              </p>
+            </article>
+          ))}
         </div>
       </div>
     </section>

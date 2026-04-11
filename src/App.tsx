@@ -8,8 +8,8 @@ import About from './pages/website/About';
 import Contact from './pages/website/Contact';
 import Shop from './pages/website/Shop';
 import ProductDetail from './pages/website/ProductDetail';
-import Cart from './pages/website/Cart';
 import Checkout from './pages/website/Checkout';
+import CartDrawer from './components/store/CartDrawer';
 import Login from './pages/Login';
 import AdminLayout from './components/admin/AdminLayout';
 import AdminDashboard from './pages/admin/Dashboard';
@@ -19,9 +19,11 @@ import AdminCustomers from './pages/admin/Customers';
 import AdminConsultations from './pages/admin/Consultations';
 import AdminSettings from './pages/admin/Settings';
 import AdminProfile from './pages/admin/Profile';
+import CustomerAccount from './pages/website/CustomerAccount';
 import ProtectedRoute from './components/ProtectedRoute';
-import { CartProvider } from './context/CartContext';
+import { CartProvider, type StoreDrawerTab } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
+import { FavoritesProvider } from './context/FavoritesContext';
 
 interface CartItem {
   id: number;
@@ -33,6 +35,19 @@ interface CartItem {
 
 function App() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [drawerTab, setDrawerTab] = useState<StoreDrawerTab>('cart');
+
+  const openCart = () => {
+    setDrawerTab('cart');
+    setIsCartOpen(true);
+  };
+  const openFavoritesDrawer = () => {
+    setDrawerTab('favorites');
+    setIsCartOpen(true);
+  };
+  const closeCart = () => setIsCartOpen(false);
+  const toggleCart = () => setIsCartOpen((v) => !v);
 
   useEffect(() => {
     const savedCart = localStorage.getItem('energymart-cart');
@@ -75,33 +90,51 @@ function App() {
 
   return (
     <AuthProvider>
-      <CartProvider value={{ cartItems, addToCart, updateCartQuantity, removeFromCart, clearCart }}>
-        <BrowserRouter>
-          <ScrollToTop />
-          <Routes>
-            {/* Store Routes */}
-            <Route path="/" element={<><Header cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)} /><Home /><Footer /></>} />
-            <Route path="/about" element={<><Header cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)} /><About /><Footer /></>} />
-            <Route path="/contact" element={<><Header cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)} /><Contact /><Footer /></>} />
-            <Route path="/shop" element={<><Header cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)} /><Shop /><Footer /></>} />
-            <Route path="/product/:id" element={<><Header cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)} /><ProductDetail /><Footer /></>} />
-            <Route path="/cart" element={<><Header cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)} /><Cart /><Footer /></>} />
-            <Route path="/checkout" element={<><Header cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)} /><Checkout /><Footer /></>} />
-            
-            {/* Login */}
-            <Route path="/login" element={<Login />} />
-            
-            {/* Admin Routes (Protected) */}
-            <Route path="/admin" element={<ProtectedRoute><AdminLayout><AdminDashboard /></AdminLayout></ProtectedRoute>} />
-            <Route path="/admin/products" element={<ProtectedRoute><AdminLayout><AdminProducts /></AdminLayout></ProtectedRoute>} />
-            <Route path="/admin/orders" element={<ProtectedRoute><AdminLayout><AdminOrders /></AdminLayout></ProtectedRoute>} />
-            <Route path="/admin/customers" element={<ProtectedRoute><AdminLayout><AdminCustomers /></AdminLayout></ProtectedRoute>} />
-            <Route path="/admin/consultations" element={<ProtectedRoute><AdminLayout><AdminConsultations /></AdminLayout></ProtectedRoute>} />
-            <Route path="/admin/settings" element={<ProtectedRoute><AdminLayout><AdminSettings /></AdminLayout></ProtectedRoute>} />
-            <Route path="/admin/profile" element={<ProtectedRoute><AdminLayout><AdminProfile /></AdminLayout></ProtectedRoute>} />
-          </Routes>
-        </BrowserRouter>
-      </CartProvider>
+      <FavoritesProvider>
+        <CartProvider
+          value={{
+            cartItems,
+            addToCart,
+            updateCartQuantity,
+            removeFromCart,
+            clearCart,
+            isCartOpen,
+            drawerTab,
+            setDrawerTab,
+            openCart,
+            openFavoritesDrawer,
+            closeCart,
+            toggleCart,
+          }}
+        >
+          <BrowserRouter>
+            <ScrollToTop />
+            <CartDrawer />
+            <Routes>
+              {/* Store Routes */}
+              <Route path="/" element={<><Header cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)} /><Home /><Footer /></>} />
+              <Route path="/about" element={<><Header cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)} /><About /><Footer /></>} />
+              <Route path="/contact" element={<><Header cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)} /><Contact /><Footer /></>} />
+              <Route path="/shop" element={<><Header cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)} /><Shop /><Footer /></>} />
+              <Route path="/product/:id" element={<><Header cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)} /><ProductDetail /><Footer /></>} />
+              <Route path="/checkout" element={<><Header cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)} /><Checkout /><Footer /></>} />
+              <Route path="/profile" element={<><Header cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)} /><ProtectedRoute><CustomerAccount /></ProtectedRoute><Footer /></>} />
+
+              {/* Login */}
+              <Route path="/login" element={<Login />} />
+
+              {/* Admin Routes (admin only) */}
+              <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><AdminDashboard /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/products" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><AdminProducts /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/orders" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><AdminOrders /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/customers" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><AdminCustomers /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/consultations" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><AdminConsultations /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/settings" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><AdminSettings /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/profile" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><AdminProfile /></AdminLayout></ProtectedRoute>} />
+            </Routes>
+          </BrowserRouter>
+        </CartProvider>
+      </FavoritesProvider>
     </AuthProvider>
   );
 }

@@ -1,4 +1,5 @@
-import { HeroSection, OurStorySection, MissionVisionSection, WhyChooseUsSection, CTASection } from "./features";
+import { WhyChooseUs } from "../Home/features/WhyChooseUs";
+import { HeroSection, OurStorySection, MissionVisionSection, CTASection } from "./features";
 
 export default function About() {
   return (
@@ -6,7 +7,7 @@ export default function About() {
       <HeroSection />
       <OurStorySection />
       <MissionVisionSection />
-      <WhyChooseUsSection />
+      <WhyChooseUs />
       <CTASection />
     </div>
   );

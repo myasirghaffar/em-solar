@@ -2,22 +2,25 @@ import { Target, Sun } from "lucide-react";
 
 export function MissionVisionSection() {
   return (
-    <section className="py-20 bg-white">
+    <section className="bg-white py-20">
       <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12">
-          <div>
-            <div className="bg-[#0B2A4A] text-white rounded-2xl p-8">
-              <Target className="w-12 h-12 text-[#FF7A00] mb-4" />
-              <h3 className="text-2xl font-bold mb-4">Our Mission</h3>
-              <p className="text-gray-300 leading-relaxed">To accelerate Pakistan's transition to clean energy by providing high-quality solar products at competitive prices, backed by expert consultation and reliable after-sales support.</p>
-            </div>
+        <div className="mx-auto grid max-w-4xl grid-cols-1 gap-12 md:grid-cols-2 md:items-stretch">
+          <div className="flex h-full min-h-0 flex-col rounded-2xl bg-[#0B2A4A] p-8 text-white">
+            <Target className="mb-4 h-12 w-12 shrink-0 text-[#FF7A00]" />
+            <h3 className="mb-4 text-2xl font-bold">Our Mission</h3>
+            <p className="leading-relaxed text-gray-300">
+              To accelerate Pakistan's transition to clean energy by providing high-quality solar
+              products at competitive prices, backed by expert consultation and reliable after-sales
+              support.
+            </p>
           </div>
-          <div>
-            <div className="bg-[#FF7A00] text-white rounded-2xl p-8">
-              <Sun className="w-12 h-12 text-white mb-4" />
-              <h3 className="text-2xl font-bold mb-4">Our Vision</h3>
-              <p className="leading-relaxed">To become Pakistan's most trusted and innovative solar energy platform, leading the way in renewable energy solutions.</p>
-            </div>
+          <div className="flex h-full min-h-0 flex-col rounded-2xl bg-[#FF7A00] p-8 text-white">
+            <Sun className="mb-4 h-12 w-12 shrink-0 text-white" />
+            <h3 className="mb-4 text-2xl font-bold">Our Vision</h3>
+            <p className="leading-relaxed">
+              To become Pakistan's most trusted and innovative solar energy platform, leading the way
+              in renewable energy solutions.
+            </p>
           </div>
         </div>
       </div>

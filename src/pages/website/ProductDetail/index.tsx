@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { useCart } from "../../../context/CartContext";
-import { ProductInfo, ProductImages, SpecificationsTable, RelatedProducts } from "./features";
+import { ProductInfo, ProductImages, ProductContentTabs, RelatedProducts } from "./features";
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -68,7 +68,6 @@ export default function ProductDetail() {
   }
 
   const images = product.images?.length ? product.images : ["/placeholder-product.jpg"];
-  const specs = (product.specifications || {}) as Record<string, unknown>;
 
   const getImageUrl = (index: number) => {
     if (imageError || !product.images?.[index]) return "/placeholder-product.jpg";
@@ -77,7 +76,7 @@ export default function ProductDetail() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b">
+      <div className="border-b border-white bg-white">
         <div className="container mx-auto px-4 py-4">
           <Link to="/shop" className="inline-flex items-center text-gray-600 hover:text-[#FF7A00] transition-colors">
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -90,7 +89,7 @@ export default function ProductDetail() {
           <ProductImages product={product} images={images} selectedImage={selectedImage} setSelectedImage={setSelectedImage} getImageUrl={getImageUrl} onImageError={() => setImageError(true)} />
           <ProductInfo product={product} quantity={quantity} setQuantity={setQuantity} onAddToCart={handleAddToCart} />
         </div>
-        <SpecificationsTable specs={specs} />
+        <ProductContentTabs product={product} />
         <RelatedProducts products={relatedProducts} />
       </div>
     </div>

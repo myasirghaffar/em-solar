@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import {
   HeroSection,
   AboutSection,
@@ -14,6 +15,7 @@ import {
 } from "./features";
 
 export default function Home() {
+  const { pathname, hash } = useLocation();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -43,6 +45,18 @@ export default function Home() {
       }
     })();
   }, []);
+
+  useEffect(() => {
+    if (pathname !== "/" || hash !== "#categories") return;
+    const scroll = () =>
+      document.getElementById("categories")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    scroll();
+    const t = window.setTimeout(scroll, 80);
+    return () => window.clearTimeout(t);
+  }, [pathname, hash]);
 
   return (
     <>

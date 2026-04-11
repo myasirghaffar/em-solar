@@ -1,6 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Search, Phone, MapPin, FileText, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { AdminPageHeader, AdminPanel, AdminTableShell } from '../../components/admin/AdminUI';
+import Select from '../../components/ui/Select';
+
+const CONSULTATION_STATUS_FILTER_OPTIONS = [
+  { value: '', label: 'All Status' },
+  { value: 'new', label: 'New' },
+  { value: 'contacted', label: 'Contacted' },
+  { value: 'converted', label: 'Converted' },
+  { value: 'closed', label: 'Closed' },
+];
+
+const CONSULTATION_STATUS_ROW_OPTIONS = CONSULTATION_STATUS_FILTER_OPTIONS.filter((o) => o.value !== '');
 
 export default function AdminConsultations() {
   const [consultations, setConsultations] = useState<any[]>([]);
@@ -44,7 +55,7 @@ export default function AdminConsultations() {
   });
 
   const statusConfig: Record<string, { icon: any; color: string; bgColor: string }> = {
-    new: { icon: Clock, color: 'text-blue-600', bgColor: 'bg-blue-100' },
+    new: { icon: Clock, color: 'text-[#FF7A00]', bgColor: 'bg-[#FF7A00]/12' },
     contacted: { icon: Phone, color: 'text-yellow-600', bgColor: 'bg-yellow-100' },
     converted: { icon: CheckCircle, color: 'text-green-600', bgColor: 'bg-green-100' },
     closed: { icon: XCircle, color: 'text-gray-600', bgColor: 'bg-gray-100' }
@@ -75,20 +86,17 @@ export default function AdminConsultations() {
             placeholder="Search leads..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full h-11 pl-10 pr-4 border border-gray-200 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-gray-200"
+            className="w-full h-11 pl-10 pr-4 border border-gray-200 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#FF7A00]/35"
           />
         </div>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2 border border-gray-200 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-gray-200"
-        >
-          <option value="">All Status</option>
-          <option value="new">New</option>
-          <option value="contacted">Contacted</option>
-          <option value="converted">Converted</option>
-          <option value="closed">Closed</option>
-        </select>
+        <div className="w-full sm:w-48 shrink-0">
+          <Select
+            options={CONSULTATION_STATUS_FILTER_OPTIONS}
+            value={statusFilter}
+            onChange={setStatusFilter}
+            placeholder="All Status"
+          />
+        </div>
       </AdminPanel>
 
       {/* Consultations Table */}
@@ -150,17 +158,15 @@ export default function AdminConsultations() {
                           <p className="text-sm text-gray-700 max-w-xs line-clamp-2">{consultation.message}</p>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <select
+                      <td className="relative z-20 min-w-[8.5rem] overflow-visible px-6 py-4 whitespace-nowrap">
+                        <Select
+                          size="sm"
+                          dropdownPosition="above"
+                          options={CONSULTATION_STATUS_ROW_OPTIONS}
                           value={consultation.status || 'new'}
-                          onChange={(e) => updateStatus(consultation.id, e.target.value)}
-                          className={`px-2 py-1 text-xs font-medium rounded-full border-0 ${config.bgColor} ${config.color}`}
-                        >
-                          <option value="new">New</option>
-                          <option value="contacted">Contacted</option>
-                          <option value="converted">Converted</option>
-                          <option value="closed">Closed</option>
-                        </select>
+                          onChange={(v) => updateStatus(consultation.id, v)}
+                          triggerClassName={`rounded-full border-0 shadow-none ring-0 ${config.bgColor} ${config.color}`}
+                        />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(consultation.created_at).toLocaleDateString()}
@@ -168,7 +174,7 @@ export default function AdminConsultations() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <a
                           href={`tel:${consultation.phone}`}
-                          className="inline-flex items-center space-x-1 px-3 py-1 bg-indigo-500 text-white text-sm rounded-[10px] hover:bg-indigo-600 transition-colors"
+                          className="inline-flex items-center space-x-1 px-3 py-1 bg-[#FF7A00] text-white text-sm rounded-[10px] hover:bg-[#e86e00] transition-colors"
                         >
                           <Phone className="w-4 h-4" />
                           <span>Call</span>

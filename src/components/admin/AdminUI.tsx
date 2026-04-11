@@ -57,7 +57,7 @@ export function StatusPill({
     warning: "bg-amber-100 text-amber-600",
     danger: "bg-rose-100 text-rose-600",
     info: "bg-blue-100 text-blue-600",
-    purple: "bg-violet-100 text-violet-600",
+    purple: "bg-[#FF7A00]/12 text-[#FF7A00]",
   };
 
   return (

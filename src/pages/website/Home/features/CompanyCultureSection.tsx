@@ -4,14 +4,12 @@ const tiles = [
   {
     title: "Mission",
     body: "Drive development with innovation and lead the future with green energy.",
-    image:
-      "https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?w=1200&q=80",
+    image: "/images/10005.jpg",
   },
   {
     title: "Vision",
     body: "To promote global energy transformation with technology.",
-    image:
-      "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80",
+    image: "/images/10006.jpg",
   },
   {
     title: "Core values",
@@ -21,8 +19,7 @@ const tiles = [
       "High quality",
       "High efficiency",
     ],
-    image:
-      "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=1200&q=80",
+    image: "/images/10004.jpg",
   },
 ] as const;
 
@@ -72,10 +69,10 @@ export function CompanyCultureSection() {
                   aria-hidden="true"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#050d18]/92 via-[#0B2A4A]/45 to-[#0B2A4A]/25" />
-                <div className="absolute inset-0 bg-white/[0.06] backdrop-blur-[3px]" />
+                <div className="absolute inset-0 bg-white/[0.04]" />
 
                 <div className="relative z-10 flex h-full min-h-[260px] flex-col justify-end p-5 md:min-h-[300px] md:p-6">
-                  <div className="rounded-xl border border-white/20 bg-white/[0.12] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] backdrop-blur-md md:px-5 md:py-4">
+                  <div className="rounded-xl border border-white/20 bg-white/[0.14] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] backdrop-blur-sm md:px-5 md:py-4">
                     <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-white/90 md:text-sm">
                       {tile.title}
                     </h3>
