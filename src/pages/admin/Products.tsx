@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ApiError } from "../../lib/api";
 import {
   Plus,
   Search,
@@ -157,6 +158,7 @@ function FormSection({
 export default function AdminProducts() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -167,21 +169,31 @@ export default function AdminProducts() {
 
   useScrollLock(showModal);
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  const fetchProducts = async () => {
+  const loadProducts = useCallback(async () => {
+    setLoadError(null);
+    setLoading(true);
     try {
-      const { fetchProducts: apiFetchProducts } = await import("../../lib/api");
+      const { fetchProductsAdmin: apiFetchProducts } = await import("../../lib/api");
       const data = await apiFetchProducts();
       setProducts(data);
     } catch (err) {
       console.error("Fetch error:", err);
+      const msg =
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Could not load products.";
+      setLoadError(msg);
+      setProducts([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    void loadProducts();
+  }, [loadProducts]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -199,7 +211,7 @@ export default function AdminProducts() {
       setUploadError(null);
       setAttachmentError(null);
       setFormData(emptyForm());
-      fetchProducts();
+      void loadProducts();
     } catch (err) {
       console.error("Error:", err);
     }
@@ -230,7 +242,7 @@ export default function AdminProducts() {
       try {
         const { deleteProduct } = await import("../../lib/api");
         await deleteProduct(id);
-        fetchProducts();
+        void loadProducts();
       } catch (err) {
         console.error("Error:", err);
       }
@@ -324,11 +336,18 @@ export default function AdminProducts() {
     }
   };
 
-  const filteredProducts = products.filter(
-    (p) =>
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.category.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const filteredProducts = useMemo(() => {
+    const q = searchTerm.toLowerCase();
+    return products.filter(
+      (p) =>
+        String(p?.name ?? "")
+          .toLowerCase()
+          .includes(q) ||
+        String(p?.category ?? "")
+          .toLowerCase()
+          .includes(q),
+    );
+  }, [products, searchTerm]);
 
   const {
     page,
@@ -409,6 +428,21 @@ export default function AdminProducts() {
           </button>
         }
       />
+
+      {loadError ? (
+        <AdminPanel className="border-rose-200 bg-rose-50/80">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm font-medium text-rose-800">{loadError}</p>
+            <button
+              type="button"
+              onClick={() => void loadProducts()}
+              className="inline-flex h-10 shrink-0 items-center justify-center rounded-[10px] bg-[#0B2A4A] px-4 text-sm font-bold text-white hover:bg-[#0a2440]"
+            >
+              Retry
+            </button>
+          </div>
+        </AdminPanel>
+      ) : null}
 
       <AdminPanel className="p-4">
         <div className="relative">

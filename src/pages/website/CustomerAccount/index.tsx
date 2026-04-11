@@ -53,11 +53,8 @@ export default function CustomerAccount() {
     (async () => {
       setLoading(true);
       try {
-        const { fetchMyOrders, fetchCustomerByEmail } = await import("../../../lib/api");
-        const [o, c] = await Promise.all([
-          fetchMyOrders(user.email),
-          fetchCustomerByEmail(user.email),
-        ]);
+        const { fetchMyOrders, fetchMyCustomer } = await import("../../../lib/api");
+        const [o, c] = await Promise.all([fetchMyOrders(user.email), fetchMyCustomer()]);
         if (!cancelled) {
           setOrders(o);
           setCustomerRow(c);
@@ -134,8 +131,8 @@ export default function CustomerAccount() {
             </nav>
             <button
               type="button"
-              onClick={() => {
-                logout();
+              onClick={async () => {
+                await logout();
                 navigate("/", { replace: true });
               }}
               className="mt-4 w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50"

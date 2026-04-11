@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Mail, Lock, Sun } from "lucide-react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth, isAuthApiError } from "../context/AuthContext";
 
 function pickPostLoginPath(
   role: "admin" | "user",
@@ -41,8 +41,18 @@ export default function Login() {
       } else {
         setError("Invalid email or password");
       }
-    } catch {
-      setError("Login failed. Please try again.");
+    } catch (err) {
+      if (isAuthApiError(err)) {
+        if (err.code === "AUTH_EMAIL_NOT_VERIFIED") {
+          setError(
+            "Please verify your email before signing in. You can request a new link below.",
+          );
+        } else {
+          setError(err.message);
+        }
+      } else {
+        setError("Login failed. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -60,23 +70,18 @@ export default function Login() {
           </Link>
           <h1 className="text-2xl font-bold">Sign in</h1>
           <p className="text-gray-300 mt-1">Admin dashboard or customer account</p>
-          <div className="text-gray-400 text-sm mt-3 space-y-2 rounded-lg bg-white/10 px-3 py-3">
-            <p>
-              <span className="text-white/80">Admin: </span>
-              <span className="text-white font-medium">admin@energymart.pk</span> /{" "}
-              <span className="text-white font-medium">admin123</span>
-            </p>
-            <p>
-              <span className="text-white/80">Customer: </span>
-              <span className="text-white font-medium">ali.khan@example.com</span> /{" "}
-              <span className="text-white font-medium">user123</span>
-            </p>
-          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
-            <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm">{error}</div>
+            <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm space-y-2">
+              <p>{error}</p>
+              {error.includes("verify your email") && (
+                <Link to="/resend-verification" className="font-medium text-[#FF7A00] hover:underline">
+                  Resend verification email
+                </Link>
+              )}
+            </div>
           )}
 
           <div>
@@ -105,8 +110,15 @@ export default function Login() {
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A00]"
                 placeholder="Enter password"
                 required
+                minLength={8}
               />
             </div>
+          </div>
+
+          <div className="flex justify-end">
+            <Link to="/forgot-password" className="text-sm text-[#FF7A00] hover:underline">
+              Forgot password?
+            </Link>
           </div>
 
           <button
@@ -116,6 +128,13 @@ export default function Login() {
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>
+
+          <p className="text-center text-gray-600 text-sm">
+            No account?{" "}
+            <Link to="/signup" className="text-[#FF7A00] font-medium hover:underline">
+              Sign up
+            </Link>
+          </p>
 
           <p className="text-center text-gray-600 text-sm">
             <Link to="/" className="text-[#FF7A00] hover:underline">

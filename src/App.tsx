@@ -12,6 +12,12 @@ import ProductDetail from './pages/website/ProductDetail';
 import Checkout from './pages/website/Checkout';
 import CartDrawer from './components/store/CartDrawer';
 import Login from './pages/Login';
+import Signup from './pages/Signup';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import VerifyEmail from './pages/VerifyEmail';
+import ResendVerification from './pages/ResendVerification';
+import RegisterAdmin from './pages/RegisterAdmin';
 import AdminLayout from './components/admin/AdminLayout';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminProducts from './pages/admin/Products';
@@ -122,8 +128,14 @@ function App() {
               <Route path="/checkout" element={<><Header cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)} /><Checkout /><Footer /></>} />
               <Route path="/profile" element={<><Header cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)} /><ProtectedRoute><CustomerAccount /></ProtectedRoute><Footer /></>} />
 
-              {/* Login */}
+              {/* Auth */}
               <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
+              <Route path="/resend-verification" element={<ResendVerification />} />
+              <Route path="/register-admin" element={<RegisterAdmin />} />
 
               {/* Admin Routes (admin only) */}
               <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><AdminDashboard /></AdminLayout></ProtectedRoute>} />

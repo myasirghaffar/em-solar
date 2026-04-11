@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Package,
@@ -19,6 +19,7 @@ import { useScrollLock } from "../../hooks/useScrollLock";
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, logout } = useAuth();
 
   useScrollLock(sidebarOpen);
@@ -85,7 +86,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <span>View Store</span>
           </Link>
           <button
-            onClick={() => logout()}
+            type="button"
+            onClick={async () => {
+              await logout();
+              navigate("/login", { replace: true });
+            }}
             className="flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-slate-900 transition-colors w-full text-left"
           >
             <LogOut className="w-5 h-5" />

@@ -17,14 +17,25 @@ export default function ProductDetail() {
   useEffect(() => {
     (async () => {
       try {
-        const { fetchProducts } = await import("../../../lib/api");
+        const { fetchProductById, fetchProducts } = await import("../../../lib/api");
         const { withStoreProductFallback } = await import(
           "../../../data/dummyProducts"
         );
-        const data = await fetchProducts();
-        const list = withStoreProductFallback(data);
         const pid = parseInt(id || "0", 10);
-        const found = list.find((p: any) => p.id === pid);
+        if (!Number.isFinite(pid) || pid < 1) {
+          setProduct(null);
+          return;
+        }
+        let found: any = null;
+        try {
+          found = await fetchProductById(pid);
+        } catch {
+          found = null;
+        }
+        const list = withStoreProductFallback(await fetchProducts());
+        if (!found) {
+          found = list.find((p: any) => p.id === pid) ?? null;
+        }
         setProduct(found);
         if (found) {
           const related = list

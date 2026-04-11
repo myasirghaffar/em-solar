@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { DollarSign, ShoppingCart, Users, Package, TrendingUp } from 'lucide-react';
+import { DollarSign, ShoppingCart, Users, Package, TrendingUp, AlertCircle } from 'lucide-react';
+import { ApiError } from '../../lib/api';
 import {
   AreaChart,
   Area,
@@ -22,36 +23,67 @@ const CHART_PERIOD_OPTIONS: { id: ChartPeriod; label: string; description: strin
   { id: 'yearly', label: 'Yearly', description: 'Last 6 calendar years' },
 ];
 
+function normalizeAnalyticsPayload(raw: unknown): any | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const r = raw as Record<string, unknown>;
+  const cs = r.chartSeries as Record<string, unknown> | undefined;
+  const series =
+    cs && typeof cs === 'object' && !Array.isArray(cs)
+      ? {
+          weekly: Array.isArray(cs.weekly) ? cs.weekly : [],
+          monthly: Array.isArray(cs.monthly) ? cs.monthly : [],
+          yearly: Array.isArray(cs.yearly) ? cs.yearly : [],
+        }
+      : { weekly: [], monthly: [], yearly: [] };
+  const monthlySales = Array.isArray(r.monthlySales)
+    ? (r.monthlySales as unknown[]).map((n) => Number(n) || 0)
+    : Array.from({ length: 12 }, () => 0);
+  const orderGrowth = Array.isArray(r.orderGrowth)
+    ? (r.orderGrowth as unknown[]).map((n) => Number(n) || 0)
+    : Array.from({ length: 12 }, () => 0);
+  return {
+    totalSales: Number(r.totalSales) || 0,
+    totalOrders: Number(r.totalOrders) || 0,
+    totalCustomers: Number(r.totalCustomers) || 0,
+    totalProducts: Number(r.totalProducts) || 0,
+    monthlySales,
+    orderGrowth,
+    chartSeries: series,
+  };
+}
+
 export default function AdminDashboard() {
   const [analytics, setAnalytics] = useState<any>(null);
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [analyticsError, setAnalyticsError] = useState<string | null>(null);
   const [chartPeriod, setChartPeriod] = useState<ChartPeriod>('monthly');
 
   useEffect(() => {
-    fetchAnalytics();
-    fetchRecentOrders();
+    void loadDashboard();
   }, []);
 
-  const fetchAnalytics = async () => {
+  const loadDashboard = async () => {
+    setLoading(true);
+    setAnalyticsError(null);
     try {
-      const { fetchAnalytics: apiFetchAnalytics } = await import('../../lib/api');
-      const data = await apiFetchAnalytics();
-      setAnalytics(data);
+      const { fetchAnalytics: apiFetchAnalytics, fetchOrders } = await import('../../lib/api');
+      const [a, orders] = await Promise.all([apiFetchAnalytics(), fetchOrders()]);
+      setAnalytics(normalizeAnalyticsPayload(a));
+      setRecentOrders(Array.isArray(orders) ? orders : []);
     } catch (err) {
       console.error('Fetch error:', err);
+      const msg =
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : 'Could not load dashboard data.';
+      setAnalyticsError(msg);
+      setAnalytics(null);
+      setRecentOrders([]);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchRecentOrders = async () => {
-    try {
-      const { fetchOrders } = await import('../../lib/api');
-      const data = await fetchOrders();
-      setRecentOrders(data);
-    } catch (err) {
-      console.error('Fetch error:', err);
     }
   };
 
@@ -95,6 +127,22 @@ export default function AdminDashboard() {
         title="Dashboard Overview"
         subtitle="Welcome back! Here's what's happening with your store."
       />
+
+      {analyticsError ? (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50/90 px-4 py-3 text-sm text-rose-900 sm:flex sm:items-center sm:justify-between sm:gap-4">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-rose-600" aria-hidden />
+            <span>{analyticsError}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => void loadDashboard()}
+            className="mt-3 inline-flex h-9 shrink-0 items-center justify-center rounded-lg bg-[#0B2A4A] px-3 text-xs font-bold text-white hover:bg-[#0a2440] sm:mt-0"
+          >
+            Retry
+          </button>
+        </div>
+      ) : null}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 min-w-0">
@@ -143,8 +191,8 @@ export default function AdminDashboard() {
               <h2 className="text-lg font-bold tracking-tight text-slate-900">Sales performance</h2>
               <p className="text-sm text-slate-500">Revenue from completed orders in the selected period.</p>
             </div>
-            <div className="mt-5 min-h-[300px] w-full">
-              <ResponsiveContainer width="100%" height={300}>
+            <div className="mt-5 h-[300px] w-full min-w-0">
+              <ResponsiveContainer width="100%" height="100%" minHeight={280}>
                 <AreaChart data={chartRows} margin={{ top: 10, right: 6, left: 4, bottom: chartPeriod === 'weekly' ? 18 : 4 }}>
                   <defs>
                     <linearGradient id="dashSalesArea" x1="0" y1="0" x2="0" y2="1">
@@ -192,8 +240,8 @@ export default function AdminDashboard() {
               <h2 className="text-lg font-bold tracking-tight text-slate-900">Orders overview</h2>
               <p className="text-sm text-slate-500">Number of orders placed in the same period.</p>
             </div>
-            <div className="mt-5 min-h-[300px] w-full">
-              <ResponsiveContainer width="100%" height={300}>
+            <div className="mt-5 h-[300px] w-full min-w-0">
+              <ResponsiveContainer width="100%" height="100%" minHeight={280}>
                 <BarChart data={chartRows} margin={{ top: 10, right: 6, left: 4, bottom: chartPeriod === 'weekly' ? 18 : 4 }} barCategoryGap="18%">
                   <defs>
                     <linearGradient id="dashOrdersBar" x1="0" y1="0" x2="0" y2="1">
