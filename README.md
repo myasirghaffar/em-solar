@@ -18,8 +18,9 @@ Do these in order; skip a step only if you are sure it is already done.
 
 1. **Secrets** (Worker → Settings → Variables, type _Secret_, or `wrangler secret put`):  
    `DATABASE_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`.
-2. **Plaintext** `ALLOWED_ORIGINS`: comma-separated, **no trailing slash**. Must include **exactly** your live storefront origin, e.g. `https://em-solar.ghaffaryasir28.workers.dev`. If you set this only in the dashboard, it overrides `wrangler.toml`—include every frontend URL that calls the API.
-3. **Cloudflare Zero Trust (Access):** if `curl -sI "https://<your-backend-host>/store/products"` shows **`Location: …cloudflareaccess.com`**, Access is blocking the browser. Either **remove** that Access application for the API host, or add a **Bypass** policy above “require login” for public API paths.
+2. If **`/store/products`** returns **500** or **503** (`DATABASE_UNAVAILABLE` in JSON): the Worker is hitting Postgres and failing (bad URL, pooler, missing tables, or SSL). Open **Workers → em-solar-api → Logs** (or run `npx wrangler tail` in `em-solar-backend`), fix `DATABASE_URL`, then run migrations / schema from that repo (`db:push`, `db:apply-sql-schema`, `db:seed-store` as documented in `em-solar-backend/.env.example`).
+3. **Plaintext** `ALLOWED_ORIGINS`: comma-separated, **no trailing slash**. Must include **exactly** your live storefront origin, e.g. `https://em-solar.ghaffaryasir28.workers.dev`. If you set this only in the dashboard, it overrides `wrangler.toml`—include every frontend URL that calls the API.
+4. **Cloudflare Zero Trust (Access):** if `curl -sI "https://<your-backend-host>/store/products"` shows **`Location: …cloudflareaccess.com`**, Access is blocking the browser. Either **remove** that Access application for the API host, or add a **Bypass** policy above “require login” for public API paths.
 
 ### 2. Frontend Worker (`em-solar` / this app)
 

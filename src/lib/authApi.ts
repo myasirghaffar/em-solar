@@ -27,6 +27,8 @@ export function humanizeApiError(code: string, message: string): string {
     TIMEOUT: "The request timed out. Try again in a moment.",
     DATABASE_NOT_CONFIGURED:
       "The live API is not connected to the database yet. Add DATABASE_URL (or Hyperdrive) on the Cloudflare Worker.",
+    DATABASE_UNAVAILABLE:
+      "The live API cannot use the database (wrong URL, migrations not run, or network). Check the API Worker logs and DATABASE_URL.",
   };
   return byCode[code] ?? (message || "Something went wrong. Please try again.");
 }
