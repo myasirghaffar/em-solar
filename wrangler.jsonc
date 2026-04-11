@@ -1,12 +1,18 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "em-solar",
+  "main": "src/worker.ts",
   "compatibility_date": "2026-04-06",
   "observability": {
     "enabled": true
   },
+  // Plaintext — same name in dashboard → Variables (after deploy, this Worker is no longer "static only").
+  "vars": {
+    "API_BASE_URL": "https://em-solar-backend.ghaffaryasir28.workers.dev"
+  },
   "assets": {
     "directory": "dist",
+    "binding": "ASSETS",
     "not_found_handling": "single-page-application"
   },
   "compatibility_flags": [
