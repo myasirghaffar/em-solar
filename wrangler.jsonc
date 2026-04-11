@@ -6,7 +6,7 @@
   "observability": {
     "enabled": true
   },
-  // Plaintext — same name in dashboard → Variables (after deploy, this Worker is no longer "static only").
+  // Upstream em-solar-api URL (plaintext). Browser calls same-origin `/api/*`; this Worker proxies there.
   "vars": {
     "API_BASE_URL": "https://em-solar-backend.ghaffaryasir28.workers.dev"
   },
