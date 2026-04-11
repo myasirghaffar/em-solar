@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Save, Shield, Bell, Store } from "lucide-react";
+import { Save, Shield, Bell, Store, Check } from "lucide-react";
 import { AdminPageHeader, AdminPanel } from "../../components/admin/AdminUI";
 
 export default function AdminSettings() {
@@ -72,35 +72,18 @@ export default function AdminSettings() {
             <h2 className="text-xl font-bold text-slate-900">Notifications</h2>
           </div>
 
-          <label className="flex items-start gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={settings.orderNotifications}
-              onChange={(e) =>
-                setSettings((s) => ({ ...s, orderNotifications: e.target.checked }))
-              }
-              className="mt-1 w-4 h-4 accent-[#FF7A00]"
-            />
-            <div>
-              <p className="font-semibold text-slate-900">Order notifications</p>
-              <p className="text-sm text-gray-600">Get notified when new orders arrive.</p>
-            </div>
-          </label>
-
-          <label className="flex items-start gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={settings.lowStockAlerts}
-              onChange={(e) =>
-                setSettings((s) => ({ ...s, lowStockAlerts: e.target.checked }))
-              }
-              className="mt-1 w-4 h-4 accent-[#FF7A00]"
-            />
-            <div>
-              <p className="font-semibold text-slate-900">Low stock alerts</p>
-              <p className="text-sm text-gray-600">Warn when product stock is low.</p>
-            </div>
-          </label>
+          <SettingsCheckbox
+            checked={settings.orderNotifications}
+            onChange={(v) => setSettings((s) => ({ ...s, orderNotifications: v }))}
+            title="Order notifications"
+            description="Get notified when new orders arrive."
+          />
+          <SettingsCheckbox
+            checked={settings.lowStockAlerts}
+            onChange={(v) => setSettings((s) => ({ ...s, lowStockAlerts: v }))}
+            title="Low stock alerts"
+            description="Warn when product stock is low."
+          />
 
           <div className="pt-2 border-t">
             <div className="flex items-center gap-3 mb-3">
@@ -115,6 +98,39 @@ export default function AdminSettings() {
         </AdminPanel>
       </div>
     </div>
+  );
+}
+
+function SettingsCheckbox({
+  checked,
+  onChange,
+  title,
+  description,
+}: {
+  checked: boolean;
+  onChange: (value: boolean) => void;
+  title: string;
+  description: string;
+}) {
+  return (
+    <label className="flex cursor-pointer items-start gap-3">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="peer sr-only"
+      />
+      <span
+        className="mt-1 flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-md border-2 border-slate-300 bg-white transition-colors peer-checked:border-[#FF7A00] peer-checked:bg-[#FF7A00] peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-[#FF7A00]/35 [&>svg]:opacity-0 peer-checked:[&>svg]:opacity-100"
+        aria-hidden
+      >
+        <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />
+      </span>
+      <div>
+        <p className="font-semibold text-slate-900">{title}</p>
+        <p className="text-sm text-gray-600">{description}</p>
+      </div>
+    </label>
   );
 }
 

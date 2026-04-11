@@ -88,6 +88,8 @@ export async function createConsultation(payload: any): Promise<boolean> {
 }
 
 // Analytics
+export type ChartPoint = { label: string; sales: number; orders: number };
+
 export async function fetchAnalytics(): Promise<{
   totalSales: number;
   totalOrders: number;
@@ -95,6 +97,11 @@ export async function fetchAnalytics(): Promise<{
   totalProducts: number;
   monthlySales: number[];
   orderGrowth: number[];
+  chartSeries: {
+    weekly: ChartPoint[];
+    monthly: ChartPoint[];
+    yearly: ChartPoint[];
+  };
 }> {
   return localStore.getAnalytics();
 }

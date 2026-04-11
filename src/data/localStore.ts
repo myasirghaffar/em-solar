@@ -66,6 +66,94 @@ function buildSeedProducts(): any[] {
         "Designed for three-phase commercial rooftops and small industrial plants. Includes Wi‑Fi / app monitoring. Pair with approved DC combiners and surge protection for code-compliant string design.",
       attachments: [{ title: "Datasheet & certificates (ZIP)", href: "#" }],
     },
+    {
+      id: 9909,
+      name: "Solar PV Extension Cable 4mm² (30m roll)",
+      price: 8900,
+      description: "UV-resistant twin-core DC cable for string runs and combiner wiring.",
+      images: [
+        "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=800&q=80",
+      ],
+      category: "Accessories",
+      status: "active",
+      stock: 55,
+      brand: "Mean Well",
+      specifications: { Gauge: "4mm²", Length: "30m" },
+      longDescription:
+        "Tinned copper conductors with XLPO jacket for outdoor lifetime. Suitable for 1000V DC string circuits. Cut to length on site or deploy full rolls for warehouse runs.",
+      attachments: [{ title: "Cable spec sheet (PDF)", href: "#" }],
+    },
+    {
+      id: 9910,
+      name: "MC4-Compatible Branch Connector Pair",
+      price: 1850,
+      description: "Y-branch harness for parallel strings; IP67 when mated.",
+      images: [
+        "https://images.unsplash.com/photo-1592838064575-70b94206782a?w=800&q=80",
+      ],
+      category: "Accessories",
+      status: "active",
+      stock: 120,
+      brand: "SolarMax",
+      specifications: { Rating: "30A", IP: "IP67" },
+      longDescription:
+        "Install between panel strings and combiner inputs. Locking collars match standard MC4 tooling. EnergyMart.pk stocks genuine-spec connectors for warranty-safe arrays.",
+      attachments: [{ title: "Installation torque guide (PDF)", href: "#" }],
+    },
+    {
+      id: 9911,
+      name: "Bifacial Monocrystalline Module 600W",
+      price: 35200,
+      description: "Dual-glass bifacial frame for higher yield on reflective rooftops.",
+      images: [
+        "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80",
+      ],
+      category: "Solar Panels",
+      status: "active",
+      stock: 16,
+      brand: "JA Solar",
+      specifications: { Power: "600W", Type: "Bifacial mono" },
+      longDescription:
+        "Higher rear-side gain on light-colored roofs and trackers. Pair with compatible string inverters and DC optimizers where required by your net-metering rules.",
+      attachments: [
+        { title: "Flash test report (PDF)", href: "#" },
+        { title: "Warranty terms (PDF)", href: "#" },
+      ],
+    },
+    {
+      id: 9912,
+      name: "Off-Grid Pure Sine Inverter 3kW 24V",
+      price: 78500,
+      description: "Standalone inverter with built-in charger for cabin and backup loads.",
+      images: [
+        "https://images.unsplash.com/photo-1613665813446-82a78c468a1d?w=800&q=80",
+      ],
+      category: "Solar Inverters",
+      status: "active",
+      stock: 9,
+      brand: "Growatt",
+      specifications: { Power: "3kW", DC: "24V" },
+      longDescription:
+        "Ideal for small off-grid homes and UPS-style backup. Supports generator assist input. Our team can size battery banks and surge loads for reliable autonomy.",
+      attachments: [{ title: "Quick start guide (PDF)", href: "#" }],
+    },
+    {
+      id: 9913,
+      name: "Deep-Cycle AGM Battery 12V 200Ah",
+      price: 62500,
+      description: "Sealed AGM bank for 12/24/48V systems where LiFePO₄ is not required.",
+      images: [
+        "https://images.unsplash.com/photo-1620714223084-8fcacc6dfd8d?w=800&q=80",
+      ],
+      category: "Batteries",
+      status: "active",
+      stock: 14,
+      brand: "Pylontech",
+      specifications: { Voltage: "12V", Capacity: "200Ah" },
+      longDescription:
+        "Maintenance-free VRLA-AGM for ventilated battery rooms. Match with charge controllers sized for C/5–C/10 charge rates. Parallel for 24V or 48V banks with equal-length cabling.",
+      attachments: [{ title: "Safety & venting guide (PDF)", href: "#" }],
+    },
   ];
 }
 
@@ -355,6 +443,84 @@ function nextId(items: { id: number }[]): number {
   return items.length ? Math.max(...items.map((x) => x.id)) + 1 : 1;
 }
 
+const MONTH_SHORT = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+function startOfWeekMonday(d: Date): Date {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  const day = x.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  x.setDate(x.getDate() + diff);
+  return x;
+}
+
+function endOfWeekFromMondayStart(ws: Date): Date {
+  const x = new Date(ws);
+  x.setDate(x.getDate() + 6);
+  x.setHours(23, 59, 59, 999);
+  return x;
+}
+
+function computeWeeklyChart(orders: any[], weeksCount = 12) {
+  const anchor = startOfWeekMonday(new Date());
+  const rows: { label: string; sales: number; orders: number }[] = [];
+  for (let i = weeksCount - 1; i >= 0; i--) {
+    const ws = new Date(anchor);
+    ws.setDate(ws.getDate() - i * 7);
+    const we = endOfWeekFromMondayStart(ws);
+    const t0 = ws.getTime();
+    const t1 = we.getTime();
+    let sales = 0;
+    let orderCount = 0;
+    for (const o of orders) {
+      const t = new Date(o.created_at).getTime();
+      if (t >= t0 && t <= t1) {
+        sales += Number(o.total_price) || 0;
+        orderCount += 1;
+      }
+    }
+    const m0 = MONTH_SHORT[ws.getMonth()] ?? "";
+    const m1 = MONTH_SHORT[we.getMonth()] ?? "";
+    const sameMonth = ws.getMonth() === we.getMonth();
+    const label = sameMonth
+      ? `${m0} ${ws.getDate()}–${we.getDate()}`
+      : `${m0} ${ws.getDate()} – ${m1} ${we.getDate()}`;
+    rows.push({ label, sales, orders: orderCount });
+  }
+  return rows;
+}
+
+function computeYearlyChart(orders: any[], span = 6) {
+  const currentYear = new Date().getFullYear();
+  const from = currentYear - (span - 1);
+  const rows: { label: string; sales: number; orders: number }[] = [];
+  for (let y = from; y <= currentYear; y++) {
+    let sales = 0;
+    let orderCount = 0;
+    for (const o of orders) {
+      if (new Date(o.created_at).getFullYear() === y) {
+        sales += Number(o.total_price) || 0;
+        orderCount += 1;
+      }
+    }
+    rows.push({ label: String(y), sales, orders: orderCount });
+  }
+  return rows;
+}
+
 function computeAnalytics() {
   const orders = state.orders;
   const year = new Date().getFullYear();
@@ -373,6 +539,11 @@ function computeAnalytics() {
       return d.getMonth() === i && d.getFullYear() === year;
     }).length,
   );
+  const monthlyChart = MONTH_SHORT.map((label, i) => ({
+    label,
+    sales: monthlySales[i] ?? 0,
+    orders: orderGrowth[i] ?? 0,
+  }));
   return {
     totalSales,
     totalOrders: orders.length,
@@ -380,6 +551,11 @@ function computeAnalytics() {
     totalProducts: state.products.length,
     monthlySales,
     orderGrowth,
+    chartSeries: {
+      weekly: computeWeeklyChart(orders, 12),
+      monthly: monthlyChart,
+      yearly: computeYearlyChart(orders, 6),
+    },
   };
 }
 

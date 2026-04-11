@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Search, Mail, Phone, MapPin } from 'lucide-react';
-import { AdminPageHeader, AdminPanel, AdminTableShell } from '../../components/admin/AdminUI';
+import { AdminPageHeader, AdminPanel, AdminTablePagination, AdminTableShell } from '../../components/admin/AdminUI';
+import { useAdminTablePagination } from '../../hooks/useAdminTablePagination';
 
 export default function AdminCustomers() {
   const [customers, setCustomers] = useState<any[]>([]);
@@ -28,6 +29,16 @@ export default function AdminCustomers() {
     customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     customer.phone?.includes(searchTerm)
   );
+
+  const {
+    page,
+    setPage,
+    pageItems,
+    totalPages,
+    startItem,
+    endItem,
+    totalItems,
+  } = useAdminTablePagination(filteredCustomers, searchTerm);
 
   return (
     <div className="space-y-6 min-w-0 w-full max-w-full">
@@ -68,7 +79,7 @@ export default function AdminCustomers() {
                   </td>
                 </tr>
               ) : filteredCustomers.length > 0 ? (
-                filteredCustomers.map(customer => (
+                pageItems.map(customer => (
                   <tr key={customer.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center space-x-3">
@@ -111,6 +122,15 @@ export default function AdminCustomers() {
             </tbody>
           </table>
         </div>
+        <AdminTablePagination
+          enabled={!loading}
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          startItem={startItem}
+          endItem={endItem}
+          totalItems={totalItems}
+        />
       </AdminTableShell>
     </div>
   );

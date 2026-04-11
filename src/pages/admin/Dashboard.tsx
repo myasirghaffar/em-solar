@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { DollarSign, ShoppingCart, Users, Package, TrendingUp } from 'lucide-react';
 import {
   AreaChart,
@@ -9,16 +9,24 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer
+  ResponsiveContainer,
 } from 'recharts';
-import { AdminPageHeader, AdminPanel, AdminTableShell, StatusPill } from '../../components/admin/AdminUI';
+import { AdminPageHeader, AdminPanel, AdminTablePagination, AdminTableShell, StatusPill } from '../../components/admin/AdminUI';
+import { useAdminTablePagination } from '../../hooks/useAdminTablePagination';
 
-const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+type ChartPeriod = 'weekly' | 'monthly' | 'yearly';
+
+const CHART_PERIOD_OPTIONS: { id: ChartPeriod; label: string; description: string }[] = [
+  { id: 'weekly', label: 'Weekly', description: 'Last 12 weeks (Mon–Sun)' },
+  { id: 'monthly', label: 'Monthly', description: 'Current calendar year by month' },
+  { id: 'yearly', label: 'Yearly', description: 'Last 6 calendar years' },
+];
 
 export default function AdminDashboard() {
   const [analytics, setAnalytics] = useState<any>(null);
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [chartPeriod, setChartPeriod] = useState<ChartPeriod>('monthly');
 
   useEffect(() => {
     fetchAnalytics();
@@ -41,11 +49,37 @@ export default function AdminDashboard() {
     try {
       const { fetchOrders } = await import('../../lib/api');
       const data = await fetchOrders();
-      setRecentOrders(data.slice(0, 5));
+      setRecentOrders(data);
     } catch (err) {
       console.error('Fetch error:', err);
     }
   };
+
+  const chartRows = useMemo(() => {
+    const series = analytics?.chartSeries;
+    if (series?.[chartPeriod]) return series[chartPeriod];
+    if (chartPeriod === 'monthly' && analytics?.monthlySales) {
+      const m = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return analytics.monthlySales.map((v: number, i: number) => ({
+        label: m[i],
+        sales: v,
+        orders: analytics.orderGrowth?.[i] ?? 0,
+      }));
+    }
+    return [];
+  }, [analytics, chartPeriod]);
+
+  const periodMeta = CHART_PERIOD_OPTIONS.find((o) => o.id === chartPeriod);
+
+  const {
+    page: ordersPage,
+    setPage: setOrdersPage,
+    pageItems: dashboardOrderRows,
+    totalPages: ordersTotalPages,
+    startItem: ordersStartItem,
+    endItem: ordersEndItem,
+    totalItems: ordersTotalItems,
+  } = useAdminTablePagination(recentOrders);
 
   if (loading) {
     return (
@@ -54,16 +88,6 @@ export default function AdminDashboard() {
       </div>
     );
   }
-
-  const salesData = analytics?.monthlySales?.map((value: number, index: number) => ({
-    month: months[index],
-    sales: value
-  })) || [];
-
-  const ordersData = analytics?.orderGrowth?.map((value: number, index: number) => ({
-    month: months[index],
-    orders: value
-  })) || [];
 
   return (
     <div className="space-y-6 min-w-0 w-full max-w-full">
@@ -105,55 +129,119 @@ export default function AdminDashboard() {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 min-w-0">
-        <AdminPanel>
-          <h2 className="text-base font-bold text-slate-900 mb-4">Monthly Sales</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={salesData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="month" stroke="#666" />
-              <YAxis stroke="#666" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#ffffff',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 14px rgba(15, 23, 42, 0.08)',
-                }}
-                itemStyle={{ color: '#0f172a' }}
-                labelStyle={{ color: '#64748b' }}
-              />
-              <Area type="monotone" dataKey="sales" stroke="#FF7A00" fill="#FF7A00" fillOpacity={0.28} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </AdminPanel>
-        <AdminPanel>
-          <h2 className="text-base font-bold text-slate-900 mb-4">Orders Growth</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={ordersData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="month" stroke="#666" />
-              <YAxis stroke="#666" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#ffffff',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 14px rgba(15, 23, 42, 0.08)',
-                }}
-                itemStyle={{ color: '#0f172a' }}
-                labelStyle={{ color: '#64748b' }}
-              />
-              <Bar dataKey="orders" fill="#FF7A00" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </AdminPanel>
+      <div className="space-y-3 min-w-0">
+        <div className="flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-gradient-to-br from-white to-slate-50/80 px-4 py-3.5 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-5">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Analytics range</p>
+            <p className="mt-0.5 text-sm text-slate-600">{periodMeta?.description}</p>
+          </div>
+          <ChartPeriodToggle value={chartPeriod} onChange={setChartPeriod} />
+        </div>
+        <div className="grid grid-cols-1 gap-5 min-w-0 lg:grid-cols-2 lg:gap-6">
+          <AdminPanel className="overflow-hidden shadow-[0_12px_40px_-12px_rgba(15,23,42,0.12)] ring-1 ring-slate-200/60">
+            <div className="mb-1 flex flex-col gap-1">
+              <h2 className="text-lg font-bold tracking-tight text-slate-900">Sales performance</h2>
+              <p className="text-sm text-slate-500">Revenue from completed orders in the selected period.</p>
+            </div>
+            <div className="mt-5 min-h-[300px] w-full">
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={chartRows} margin={{ top: 10, right: 6, left: 4, bottom: chartPeriod === 'weekly' ? 18 : 4 }}>
+                  <defs>
+                    <linearGradient id="dashSalesArea" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#FF7A00" stopOpacity={0.42} />
+                      <stop offset="55%" stopColor="#FF9F4A" stopOpacity={0.12} />
+                      <stop offset="100%" stopColor="#FF7A00" stopOpacity={0.02} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="4 8" stroke="#e2e8f0" vertical={false} />
+                  <XAxis
+                    dataKey="label"
+                    tick={{ fill: '#64748b', fontSize: 11 }}
+                    tickLine={false}
+                    axisLine={{ stroke: '#e2e8f0' }}
+                    interval={chartPeriod === 'weekly' ? 1 : 0}
+                    {...(chartPeriod === 'weekly'
+                      ? { angle: -32, textAnchor: 'end', height: 56 }
+                      : {})}
+                  />
+                  <YAxis
+                    tickFormatter={formatSalesAxis}
+                    tick={{ fill: '#94a3b8', fontSize: 11 }}
+                    tickLine={false}
+                    axisLine={false}
+                    width={44}
+                  />
+                  <Tooltip
+                    cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4' }}
+                    content={<SalesChartTooltip />}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="sales"
+                    stroke="#ea580c"
+                    strokeWidth={2.5}
+                    fill="url(#dashSalesArea)"
+                    activeDot={{ r: 5, strokeWidth: 2, stroke: '#fff', fill: '#ea580c' }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </AdminPanel>
+          <AdminPanel className="overflow-hidden shadow-[0_12px_40px_-12px_rgba(15,23,42,0.12)] ring-1 ring-slate-200/60">
+            <div className="mb-1 flex flex-col gap-1">
+              <h2 className="text-lg font-bold tracking-tight text-slate-900">Orders overview</h2>
+              <p className="text-sm text-slate-500">Number of orders placed in the same period.</p>
+            </div>
+            <div className="mt-5 min-h-[300px] w-full">
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={chartRows} margin={{ top: 10, right: 6, left: 4, bottom: chartPeriod === 'weekly' ? 18 : 4 }} barCategoryGap="18%">
+                  <defs>
+                    <linearGradient id="dashOrdersBar" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#FF9F4A" />
+                      <stop offset="100%" stopColor="#E85D00" />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="4 8" stroke="#e2e8f0" vertical={false} />
+                  <XAxis
+                    dataKey="label"
+                    tick={{ fill: '#64748b', fontSize: 11 }}
+                    tickLine={false}
+                    axisLine={{ stroke: '#e2e8f0' }}
+                    interval={chartPeriod === 'weekly' ? 1 : 0}
+                    {...(chartPeriod === 'weekly'
+                      ? { angle: -32, textAnchor: 'end', height: 56 }
+                      : {})}
+                  />
+                  <YAxis
+                    allowDecimals={false}
+                    tick={{ fill: '#94a3b8', fontSize: 11 }}
+                    tickLine={false}
+                    axisLine={false}
+                    width={36}
+                  />
+                  <Tooltip
+                    cursor={{ fill: 'rgba(255, 122, 0, 0.08)' }}
+                    content={<OrdersChartTooltip />}
+                  />
+                  <Bar
+                    dataKey="orders"
+                    fill="url(#dashOrdersBar)"
+                    radius={[8, 8, 0, 0]}
+                    maxBarSize={44}
+                    animationDuration={700}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </AdminPanel>
+        </div>
       </div>
 
       {/* Recent Orders */}
       <AdminTableShell>
         <div className="p-4 sm:p-6 border-b border-gray-200">
-          <h2 className="text-base font-bold text-slate-900">Recent Orders</h2>
+          <h2 className="text-base font-bold text-slate-900">Orders</h2>
+          <p className="mt-1 text-sm text-gray-500">Newest first · {ordersTotalItems} total</p>
         </div>
         <div className="overflow-x-auto overflow-y-visible touch-pan-x min-w-0 admin-table-scroll">
           <table className="w-full min-w-full">
@@ -167,7 +255,7 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {recentOrders.map(order => (
+              {dashboardOrderRows.map(order => (
                 <tr key={order.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">#{order.id}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{order.customer_name}</td>
@@ -201,7 +289,77 @@ export default function AdminDashboard() {
             </tbody>
           </table>
         </div>
+        <AdminTablePagination
+          enabled={recentOrders.length > 0}
+          page={ordersPage}
+          totalPages={ordersTotalPages}
+          onPageChange={setOrdersPage}
+          startItem={ordersStartItem}
+          endItem={ordersEndItem}
+          totalItems={ordersTotalItems}
+        />
       </AdminTableShell>
+    </div>
+  );
+}
+
+function ChartPeriodToggle({
+  value,
+  onChange,
+}: {
+  value: ChartPeriod;
+  onChange: (p: ChartPeriod) => void;
+}) {
+  return (
+    <div
+      className="inline-flex rounded-xl bg-slate-100/90 p-1 ring-1 ring-slate-200/70"
+      role="group"
+      aria-label="Chart time range"
+    >
+      {CHART_PERIOD_OPTIONS.map((opt) => (
+        <button
+          key={opt.id}
+          type="button"
+          onClick={() => onChange(opt.id)}
+          className={`rounded-lg px-3.5 py-2 text-xs font-semibold transition-all sm:px-4 sm:text-sm ${
+            value === opt.id
+              ? 'bg-white text-[#0f172a] shadow-md shadow-slate-900/8 ring-1 ring-slate-200/90'
+              : 'text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function formatSalesAxis(n: number) {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1000) return `${(n / 1000).toFixed(0)}k`;
+  return n === 0 ? '0' : String(Math.round(n));
+}
+
+function SalesChartTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null;
+  const v = Number(payload[0]?.value ?? 0);
+  return (
+    <div className="rounded-xl border border-slate-200/90 bg-white/95 px-3.5 py-2.5 shadow-xl shadow-slate-900/10 backdrop-blur-sm">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{label}</p>
+      <p className="mt-1 text-base font-bold tabular-nums text-slate-900">Rs. {v.toLocaleString()}</p>
+    </div>
+  );
+}
+
+function OrdersChartTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null;
+  const v = Number(payload[0]?.value ?? 0);
+  return (
+    <div className="rounded-xl border border-slate-200/90 bg-white/95 px-3.5 py-2.5 shadow-xl shadow-slate-900/10 backdrop-blur-sm">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{label}</p>
+      <p className="mt-1 text-base font-bold tabular-nums text-slate-900">
+        {v} order{v === 1 ? '' : 's'}
+      </p>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Pagination from "../ui/Pagination";
 
 export function AdminPageHeader({
   title,
@@ -66,5 +67,39 @@ export function StatusPill({
     >
       {label}
     </span>
+  );
+}
+
+/** Compact footer for admin data tables; uses shared `Pagination` (hidden when ≤1 page). */
+export function AdminTablePagination({
+  page,
+  totalPages,
+  onPageChange,
+  startItem,
+  endItem,
+  totalItems,
+  enabled = true,
+}: {
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  startItem: number;
+  endItem: number;
+  totalItems: number;
+  enabled?: boolean;
+}) {
+  if (!enabled || totalPages <= 1) return null;
+  return (
+    <div className="border-t border-gray-200 bg-slate-50/90 px-4 py-3 sm:px-6">
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        onPageChange={onPageChange}
+        startItem={startItem}
+        endItem={endItem}
+        totalItems={totalItems}
+        size="compact"
+      />
+    </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Search, Phone, MapPin, FileText, CheckCircle, Clock, XCircle } from 'lucide-react';
-import { AdminPageHeader, AdminPanel, AdminTableShell } from '../../components/admin/AdminUI';
+import { AdminPageHeader, AdminPanel, AdminTablePagination, AdminTableShell } from '../../components/admin/AdminUI';
+import { useAdminTablePagination } from '../../hooks/useAdminTablePagination';
 import Select from '../../components/ui/Select';
 
 const CONSULTATION_STATUS_FILTER_OPTIONS = [
@@ -53,6 +54,16 @@ export default function AdminConsultations() {
     const matchesStatus = !statusFilter || consultation.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  const {
+    page,
+    setPage,
+    pageItems,
+    totalPages,
+    startItem,
+    endItem,
+    totalItems,
+  } = useAdminTablePagination(filteredConsultations, searchTerm, statusFilter);
 
   const statusConfig: Record<string, { icon: any; color: string; bgColor: string }> = {
     new: { icon: Clock, color: 'text-[#FF7A00]', bgColor: 'bg-[#FF7A00]/12' },
@@ -122,7 +133,7 @@ export default function AdminConsultations() {
                   </td>
                 </tr>
               ) : filteredConsultations.length > 0 ? (
-                filteredConsultations.map(consultation => {
+                pageItems.map(consultation => {
                   const config = statusConfig[consultation.status] || statusConfig.new;
                   const Icon = config.icon;
                   return (
@@ -191,6 +202,15 @@ export default function AdminConsultations() {
             </tbody>
           </table>
         </div>
+        <AdminTablePagination
+          enabled={!loading}
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          startItem={startItem}
+          endItem={endItem}
+          totalItems={totalItems}
+        />
       </AdminTableShell>
     </div>
   );

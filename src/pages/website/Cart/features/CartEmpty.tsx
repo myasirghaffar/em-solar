@@ -3,16 +3,20 @@ import { ShoppingBag } from "lucide-react";
 
 export function CartEmpty({ onContinue }: { onContinue?: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
-      <ShoppingBag className="w-16 h-16 text-gray-300 mb-4" />
-      <h2 className="text-lg font-bold text-gray-800 mb-2">Your cart is empty</h2>
-      <p className="text-gray-500 text-sm mb-6 max-w-xs">Add products from the shop to see them here.</p>
+    <div className="flex flex-col items-center px-4 py-14 text-center">
+      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#FF7A00]/10 text-[#FF7A00]">
+        <ShoppingBag className="h-8 w-8" aria-hidden />
+      </div>
+      <p className="text-base font-semibold text-[#0B2A4A]">Your cart is empty</p>
+      <p className="mt-2 max-w-xs text-sm text-gray-600">
+        Add products from the shop to see them here for checkout.
+      </p>
       <Link
         to="/shop"
         onClick={onContinue}
-        className="bg-[#FF7A00] text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-[#FF7A00]/90 transition-colors"
+        className="mt-6 rounded-full bg-[#0B2A4A] px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0B2A4A]/90"
       >
-        Continue shopping
+        Browse shop
       </Link>
     </div>
   );

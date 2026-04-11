@@ -14,10 +14,12 @@ import Select from "../../components/ui/Select";
 import {
   AdminPageHeader,
   AdminPanel,
+  AdminTablePagination,
   AdminTableShell,
   StatusPill,
 } from "../../components/admin/AdminUI";
 import { useScrollLock } from "../../hooks/useScrollLock";
+import { useAdminTablePagination } from "../../hooks/useAdminTablePagination";
 
 type SpecRow = { key: string; value: string };
 type AttachmentRow = { title: string; href: string; fileName?: string };
@@ -328,6 +330,16 @@ export default function AdminProducts() {
       p.category.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
+  const {
+    page,
+    setPage,
+    pageItems,
+    totalPages,
+    startItem,
+    endItem,
+    totalItems,
+  } = useAdminTablePagination(filteredProducts, searchTerm);
+
   const processImageFiles = async (fileList: FileList | File[] | null) => {
     if (!fileList?.length) return;
     const files = Array.from(fileList);
@@ -444,7 +456,7 @@ export default function AdminProducts() {
                   </td>
                 </tr>
               ) : filteredProducts.length > 0 ? (
-                filteredProducts.map((product) => (
+                pageItems.map((product) => (
                   <tr key={product.id} className="hover:bg-gray-50">
                     <td className="whitespace-nowrap px-6 py-4">
                       <div className="flex items-center space-x-3">
@@ -515,6 +527,15 @@ export default function AdminProducts() {
             </tbody>
           </table>
         </div>
+        <AdminTablePagination
+          enabled={!loading}
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          startItem={startItem}
+          endItem={endItem}
+          totalItems={totalItems}
+        />
       </AdminTableShell>
 
       {showModal && (

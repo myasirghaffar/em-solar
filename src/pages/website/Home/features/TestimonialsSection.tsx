@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useLayoutEffect, useMemo } from "react";
 import { Quote, Star, ChevronLeft, ChevronRight } from "lucide-react";
 
 const testimonials = [
@@ -52,19 +52,43 @@ const testimonials = [
   },
 ];
 
+function buildLoopPages(paired: boolean) {
+  const pages = paired
+    ? testimonials.map((_, i) => [
+        testimonials[i],
+        testimonials[(i + 1) % testimonials.length],
+      ])
+    : testimonials.map((t) => [t]);
+  return [pages[pages.length - 1], ...pages, pages[0]];
+}
+
+const MD_QUERY = "(min-width: 768px)";
+
 export function TestimonialsSection() {
-  const pairPages = testimonials.map((_, i) => [
-    testimonials[i],
-    testimonials[(i + 1) % testimonials.length],
-  ]);
-  const loopPages = [
-    pairPages[pairPages.length - 1],
-    ...pairPages,
-    pairPages[0],
-  ];
+  const [isMdUp, setIsMdUp] = useState(() =>
+    typeof window !== "undefined" ? window.matchMedia(MD_QUERY).matches : true,
+  );
+
+  useLayoutEffect(() => {
+    const mq = window.matchMedia(MD_QUERY);
+    const onChange = () => setIsMdUp(mq.matches);
+    onChange();
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
+  const loopPages = useMemo(() => buildLoopPages(isMdUp), [isMdUp]);
+  const pageCount = testimonials.length;
 
   const [slideIndex, setSlideIndex] = useState(1);
   const [withTransition, setWithTransition] = useState(true);
+
+  useEffect(() => {
+    setSlideIndex(1);
+    setWithTransition(false);
+    const id = requestAnimationFrame(() => setWithTransition(true));
+    return () => cancelAnimationFrame(id);
+  }, [isMdUp]);
 
   const goToNext = () => {
     setWithTransition(true);
@@ -79,7 +103,7 @@ export function TestimonialsSection() {
   useEffect(() => {
     const t = setInterval(goToNext, 5000);
     return () => clearInterval(t);
-  }, []);
+  }, [isMdUp]);
 
   const handleTrackTransitionEnd = () => {
     if (slideIndex === loopPages.length - 1) {
@@ -98,7 +122,7 @@ export function TestimonialsSection() {
     }
   }, [withTransition]);
 
-  const activeDot = (slideIndex - 1 + pairPages.length) % pairPages.length;
+  const activeDot = (slideIndex - 1 + pageCount) % pageCount;
 
   return (
     <section className="py-20 bg-[#0B2A4A] relative overflow-hidden">
@@ -117,7 +141,9 @@ export function TestimonialsSection() {
           </p>
         </div>
         <div className="max-w-7xl mx-auto scroll-reveal">
-          <div className="min-h-[440px] md:min-h-[460px] flex items-center w-full">
+          <div
+            className={`flex w-full items-center ${isMdUp ? "min-h-[460px]" : "min-h-[400px]"}`}
+          >
             <div className="w-full overflow-hidden">
               <div
                 className={`flex ${withTransition ? "transition-transform duration-500 ease-out" : ""}`}
@@ -126,8 +152,8 @@ export function TestimonialsSection() {
               >
                 {loopPages.map((pair, pageIndex) => (
                   <div
-                    key={pageIndex}
-                    className="min-w-full grid grid-cols-1 md:grid-cols-2 gap-6 px-4"
+                    key={`${isMdUp ? "p" : "s"}-${pageIndex}`}
+                    className={`grid min-w-full gap-6 px-4 ${isMdUp ? "grid-cols-2" : "grid-cols-1"}`}
                   >
                     {pair.map((item, idx) => (
                       <article
