@@ -86,26 +86,37 @@ export function HeroSection() {
     setActiveIndex(internalIndex);
   }, [internalIndex]);
 
+  const trackCount = displaySlides.length;
+  const trackWidthPct = trackCount * 100;
+  const slideBasisPct = 100 / trackCount;
+
   return (
-    <section className="relative -mt-20 pt-8 min-h-[100vh] w-full bg-gradient-to-b from-[#cfeaff] via-[#eaf6ff] to-white overflow-hidden flex items-center">
-      <div className="absolute inset-0">
-        <div className="absolute -top-40 -right-40 w-[520px] h-[520px] bg-[#FF7A00]/15 rounded-full blur-3xl" />
-        <div className="absolute top-24 left-10 w-[420px] h-[420px] bg-[#0B2A4A]/10 rounded-full blur-3xl" />
+    <section className="relative -mt-20 pt-8 min-h-[100vh] w-full max-w-[100vw] bg-gradient-to-b from-[#cfeaff] via-[#eaf6ff] to-white overflow-x-clip overflow-y-hidden flex items-center">
+      <div className="absolute inset-0 max-w-[100vw] overflow-x-clip">
+        <div className="pointer-events-none absolute -top-28 right-0 size-[min(26rem,90vw)] translate-x-1/3 bg-[#FF7A00]/15 rounded-full blur-3xl" />
+        <div className="absolute top-24 left-2 sm:left-8 size-[min(22rem,88vw)] bg-[#0B2A4A]/10 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-white to-transparent" />
       </div>
 
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[100%] h-[85%] rounded-[36px] backdrop-blur-md border border-white" />
-        <div className="absolute top-[22%] right-[10%] w-20 h-20 rounded-2xl bg-[#FF7A00]/15 rotate-12" />
+      <div className="absolute inset-0 pointer-events-none max-w-[100vw] overflow-x-clip">
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[min(100%,calc(100vw-2rem))] max-w-full h-[85%] rounded-[36px] backdrop-blur-md border border-white" />
+        <div className="absolute top-[22%] right-4 sm:right-[8%] h-20 w-20 rounded-2xl bg-[#FF7A00]/15 rotate-12" />
       </div>
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="w-full mx-auto overflow-hidden">
+      <div className="container mx-auto max-w-full px-4 relative z-10">
+        <div className="w-full max-w-full mx-auto overflow-hidden">
           <div
             className={`flex ${withTransition ? "transition-transform duration-500 ease-out" : ""}`}
-            style={{ transform: `translateX(-${internalIndex * 100}%)` }}
+            style={{
+              width: `${trackWidthPct}%`,
+              transform: `translateX(-${(internalIndex * 100) / trackCount}%)`,
+            }}
           >
             {displaySlides.map((slide, idx) => (
-              <div key={`${slide.id}-${idx}`} className="min-w-full">
+              <div
+                key={`${slide.id}-${idx}`}
+                className="shrink-0 box-border min-w-0"
+                style={{ width: `${slideBasisPct}%` }}
+              >
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center py-20">
                   <div className="px-6 md:px-10 order-1 lg:order-1 text-center lg:text-left">
                     <div

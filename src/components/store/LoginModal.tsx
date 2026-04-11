@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X, Mail, Lock, User } from 'lucide-react';
+import { useScrollLock } from '../../hooks/useScrollLock';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -13,6 +14,8 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
     email: '',
     password: ''
   });
+
+  useScrollLock(isOpen);
 
   if (!isOpen) return null;
 

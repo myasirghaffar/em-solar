@@ -17,6 +17,7 @@ import {
   AdminTableShell,
   StatusPill,
 } from "../../components/admin/AdminUI";
+import { useScrollLock } from "../../hooks/useScrollLock";
 
 type SpecRow = { key: string; value: string };
 type AttachmentRow = { title: string; href: string; fileName?: string };
@@ -161,6 +162,8 @@ export default function AdminProducts() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useScrollLock(showModal);
 
   useEffect(() => {
     fetchProducts();

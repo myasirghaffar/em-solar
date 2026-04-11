@@ -76,11 +76,7 @@ export function TrustedBrandsSection() {
         </div>
       </div>
 
-      <div
-        className="scroll-reveal w-full overflow-hidden py-3"
-        data-aos="fade-up"
-        data-aos-delay="100"
-      >
+      <div className="scroll-reveal w-full overflow-hidden py-3">
         <div
           role="region"
           aria-roledescription="carousel"

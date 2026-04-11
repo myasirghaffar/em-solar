@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
+import AOS from "aos";
 import {
   HeroSection,
   AboutSection,
@@ -45,6 +46,19 @@ export default function Home() {
       }
     })();
   }, []);
+
+  useEffect(() => {
+    const refresh = () => AOS.refresh();
+    refresh();
+    const raf = requestAnimationFrame(refresh);
+    const t1 = setTimeout(refresh, 120);
+    const t2 = setTimeout(refresh, 500);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [loading]);
 
   useEffect(() => {
     if (pathname !== "/" || hash !== "#categories") return;

@@ -122,7 +122,8 @@ export function FeaturedProducts({ products, loading }: FeaturedProductsProps) {
       </div>
 
       {/* Track — mirrors .wp-offset padding-left: 171px (responsive) */}
-      <div className="pl-6 sm:pl-10 md:pl-16 lg:pl-[171px] overflow-hidden" data-aos="fade-up" data-aos-delay="100">
+      {/* No data-aos here: AOS hides the whole overflow wrapper until scroll; mobile often never re-measures until refresh. */}
+      <div className="pl-6 sm:pl-10 md:pl-16 lg:pl-[171px] overflow-hidden">
         {loading ? (
           <div className="flex gap-5 overflow-hidden pr-4">
             {[...Array(5)].map((_, i) => (

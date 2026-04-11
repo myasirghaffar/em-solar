@@ -14,11 +14,14 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { useScrollLock } from "../../hooks/useScrollLock";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const { user, logout } = useAuth();
+
+  useScrollLock(sidebarOpen);
 
   const navItems = [
     { path: "/admin", icon: LayoutDashboard, label: "Dashboard" },

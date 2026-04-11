@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Heart, HeartOff, ShoppingBag, X } from "lucide-react";
 import { useCart } from "../../context/CartContext";
 import { useFavorites } from "../../context/FavoritesContext";
+import { useScrollLock } from "../../hooks/useScrollLock";
 import { CartEmpty, CartItems, OrderSummary } from "../../pages/website/Cart/features";
 
 export default function CartDrawer() {
@@ -18,6 +19,8 @@ export default function CartDrawer() {
   const { favoriteIds, removeFavorite } = useFavorites();
 
   const [catalog, setCatalog] = useState<any[]>([]);
+
+  useScrollLock(isCartOpen);
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shipping = subtotal > 50000 ? 0 : 2000;
@@ -44,15 +47,6 @@ export default function CartDrawer() {
     })();
     return () => {
       cancelled = true;
-    };
-  }, [isCartOpen]);
-
-  useEffect(() => {
-    if (!isCartOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
     };
   }, [isCartOpen]);
 

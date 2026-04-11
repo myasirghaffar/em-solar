@@ -152,7 +152,7 @@ export function LatestNewsSection() {
         </div>
       </div>
 
-      <div className="w-full overflow-hidden" data-aos="fade-up" data-aos-delay="100">
+      <div className="w-full overflow-hidden">
         {count === 0 ? (
           <p className="px-4 py-8 text-gray-500">No news to show.</p>
         ) : (

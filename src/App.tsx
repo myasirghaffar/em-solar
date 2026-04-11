@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AosRouteSync } from './components/AosRouteSync';
 import { useState, useEffect } from 'react';
 import Header from './components/store/Header';
 import Footer from './components/store/Footer';
@@ -108,6 +109,7 @@ function App() {
           }}
         >
           <BrowserRouter>
+            <AosRouteSync />
             <ScrollToTop />
             <CartDrawer />
             <Routes>

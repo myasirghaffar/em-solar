@@ -116,11 +116,7 @@ export function TestimonialsSection() {
             Real reviews from satisfied customers across Pakistan
           </p>
         </div>
-        <div
-          className="max-w-7xl mx-auto scroll-reveal"
-          data-aos="fade-up"
-          data-aos-delay="80"
-        >
+        <div className="max-w-7xl mx-auto scroll-reveal">
           <div className="min-h-[440px] md:min-h-[460px] flex items-center w-full">
             <div className="w-full overflow-hidden">
               <div

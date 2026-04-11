@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Search, Eye } from 'lucide-react';
 import { AdminPageHeader, AdminPanel, AdminTableShell, StatusPill } from '../../components/admin/AdminUI';
 import Select from '../../components/ui/Select';
+import { useScrollLock } from '../../hooks/useScrollLock';
 
 const ORDER_STATUS_FILTER_OPTIONS = [
   { value: '', label: 'All Status' },
@@ -20,6 +21,8 @@ export default function AdminOrders() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [statusFilter, setStatusFilter] = useState('');
+
+  useScrollLock(!!selectedOrder);
 
   useEffect(() => {
     fetchOrders();

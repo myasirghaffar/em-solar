@@ -128,14 +128,27 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-gray-400 text-sm">© 2024 EnergyMart.pk. All rights reserved.</p>
-          <div className="flex space-x-6 mt-4 md:mt-0">
-            <Link to="/login" className="text-gray-400 hover:text-[#FF7A00] text-sm transition-colors">Login</Link>
-            <a href="#" className="text-gray-400 hover:text-[#FF7A00] text-sm transition-colors">Privacy Policy</a>
-            <a href="#" className="text-gray-400 hover:text-[#FF7A00] text-sm transition-colors">Terms of Service</a>
-            <a href="#" className="text-gray-400 hover:text-[#FF7A00] text-sm transition-colors">Refund Policy</a>
-          </div>
+        <div className="flex flex-col items-center gap-6 border-t border-white/10 pt-8 md:flex-row md:items-center md:justify-between">
+          <p className="text-center text-sm text-gray-400 md:text-left">
+            © 2024 EnergyMart.pk. All rights reserved.
+          </p>
+          <nav
+            aria-label="Legal and account"
+            className="grid w-full max-w-[20rem] grid-cols-2 gap-x-6 gap-y-3 text-center sm:max-w-md md:mt-0 md:flex md:w-auto md:max-w-none md:gap-0 md:space-x-6 md:text-left"
+          >
+            <Link to="/login" className="text-sm text-gray-400 transition-colors hover:text-[#FF7A00]">
+              Login
+            </Link>
+            <a href="#" className="text-sm text-gray-400 transition-colors hover:text-[#FF7A00]">
+              Privacy Policy
+            </a>
+            <a href="#" className="text-sm text-gray-400 transition-colors hover:text-[#FF7A00]">
+              Terms of Service
+            </a>
+            <a href="#" className="text-sm text-gray-400 transition-colors hover:text-[#FF7A00]">
+              Refund Policy
+            </a>
+          </nav>
         </div>
       </div>
     </footer>

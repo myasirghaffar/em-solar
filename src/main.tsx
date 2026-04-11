@@ -8,8 +8,11 @@ import App from "./App.tsx";
 AOS.init({
   duration: 700,
   easing: "ease-out-cubic",
-  once: false,
-  offset: 30,
+  /** Avoid re-trigger / mirror quirks that can leave sections invisible on mobile. */
+  once: true,
+  /** Trigger slightly earlier so tall sections register while still on screen. */
+  offset: 100,
+  anchorPlacement: "top-bottom",
 });
 
 createRoot(document.getElementById("root")!).render(
