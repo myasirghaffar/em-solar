@@ -25,7 +25,7 @@ Do these in order; skip a step only if you are sure it is already done.
 ### 2. Frontend Worker (`em-solar` / this app)
 
 1. From this directory: **`npm run deploy`** (builds Vite + deploys Worker + assets).
-2. **Plaintext** variable **`API_BASE_URL`** on the **em-solar** Worker: full URL of the API, e.g. `https://em-solar-backend.ghaffaryasir28.workers.dev` — **no** trailing slash.
+2. **Plaintext** variable **`API_BASE_URL`** on the **em-solar** Worker: full URL of the API, e.g. `https://em-solar-api.ghaffaryasir28.workers.dev` — **no** trailing slash.
 3. In the browser **Network** tab, product requests should go to **`https://<backend>/store/products`** (cross-origin from the storefront — that is expected).
 
 ### 3. Verify
