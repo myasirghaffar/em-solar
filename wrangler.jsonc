@@ -8,7 +8,7 @@
   },
   // Injected into the browser via `/runtime-config.js` as `window.__EM_SOLAR_API_BASE__` (real API URL).
   "vars": {
-    "API_BASE_URL": "https://em-solar-api.ghaffaryasir28.workers.dev",
+    "API_BASE_URL": "https://em-solar-backend-production.up.railway.app",
   },
   // Worker must handle `/runtime-config.js` (not in dist). Without this, SPA routing can mis-handle it.
   "assets": {
