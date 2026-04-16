@@ -14,9 +14,18 @@ export default function AdminCustomers() {
 
   const fetchCustomers = async () => {
     try {
-      const { fetchCustomers: apiFetchCustomers } = await import('../../lib/api');
-      const data = await apiFetchCustomers();
-      setCustomers(data);
+      const { fetchAdminBootstrap, getAdminBootstrapCache, fetchCustomers: apiFetchCustomers } = await import(
+        '../../lib/api'
+      );
+      const cached = getAdminBootstrapCache();
+      if (cached?.customers) {
+        setCustomers(Array.isArray(cached.customers) ? cached.customers : []);
+        setLoading(false);
+        void apiFetchCustomers().then((fresh) => setCustomers(Array.isArray(fresh) ? fresh : []));
+        return;
+      }
+      const boot = await fetchAdminBootstrap();
+      setCustomers(Array.isArray(boot.customers) ? boot.customers : []);
     } catch (err) {
       console.error('Fetch error:', err);
     } finally {

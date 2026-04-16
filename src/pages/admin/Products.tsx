@@ -173,9 +173,17 @@ export default function AdminProducts() {
     setLoadError(null);
     setLoading(true);
     try {
-      const { fetchProductsAdmin: apiFetchProducts } = await import("../../lib/api");
-      const data = await apiFetchProducts();
-      setProducts(data);
+      const { fetchAdminBootstrap, getAdminBootstrapCache, fetchProductsAdmin: apiFetchProducts } =
+        await import("../../lib/api");
+      const cached = getAdminBootstrapCache();
+      if (cached?.products) {
+        setProducts(Array.isArray(cached.products) ? cached.products : []);
+        setLoading(false);
+        void apiFetchProducts().then((fresh) => setProducts(Array.isArray(fresh) ? fresh : []));
+        return;
+      }
+      const boot = await fetchAdminBootstrap();
+      setProducts(Array.isArray(boot.products) ? boot.products : []);
     } catch (err) {
       console.error("Fetch error:", err);
       const msg =

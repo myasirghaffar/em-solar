@@ -45,9 +45,19 @@ export default function AdminOrders() {
 
   const fetchOrders = async () => {
     try {
-      const { fetchOrders: apiFetchOrders } = await import('../../lib/api');
-      const data = await apiFetchOrders();
-      setOrders(data);
+      const { fetchAdminBootstrap, getAdminBootstrapCache, fetchOrders: apiFetchOrders } = await import(
+        '../../lib/api'
+      );
+      const cached = getAdminBootstrapCache();
+      if (cached?.orders) {
+        setOrders(Array.isArray(cached.orders) ? cached.orders : []);
+        setLoading(false);
+        // Revalidate in background (don’t block initial render)
+        void apiFetchOrders().then((fresh) => setOrders(Array.isArray(fresh) ? fresh : []));
+        return;
+      }
+      const boot = await fetchAdminBootstrap();
+      setOrders(Array.isArray(boot.orders) ? boot.orders : []);
     } catch (err) {
       console.error('Fetch error:', err);
     } finally {

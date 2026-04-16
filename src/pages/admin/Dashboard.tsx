@@ -67,10 +67,10 @@ export default function AdminDashboard() {
     setLoading(true);
     setAnalyticsError(null);
     try {
-      const { fetchAnalytics: apiFetchAnalytics, fetchOrders } = await import('../../lib/api');
-      const [a, orders] = await Promise.all([apiFetchAnalytics(), fetchOrders()]);
-      setAnalytics(normalizeAnalyticsPayload(a));
-      setRecentOrders(Array.isArray(orders) ? orders : []);
+      const { fetchAdminBootstrap } = await import('../../lib/api');
+      const boot = await fetchAdminBootstrap();
+      setAnalytics(normalizeAnalyticsPayload(boot.analytics));
+      setRecentOrders(Array.isArray(boot.orders) ? boot.orders : []);
     } catch (err) {
       console.error('Fetch error:', err);
       const msg =

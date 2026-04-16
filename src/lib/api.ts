@@ -314,3 +314,31 @@ export async function fetchAnalytics(): Promise<{
 }> {
   return apiRequest("/admin/analytics", { method: "GET", auth: true });
 }
+
+type AdminBootstrapPayload = {
+  products: any[];
+  orders: any[];
+  customers: any[];
+  consultations: any[];
+  analytics: any;
+};
+
+let adminBootstrapCache:
+  | { atMs: number; data: AdminBootstrapPayload }
+  | undefined;
+
+export function getAdminBootstrapCache(): AdminBootstrapPayload | null {
+  if (!adminBootstrapCache) return null;
+  // Keep cache short-lived so admin changes propagate quickly.
+  if (Date.now() - adminBootstrapCache.atMs > 60_000) return null;
+  return adminBootstrapCache.data;
+}
+
+export async function fetchAdminBootstrap(): Promise<AdminBootstrapPayload> {
+  const cached = getAdminBootstrapCache();
+  if (cached) return cached;
+  const data = await apiRequest<unknown>("/admin/bootstrap", { method: "GET", auth: true });
+  const payload = (data ?? {}) as AdminBootstrapPayload;
+  adminBootstrapCache = { atMs: Date.now(), data: payload };
+  return payload;
+}

@@ -26,9 +26,20 @@ export default function AdminConsultations() {
 
   const fetchConsultations = async () => {
     try {
-      const { fetchConsultations: apiFetchConsultations } = await import('../../lib/api');
-      const data = await apiFetchConsultations();
-      setConsultations(data);
+      const {
+        fetchAdminBootstrap,
+        getAdminBootstrapCache,
+        fetchConsultations: apiFetchConsultations,
+      } = await import('../../lib/api');
+      const cached = getAdminBootstrapCache();
+      if (cached?.consultations) {
+        setConsultations(Array.isArray(cached.consultations) ? cached.consultations : []);
+        setLoading(false);
+        void apiFetchConsultations().then((fresh) => setConsultations(Array.isArray(fresh) ? fresh : []));
+        return;
+      }
+      const boot = await fetchAdminBootstrap();
+      setConsultations(Array.isArray(boot.consultations) ? boot.consultations : []);
     } catch (err) {
       console.error('Fetch error:', err);
     } finally {
