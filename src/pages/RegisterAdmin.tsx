@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, Sun, User, KeyRound } from "lucide-react";
 import { authRegisterAdmin } from "../lib/authApi";
 import { isAuthApiError } from "../context/AuthContext";
+import { toastError, toastSuccess } from "../lib/toast";
 
 export default function RegisterAdmin() {
   const [name, setName] = useState("");
@@ -25,11 +26,15 @@ export default function RegisterAdmin() {
       const result = await authRegisterAdmin({ name, email, password, inviteSecret });
       setInfo("Check your email to verify this admin account, then sign in.");
       if (result.devVerificationUrl) setDevLink(result.devVerificationUrl);
+      toastSuccess("Check your email to verify this admin account.");
     } catch (err) {
       if (isAuthApiError(err)) {
         setError(err.message);
+        toastError(err.message);
       } else {
-        setError("Registration failed.");
+        const msg = "Registration failed.";
+        setError(msg);
+        toastError(msg);
       }
     } finally {
       setLoading(false);

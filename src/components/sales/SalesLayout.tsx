@@ -1,26 +1,19 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
-  Package,
-  ShoppingCart,
-  Users,
-  MessageSquare,
-  Newspaper,
-  Settings,
+  FolderOpen,
   Menu,
   X,
   Store,
   LogOut,
   UserCircle2,
-  FolderOpen,
-  UserPlus,
   FileText,
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useScrollLock } from "../../hooks/useScrollLock";
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function SalesLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -29,34 +22,31 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useScrollLock(sidebarOpen);
 
   const navItems = [
-    { path: "/admin", icon: LayoutDashboard, label: "Dashboard" },
-    { path: "/admin/leads", icon: FolderOpen, label: "Leads" },
-    { path: "/admin/quotes", icon: FileText, label: "Quotes" },
-    { path: "/admin/sales-team", icon: UserPlus, label: "Sales team" },
-    { path: "/admin/products", icon: Package, label: "Products" },
-    { path: "/admin/orders", icon: ShoppingCart, label: "Orders" },
-    { path: "/admin/customers", icon: Users, label: "Customers" },
-    { path: "/admin/consultations", icon: MessageSquare, label: "Consultations" },
-    { path: "/admin/blogs", icon: Newspaper, label: "Blog & news" },
-    { path: "/admin/settings", icon: Settings, label: "Settings" },
+    { path: "/salesman", icon: LayoutDashboard, label: "Dashboard" },
+    { path: "/salesman/leads", icon: FolderOpen, label: "Leads" },
+    { path: "/salesman/quotes", icon: FileText, label: "Quotes" },
+    { path: "/salesman/profile", icon: UserCircle2, label: "Profile" },
   ];
 
   return (
     <div className="min-h-screen bg-slate-100 flex">
-      {/* Sidebar */}
       <aside
         className={`fixed inset-y-0 left-0 z-50 w-72 bg-white text-slate-900 transform ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0 transition-transform duration-300 ease-in-out border-r border-gray-200`}
       >
         <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
-          <Link to="/admin" className="flex items-center space-x-2">
-            <div className="w-9 h-9 rounded-[10px] bg-[#FF7A00]/10 text-[#FF7A00] flex items-center justify-center">
+          <Link to="/salesman" className="flex items-center space-x-2">
+            <div className="w-9 h-9 rounded-[10px] bg-[#F97316]/15 text-[#F97316] flex items-center justify-center">
               <LayoutDashboard className="w-5 h-5" />
             </div>
-            <span className="text-lg font-bold">Admin Dashboard</span>
+            <div className="flex flex-col">
+              <span className="text-lg font-bold leading-tight">EnergyMart.pk</span>
+              <span className="text-xs text-slate-500 capitalize">Sales</span>
+            </div>
           </Link>
           <button
+            type="button"
             onClick={() => setSidebarOpen(false)}
             className="lg:hidden text-gray-500 hover:text-slate-900"
           >
@@ -68,17 +58,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive =
-              item.path === "/admin"
-                ? location.pathname === "/admin"
-                : location.pathname === item.path ||
-                  location.pathname.startsWith(`${item.path}/`);
+              location.pathname === item.path ||
+              (item.path !== "/salesman" && location.pathname.startsWith(item.path));
             return (
               <Link
                 key={item.path}
                 to={item.path}
                 className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${
                   isActive
-                    ? "bg-[#FF7A00] text-white"
+                    ? "bg-[#F97316] text-white"
                     : "text-gray-500 hover:bg-gray-50 hover:text-slate-900"
                 }`}
               >
@@ -111,42 +99,37 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </aside>
 
-      {/* Main Content */}
       <div className="flex-1 lg:ml-72 flex flex-col min-h-0 min-w-0 w-full overflow-hidden">
-        {/* Top Bar */}
         <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-3 sm:px-6 flex-shrink-0">
           <button
+            type="button"
             onClick={() => setSidebarOpen(true)}
             className="lg:hidden text-gray-600 hover:text-slate-900"
           >
             <Menu className="w-6 h-6" />
           </button>
-          <h1 className="text-lg font-bold text-slate-900 hidden sm:block">
-            EnergyMart Admin
-          </h1>
+          <h1 className="text-lg font-bold text-slate-900 hidden sm:block">Sales workspace</h1>
           <div className="flex items-center space-x-4">
             <span className="text-sm text-gray-600 hidden sm:inline">{user?.email}</span>
             <Link
-              to="/admin/profile"
-              className="w-10 h-10 bg-[#FF7A00] rounded-full flex items-center justify-center text-white font-bold hover:bg-[#e86e00] transition-colors"
+              to="/salesman/profile"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F97316] text-white transition-opacity hover:opacity-90"
               title="Profile"
+              aria-label="Profile"
             >
-              <span className="sr-only">Profile</span>
-              <UserCircle2 className="w-6 h-6" />
+              <UserCircle2 className="h-6 w-6" />
             </Link>
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-auto min-h-0 min-w-0 p-3 sm:p-6">
-          {children}
-        </main>
+        <main className="flex-1 overflow-auto min-h-0 min-w-0 p-3 sm:p-6">{children}</main>
       </div>
 
-      {/* Overlay for mobile */}
       {sidebarOpen && (
-        <div
+        <button
+          type="button"
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          aria-label="Close menu"
           onClick={() => setSidebarOpen(false)}
         />
       )}

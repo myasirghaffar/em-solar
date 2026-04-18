@@ -1,5 +1,12 @@
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingCart, Sun, Menu, X, ArrowRight, UserCircle2, Heart } from "lucide-react";
+import {
+  ShoppingCart,
+  Menu,
+  X,
+  ArrowRight,
+  UserCircle2,
+  Heart,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
@@ -7,7 +14,7 @@ import { useFavorites } from "../../context/FavoritesContext";
 
 export default function Header({ cartCount }: { cartCount: number }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { isAuthenticated, isAdmin } = useAuth();
+  const { isAuthenticated, isAdmin, isSalesman } = useAuth();
   const { openCart, openFavoritesDrawer } = useCart();
   const { favoriteCount } = useFavorites();
   const location = useLocation();
@@ -24,8 +31,16 @@ export default function Header({ cartCount }: { cartCount: number }) {
   };
   const [scrolled, setScrolled] = useState(false);
 
-  const accountHref = isAdmin ? "/admin" : "/profile";
-  const accountTitle = isAdmin ? "Dashboard" : "My profile";
+  const accountHref = isAdmin
+    ? "/admin"
+    : isSalesman
+      ? "/salesman"
+      : "/profile";
+  const accountTitle = isAdmin
+    ? "Dashboard"
+    : isSalesman
+      ? "Sales"
+      : "My profile";
 
   useEffect(() => {
     if (!isHome) {
@@ -43,30 +58,43 @@ export default function Header({ cartCount }: { cartCount: number }) {
     <header
       className={[
         "sticky top-0 z-50",
-        isHome ? (scrolled ? "bg-white/80 backdrop-blur-md" : "bg-transparent") : "bg-white/80 backdrop-blur-md",
+        isHome
+          ? scrolled
+            ? "bg-white/80 backdrop-blur-md"
+            : "bg-transparent"
+          : "bg-white/80 backdrop-blur-md",
       ].join(" ")}
     >
       <div className="container mx-auto p-2">
         <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center space-x-2">
-            <Sun className="w-8 h-8 text-[#FF7A00]" />
-            <span className="text-xl font-extrabold text-[#0B2A4A]">
-              EnergyMart<span className="text-[#FF7A00]">.pk</span>
-            </span>
+          <Link
+            to="/"
+            className="flex shrink-0 items-center"
+            aria-label="EnergyMart.pk home"
+          >
+            <img
+              src="/em-logo.png"
+              alt="EnergyMart.pk"
+              className="h-9 w-auto max-w-[min(100vw-8rem,280px)] object-contain object-left sm:h-16"
+              decoding="async"
+            />
           </Link>
 
-          <nav className="hidden md:flex items-center gap-2 bg-white/80 backdrop-blur-md border border-white rounded-full px-3 py-2 shadow-[0_18px_60px_rgba(11,42,74,0.10)]">
+          <nav className="hidden md:flex items-center gap-2 bg-white/80 backdrop-blur-md border border-orange-500/30 rounded-full px-3 py-2 shadow-[0_18px_60px_rgba(11,42,74,0.10)]">
             {[
               { to: "/", label: "Home" },
               { to: "/shop", label: "Shop" },
               { to: "/#categories", label: "Categories" },
+              { to: "/news", label: "News" },
               { to: "/about", label: "About" },
               { to: "/contact", label: "Contact" },
             ].map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
-                onClick={item.to === "/#categories" ? scrollToCategories : undefined}
+                onClick={
+                  item.to === "/#categories" ? scrollToCategories : undefined
+                }
                 className="px-4 py-2 rounded-full text-sm font-semibold text-[#0B2A4A] hover:bg-[#0B2A4A]/5 transition-colors"
               >
                 {item.label}
@@ -126,7 +154,11 @@ export default function Header({ cartCount }: { cartCount: number }) {
               className="md:hidden p-2 rounded-full bg-white/80 border border-white text-[#0B2A4A]"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
             </button>
           </div>
         </div>
@@ -159,6 +191,13 @@ export default function Header({ cartCount }: { cartCount: number }) {
                     }}
                   >
                     Categories
+                  </Link>
+                  <Link
+                    to="/news"
+                    className="px-3 py-2 rounded-lg text-[#0B2A4A] font-semibold hover:bg-[#0B2A4A]/5"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    News
                   </Link>
                   <Link
                     to="/about"

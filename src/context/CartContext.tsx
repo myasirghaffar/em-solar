@@ -4,7 +4,7 @@ export type StoreDrawerTab = "cart" | "favorites";
 
 export interface CartContextType {
   cartItems: any[];
-  addToCart: (product: any) => void;
+  addToCart: (product: any, quantity?: number) => void;
   updateCartQuantity: (id: number, quantity: number) => void;
   removeFromCart: (id: number) => void;
   clearCart: () => void;

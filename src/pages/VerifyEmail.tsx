@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Sun } from "lucide-react";
 import { authVerifyEmail } from "../lib/authApi";
 import { isAuthApiError, useAuth } from "../context/AuthContext";
+import { toastError, toastSuccess } from "../lib/toast";
 
 export default function VerifyEmail() {
   const [params] = useSearchParams();
@@ -14,7 +15,9 @@ export default function VerifyEmail() {
 
   useEffect(() => {
     if (!token) {
-      setError("Missing verification token. Use the link from your email.");
+      const msg = "Missing verification token. Use the link from your email.";
+      setError(msg);
+      toastError(msg);
       return;
     }
     let cancelled = false;
@@ -29,15 +32,22 @@ export default function VerifyEmail() {
           refreshToken: result.refreshToken,
         });
         setStatus("done");
+        toastSuccess("Email verified. Signed in.");
         const role = result.user.role;
-        navigate(role === "admin" ? "/admin" : "/profile", { replace: true });
+        navigate(
+          role === "admin" ? "/admin" : role === "salesman" ? "/salesman" : "/profile",
+          { replace: true },
+        );
       } catch (err) {
         if (!cancelled) {
           setStatus("idle");
           if (isAuthApiError(err)) {
             setError(err.message);
+            toastError(err.message);
           } else {
-            setError("Verification failed.");
+            const msg = "Verification failed.";
+            setError(msg);
+            toastError(msg);
           }
         }
       }

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { useCart } from "../../../context/CartContext";
+import { toastError, toastSuccess } from "../../../lib/toast";
 import { CheckoutEmpty, CheckoutForm, CheckoutOrderSummary } from "./features";
 
 export default function Checkout() {
@@ -30,11 +31,11 @@ export default function Checkout() {
       const ok = await createOrder({ ...formData, products: cartItems, total_price: total });
       if (!ok) throw new Error("createOrder failed");
       clearCart();
+      toastSuccess("Order placed successfully!");
       navigate("/");
-      alert("Order placed successfully!");
     } catch (err) {
       console.error("Error:", err);
-      alert("Failed to place order. Please try again.");
+      toastError("Failed to place order. Please try again.");
     } finally {
       setLoading(false);
     }

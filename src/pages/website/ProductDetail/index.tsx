@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { useCart } from "../../../context/CartContext";
 import { ProductInfo, ProductImages, ProductContentTabs, RelatedProducts } from "./features";
+import { toastError } from "../../../lib/toast";
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -47,6 +48,7 @@ export default function ProductDetail() {
         }
       } catch (err) {
         console.error("Fetch error:", err);
+        toastError("Could not load product.");
       } finally {
         setLoading(false);
       }
@@ -54,7 +56,7 @@ export default function ProductDetail() {
   }, [id]);
 
   const handleAddToCart = () => {
-    if (product) for (let i = 0; i < quantity; i++) addToCart(product);
+    if (product) addToCart(product, quantity);
   };
 
   if (loading) {

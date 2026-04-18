@@ -1,4 +1,5 @@
-import { useRef, useEffect, useCallback, type MouseEvent } from "react";
+import { useRef, useEffect, useCallback, useState, type MouseEvent } from "react";
+import { Link } from "react-router-dom";
 import {
   Calendar,
   ChevronRight,
@@ -6,7 +7,22 @@ import {
   ArrowRight,
   Tag,
 } from "lucide-react";
+import { fetchStoreBlogs, type BlogPost } from "../../../../lib/api";
 import { LATEST_NEWS } from "../../../../data/latestNews";
+
+function staticPosts(): BlogPost[] {
+  return LATEST_NEWS.map((n, i) => ({
+    id: -(i + 1),
+    title: n.title,
+    tag: n.tag,
+    image: n.image,
+    date: n.date,
+    excerpt: "",
+    body: "",
+    is_published: true,
+    published_at: "",
+  }));
+}
 
 /** Card width + gap — ~3 cards visible on large screens */
 const SLIDE_WIDTH = 380;
@@ -31,8 +47,15 @@ export function LatestNewsSection() {
   const isDraggingRef = useRef(false);
   const dragStartXRef = useRef(0);
   const dragStartScrollLeftRef = useRef(0);
+  const [items, setItems] = useState<BlogPost[]>([]);
+  const [newsLoading, setNewsLoading] = useState(true);
 
-  const items = LATEST_NEWS;
+  useEffect(() => {
+    void fetchStoreBlogs()
+      .then((rows) => setItems(rows.length > 0 ? rows : staticPosts()))
+      .catch(() => setItems(staticPosts()))
+      .finally(() => setNewsLoading(false));
+  }, []);
   const logicalItems =
     items.length > 0 && items.length < 4 ? [...items, ...items] : items;
   const count = logicalItems.length;
@@ -149,11 +172,21 @@ export function LatestNewsSection() {
           >
             Our Latest News
           </h2>
+          <Link
+            to="/news"
+            className="mt-4 inline-flex text-sm font-semibold text-[#FF7A00] hover:underline"
+          >
+            View all news →
+          </Link>
         </div>
       </div>
 
       <div className="w-full overflow-hidden">
-        {count === 0 ? (
+        {newsLoading ? (
+          <div className="flex justify-center px-4 py-16">
+            <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#FF7A00] border-t-transparent" aria-hidden />
+          </div>
+        ) : count === 0 ? (
           <p className="px-4 py-8 text-gray-500">No news to show.</p>
         ) : (
           <div
@@ -215,13 +248,13 @@ export function LatestNewsSection() {
                           {item.tag}
                         </span>
                       </div>
-                      <button
-                        type="button"
+                      <Link
+                        to={item.id > 0 ? `/news/${item.id}` : "/news"}
                         className="mt-3 inline-flex translate-y-1 items-center gap-2 rounded-full bg-[#FF7A00] px-4 py-2 text-sm font-semibold text-white opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100"
                       >
                         Read more
                         <ArrowRight className="h-4 w-4" aria-hidden />
-                      </button>
+                      </Link>
                     </div>
                   </div>
                 </article>

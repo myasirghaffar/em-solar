@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Save, Shield, Bell, Store, Check } from "lucide-react";
 import { AdminPageHeader, AdminPanel } from "../../components/admin/AdminUI";
+import { toastSuccess } from "../../lib/toast";
 
 export default function AdminSettings() {
   const [saving, setSaving] = useState(false);
@@ -15,6 +16,7 @@ export default function AdminSettings() {
     setSaving(true);
     await new Promise((r) => setTimeout(r, 600));
     setSaving(false);
+    toastSuccess("Settings saved");
   };
 
   return (

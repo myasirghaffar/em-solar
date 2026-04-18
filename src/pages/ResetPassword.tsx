@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Lock, Sun } from "lucide-react";
 import { authResetPassword } from "../lib/authApi";
 import { isAuthApiError } from "../context/AuthContext";
+import { toastError, toastSuccess } from "../lib/toast";
 
 export default function ResetPassword() {
   const [params] = useSearchParams();
@@ -17,19 +18,25 @@ export default function ResetPassword() {
     e.preventDefault();
     setError("");
     if (!token) {
-      setError("Missing reset token. Open the link from your email.");
+      const msg = "Missing reset token. Open the link from your email.";
+      setError(msg);
+      toastError(msg);
       return;
     }
     setLoading(true);
     try {
       await authResetPassword(token, password);
       setDone(true);
+      toastSuccess("Password updated. Redirecting to sign in…");
       setTimeout(() => navigate("/login", { replace: true }), 2000);
     } catch (err) {
       if (isAuthApiError(err)) {
         setError(err.message);
+        toastError(err.message);
       } else {
-        setError("Could not reset password.");
+        const msg = "Could not reset password.";
+        setError(msg);
+        toastError(msg);
       }
     } finally {
       setLoading(false);

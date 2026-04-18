@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { DollarSign, ShoppingCart, Users, Package, TrendingUp, AlertCircle } from 'lucide-react';
 import { ApiError } from '../../lib/api';
+import { toastError } from '../../lib/toast';
 import {
   AreaChart,
   Area,
@@ -80,6 +81,7 @@ export default function AdminDashboard() {
             ? err.message
             : 'Could not load dashboard data.';
       setAnalyticsError(msg);
+      toastError(msg);
       setAnalytics(null);
       setRecentOrders([]);
     } finally {

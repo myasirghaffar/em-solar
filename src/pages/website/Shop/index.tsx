@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useCart } from "../../../context/CartContext";
 import { ShopHeader, FiltersSidebar, ProductGrid } from "./features";
+import { toastError } from "../../../lib/toast";
 
 const categories = ["Solar Panels", "Solar Inverters", "Batteries", "Accessories"];
 const SHOP_PAGE_SIZE = 9;
@@ -33,6 +34,7 @@ export default function Shop() {
         setProducts(withStoreProductFallback(data));
       } catch (err) {
         console.error("Fetch error:", err);
+        toastError("Could not load products.");
       } finally {
         setLoading(false);
       }

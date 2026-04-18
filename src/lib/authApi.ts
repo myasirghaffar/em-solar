@@ -24,6 +24,8 @@ export function humanizeApiError(code: string, message: string): string {
     PRODUCT_NOT_FOUND: "That product is not available.",
     ORDER_NOT_FOUND: "That order could not be found.",
     CONSULTATION_NOT_FOUND: "That consultation could not be found.",
+    LEAD_NOT_FOUND: "That lead could not be found.",
+    BLOG_NOT_FOUND: "That blog post could not be found.",
     TIMEOUT: "The request timed out. Try again in a moment.",
     DATABASE_NOT_CONFIGURED:
       "The live API is not connected to the database yet. Add DATABASE_URL (or Hyperdrive) on the Cloudflare Worker.",
@@ -57,7 +59,7 @@ export interface ApiUser {
   id: string;
   name: string;
   email: string;
-  role: "ADMIN" | "USER";
+  role: "ADMIN" | "USER" | "SALESMAN";
   isActive: boolean;
   emailVerified: boolean;
   createdAt: string;
@@ -71,11 +73,13 @@ export interface AuthTokensPayload {
 }
 
 function mapApiUser(u: ApiUser): AuthUser {
+  const role =
+    u.role === "ADMIN" ? "admin" : u.role === "SALESMAN" ? "salesman" : "user";
   return {
     id: u.id,
     email: u.email,
     name: u.name,
-    role: u.role === "ADMIN" ? "admin" : "user",
+    role,
     emailVerified: u.emailVerified,
   };
 }

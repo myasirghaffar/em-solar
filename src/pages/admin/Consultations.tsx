@@ -3,6 +3,7 @@ import { Search, Phone, MapPin, FileText, CheckCircle, Clock, XCircle } from 'lu
 import { AdminPageHeader, AdminPanel, AdminTablePagination, AdminTableShell } from '../../components/admin/AdminUI';
 import { useAdminTablePagination } from '../../hooks/useAdminTablePagination';
 import Select from '../../components/ui/Select';
+import { toastError, toastSuccess } from '../../lib/toast';
 
 const CONSULTATION_STATUS_FILTER_OPTIONS = [
   { value: '', label: 'All Status' },
@@ -42,6 +43,7 @@ export default function AdminConsultations() {
       setConsultations(Array.isArray(boot.consultations) ? boot.consultations : []);
     } catch (err) {
       console.error('Fetch error:', err);
+      toastError('Could not load consultations.');
     } finally {
       setLoading(false);
     }
@@ -52,8 +54,10 @@ export default function AdminConsultations() {
       const { updateConsultationStatus } = await import('../../lib/api');
       await updateConsultationStatus(id, status);
       fetchConsultations();
+      toastSuccess('Status updated');
     } catch (err) {
       console.error('Error:', err);
+      toastError('Could not update status.');
     }
   };
 

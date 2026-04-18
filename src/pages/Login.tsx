@@ -2,9 +2,10 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Mail, Lock, Sun } from "lucide-react";
 import { useAuth, isAuthApiError } from "../context/AuthContext";
+import { toastError, toastSuccess } from "../lib/toast";
 
 function pickPostLoginPath(
-  role: "admin" | "user",
+  role: "admin" | "user" | "salesman",
   fromPath: string | undefined,
 ): string {
   if (
@@ -14,9 +15,12 @@ function pickPostLoginPath(
     !fromPath.startsWith("//")
   ) {
     if (role === "admin" && fromPath.startsWith("/admin")) return fromPath;
+    if (role === "salesman" && fromPath.startsWith("/salesman")) return fromPath;
     if (role === "user" && fromPath.startsWith("/profile")) return fromPath;
   }
-  return role === "admin" ? "/admin" : "/profile";
+  if (role === "admin") return "/admin";
+  if (role === "salesman") return "/salesman";
+  return "/profile";
 }
 
 export default function Login() {
@@ -37,21 +41,28 @@ export default function Login() {
     try {
       const loggedInUser = await login(email, password);
       if (loggedInUser) {
+        toastSuccess("Signed in");
         navigate(pickPostLoginPath(loggedInUser.role, fromPath), { replace: true });
       } else {
-        setError("Invalid email or password");
+        const msg = "Invalid email or password";
+        setError(msg);
+        toastError(msg);
       }
     } catch (err) {
       if (isAuthApiError(err)) {
         if (err.code === "AUTH_EMAIL_NOT_VERIFIED") {
-          setError(
-            "Please verify your email before signing in. You can request a new link below.",
-          );
+          const msg =
+            "Please verify your email before signing in. You can request a new link below.";
+          setError(msg);
+          toastError(msg);
         } else {
           setError(err.message);
+          toastError(err.message);
         }
       } else {
-        setError("Login failed. Please try again.");
+        const msg = "Login failed. Please try again.";
+        setError(msg);
+        toastError(msg);
       }
     } finally {
       setLoading(false);

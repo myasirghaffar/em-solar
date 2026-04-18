@@ -1,5 +1,14 @@
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
-import { Check, ChevronDown } from "lucide-react";
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+} from "react";
+import { createPortal } from "react-dom";
+import { ChevronDown } from "lucide-react";
 
 export type SelectOption = { value: string; label: string };
 
@@ -44,8 +53,9 @@ export default function Select({
   const id = idProp ?? `select-${autoId}`;
   const listId = `${id}-listbox`;
   const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
+  const [menuStyle, setMenuStyle] = useState<CSSProperties | null>(null);
   const [highlight, setHighlight] = useState(0);
 
   const selected = options.find((o) => o.value === value);
@@ -55,14 +65,66 @@ export default function Select({
     if (!open) return;
     const i = options.findIndex((o) => o.value === value);
     setHighlight(i >= 0 ? i : 0);
+  }, [open, options, value]);
+
+  /** Focus listbox once it exists in the portal (after `menuStyle` is set). */
+  useLayoutEffect(() => {
+    if (!open || !menuStyle) return;
     const t = window.requestAnimationFrame(() => listRef.current?.focus());
     return () => window.cancelAnimationFrame(t);
-  }, [open, options, value]);
+  }, [open, menuStyle]);
+
+  /** Fixed + portal: list is outside the trigger tree, so it is not clipped by overflow-hidden / scroll parents. */
+  useLayoutEffect(() => {
+    if (!open) {
+      setMenuStyle(null);
+      return;
+    }
+    const updatePosition = () => {
+      const el = triggerRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const gap = 4;
+      const maxMenuPx = 240; /* matches max-h-60 */
+      if (dropdownPosition === "above") {
+        const spaceAbove = rect.top - gap - 8;
+        setMenuStyle({
+          position: "fixed",
+          left: rect.left,
+          width: rect.width,
+          bottom: window.innerHeight - rect.top + gap,
+          maxHeight: Math.min(maxMenuPx, Math.max(64, spaceAbove)),
+          zIndex: 100,
+          boxSizing: "border-box",
+        });
+      } else {
+        const spaceBelow = window.innerHeight - rect.bottom - gap - 8;
+        setMenuStyle({
+          position: "fixed",
+          top: rect.bottom + gap,
+          left: rect.left,
+          width: rect.width,
+          maxHeight: Math.min(maxMenuPx, Math.max(64, spaceBelow)),
+          zIndex: 100,
+          boxSizing: "border-box",
+        });
+      }
+    };
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    document.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      document.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [open, dropdownPosition]);
 
   useEffect(() => {
     if (!open) return;
     const onDoc = (e: MouseEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+      const t = e.target as Node;
+      if (triggerRef.current?.contains(t) || listRef.current?.contains(t)) return;
+      setOpen(false);
     };
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
@@ -113,13 +175,42 @@ export default function Select({
       ? "h-8 min-h-0 px-2.5 py-0 text-xs font-medium"
       : "box-border h-11 min-h-0 px-4 py-0 text-sm font-medium";
 
-  const menuPosition =
-    dropdownPosition === "above"
-      ? "bottom-full mb-1 origin-bottom"
-      : "top-full mt-1 origin-top";
+  const listbox = open && menuStyle ? (
+    <ul
+      ref={listRef}
+      id={listId}
+      role="listbox"
+      tabIndex={0}
+      style={menuStyle}
+      onKeyDown={onListKeyDown}
+      className="overflow-auto rounded-xl border border-gray-200 bg-white py-1 shadow-lg outline-none ring-1 ring-black/5 focus:ring-2 focus:ring-[#FF7A00]"
+    >
+      {options.map((opt, index) => {
+        const active = index === highlight;
+        const isSelected = opt.value === value;
+        return (
+          <li
+            key={opt.value === "" ? "__empty__" : opt.value}
+            role="option"
+            aria-selected={isSelected}
+            onMouseEnter={() => setHighlight(index)}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => pick(opt.value)}
+            className={[
+              "flex cursor-pointer items-center px-3 py-2.5 text-sm text-gray-900",
+              active ? "bg-[#FF7A00]/12" : "hover:bg-gray-50",
+              isSelected ? "font-semibold" : "",
+            ].join(" ")}
+          >
+            {opt.label}
+          </li>
+        );
+      })}
+    </ul>
+  ) : null;
 
   return (
-    <div ref={rootRef} className={`relative w-full ${className}`}>
+    <div className={`relative w-full ${className}`}>
       {label ? (
         <label htmlFor={id} className="mb-1 block text-sm font-medium text-gray-700">
           {label}
@@ -127,6 +218,7 @@ export default function Select({
         </label>
       ) : null}
       <button
+        ref={triggerRef}
         type="button"
         id={id}
         name={name}
@@ -152,46 +244,7 @@ export default function Select({
         />
       </button>
 
-      {open ? (
-        <ul
-          ref={listRef}
-          id={listId}
-          role="listbox"
-          tabIndex={0}
-          onKeyDown={onListKeyDown}
-          className={[
-            "absolute left-0 z-[80] max-h-60 min-w-full overflow-auto rounded-xl border border-gray-200 bg-white py-1 shadow-lg outline-none ring-1 ring-black/5 focus:ring-2 focus:ring-[#FF7A00]",
-            menuPosition,
-          ].join(" ")}
-        >
-          {options.map((opt, index) => {
-            const active = index === highlight;
-            const isSelected = opt.value === value;
-            return (
-              <li
-                key={opt.value === "" ? "__empty__" : opt.value}
-                role="option"
-                aria-selected={isSelected}
-                onMouseEnter={() => setHighlight(index)}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => pick(opt.value)}
-                className={[
-                  "flex cursor-pointer items-center gap-2.5 px-3 py-2.5 text-sm text-gray-900",
-                  active ? "bg-[#FF7A00]/12" : "hover:bg-gray-50",
-                  isSelected ? "font-semibold" : "",
-                ].join(" ")}
-              >
-                {isSelected ? (
-                  <Check className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
-                ) : (
-                  <span className="inline-block w-4 shrink-0" aria-hidden />
-                )}
-                <span className="min-w-0 flex-1">{opt.label}</span>
-              </li>
-            );
-          })}
-        </ul>
-      ) : null}
+      {listbox ? createPortal(listbox, document.body) : null}
 
       {error ? <p className="mt-1 text-sm text-red-600">{error}</p> : null}
     </div>

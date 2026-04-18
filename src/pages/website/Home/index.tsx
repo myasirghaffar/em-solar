@@ -14,6 +14,7 @@ import {
   CompanyCultureSection,
   CTASection,
 } from "./features";
+import { toastError } from "../../../lib/toast";
 
 export default function Home() {
   const { pathname, hash } = useLocation();
@@ -41,6 +42,7 @@ export default function Home() {
         });
       } catch (err) {
         console.error("Fetch error:", err);
+        toastError("Could not load featured products.");
       } finally {
         setLoading(false);
       }

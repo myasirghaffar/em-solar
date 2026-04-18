@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Mail, Sun } from "lucide-react";
 import { authResendVerification } from "../lib/authApi";
 import { isAuthApiError } from "../context/AuthContext";
+import { toastError, toastSuccess } from "../lib/toast";
 
 export default function ResendVerification() {
   const [email, setEmail] = useState("");
@@ -19,11 +20,15 @@ export default function ResendVerification() {
       const extra = await authResendVerification(email);
       setDone(true);
       if (extra?.devVerificationUrl) setDevLink(extra.devVerificationUrl);
+      toastSuccess("If the account is pending verification, a new email was sent.");
     } catch (err) {
       if (isAuthApiError(err)) {
         setError(err.message);
+        toastError(err.message);
       } else {
-        setError("Could not send email.");
+        const msg = "Could not send email.";
+        setError(msg);
+        toastError(msg);
       }
     } finally {
       setLoading(false);

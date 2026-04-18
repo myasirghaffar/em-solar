@@ -28,6 +28,12 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
     if (user.role === "user") {
       return <Navigate to="/profile" replace />;
     }
+    if (user.role === "salesman") {
+      return <Navigate to="/salesman" replace />;
+    }
+    if (user.role === "admin") {
+      return <Navigate to="/admin" replace />;
+    }
     return <Navigate to="/" replace />;
   }
 

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Mail, Sun } from "lucide-react";
 import { authForgotPassword } from "../lib/authApi";
 import { isAuthApiError } from "../context/AuthContext";
+import { toastError, toastSuccess } from "../lib/toast";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -19,11 +20,15 @@ export default function ForgotPassword() {
       const extra = await authForgotPassword(email);
       setDone(true);
       if (extra?.devResetUrl) setDevLink(extra.devResetUrl);
+      toastSuccess("If an account exists, you will receive reset instructions.");
     } catch (err) {
       if (isAuthApiError(err)) {
         setError(err.message);
+        toastError(err.message);
       } else {
-        setError("Something went wrong. Try again later.");
+        const msg = "Something went wrong. Try again later.";
+        setError(msg);
+        toastError(msg);
       }
     } finally {
       setLoading(false);

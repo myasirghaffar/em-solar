@@ -18,6 +18,7 @@ import { useAdminTablePagination } from '../../hooks/useAdminTablePagination';
 import Select from '../../components/ui/Select';
 import { useScrollLock } from '../../hooks/useScrollLock';
 import { downloadOrderReceipt } from '../../lib/orderReceipt';
+import { toastError, toastSuccess } from '../../lib/toast';
 
 const ORDER_STATUS_FILTER_OPTIONS = [
   { value: '', label: 'All Status' },
@@ -60,6 +61,7 @@ export default function AdminOrders() {
       setOrders(Array.isArray(boot.orders) ? boot.orders : []);
     } catch (err) {
       console.error('Fetch error:', err);
+      toastError('Could not load orders.');
     } finally {
       setLoading(false);
     }
@@ -70,8 +72,10 @@ export default function AdminOrders() {
       const { updateOrderStatus: apiUpdateOrderStatus } = await import('../../lib/api');
       await apiUpdateOrderStatus(id, status);
       fetchOrders();
+      toastSuccess('Order status updated');
     } catch (err) {
       console.error('Error:', err);
+      toastError('Could not update order status.');
     }
   };
 
@@ -399,7 +403,10 @@ export default function AdminOrders() {
               </button>
               <button
                 type="button"
-                onClick={() => downloadOrderReceipt(selectedOrder)}
+                onClick={() => {
+                  downloadOrderReceipt(selectedOrder);
+                  toastSuccess('Receipt downloaded');
+                }}
                 className="order-1 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#FF7A00] px-4 text-sm font-semibold text-white shadow-lg shadow-orange-500/25 transition-colors hover:bg-[#e86e00] sm:order-2"
               >
                 <Download className="h-4 w-4 shrink-0" aria-hidden />

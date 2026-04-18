@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
 import { StatusPill } from "../../../components/admin/AdminUI";
+import { toastError, toastSuccess } from "../../../lib/toast";
 
 type TabId = "account" | "orders" | "addresses";
 
@@ -33,7 +34,7 @@ function statusVariant(
 }
 
 export default function CustomerAccount() {
-  const { user, isAuthenticated, isAdmin, logout } = useAuth();
+  const { user, isAuthenticated, isAdmin, isSalesman, logout } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabId>("account");
   const [orders, setOrders] = useState<any[]>([]);
@@ -45,7 +46,10 @@ export default function CustomerAccount() {
     if (isAuthenticated && isAdmin) {
       navigate("/admin", { replace: true });
     }
-  }, [isAuthenticated, isAdmin, navigate]);
+    if (isAuthenticated && isSalesman) {
+      navigate("/salesman", { replace: true });
+    }
+  }, [isAuthenticated, isAdmin, isSalesman, navigate]);
 
   useEffect(() => {
     if (!user?.email || user.role !== "user") return;
@@ -59,6 +63,9 @@ export default function CustomerAccount() {
           setOrders(o);
           setCustomerRow(c);
         }
+      } catch (err) {
+        console.error(err);
+        if (!cancelled) toastError("Could not load your account data.");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -133,6 +140,7 @@ export default function CustomerAccount() {
               type="button"
               onClick={async () => {
                 await logout();
+                toastSuccess("Signed out");
                 navigate("/", { replace: true });
               }}
               className="mt-4 w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50"

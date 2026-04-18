@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Search, Mail, Phone, MapPin } from 'lucide-react';
 import { AdminPageHeader, AdminPanel, AdminTablePagination, AdminTableShell } from '../../components/admin/AdminUI';
 import { useAdminTablePagination } from '../../hooks/useAdminTablePagination';
+import { toastError } from '../../lib/toast';
 
 export default function AdminCustomers() {
   const [customers, setCustomers] = useState<any[]>([]);
@@ -28,6 +29,7 @@ export default function AdminCustomers() {
       setCustomers(Array.isArray(boot.customers) ? boot.customers : []);
     } catch (err) {
       console.error('Fetch error:', err);
+      toastError('Could not load customers.');
     } finally {
       setLoading(false);
     }

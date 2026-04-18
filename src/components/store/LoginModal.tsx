@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { X, Mail, Lock, User } from "lucide-react";
 import { useScrollLock } from "../../hooks/useScrollLock";
 import { useAuth, isAuthApiError } from "../../context/AuthContext";
+import { toastError, toastSuccess } from "../../lib/toast";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -38,7 +39,15 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         const user = await login(formData.email, formData.password);
         if (user) {
           onClose();
-          navigate(user.role === "admin" ? "/admin" : "/profile", { replace: true });
+          toastSuccess("Signed in");
+          navigate(
+            user.role === "admin"
+              ? "/admin"
+              : user.role === "salesman"
+                ? "/salesman"
+                : "/profile",
+            { replace: true },
+          );
         }
       } else {
         const result = await signup({
@@ -53,13 +62,17 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
               : "Account created. Check your email to verify, then sign in.",
           );
           if (result.devVerificationUrl) setDevVerifyUrl(result.devVerificationUrl);
+          toastSuccess("Account created — check your email to verify.");
         }
       }
     } catch (err) {
       if (isAuthApiError(err)) {
         setError(err.message);
+        toastError(err.message);
       } else {
-        setError(isLogin ? "Sign in failed." : "Sign up failed.");
+        const msg = isLogin ? "Sign in failed." : "Sign up failed.";
+        setError(msg);
+        toastError(msg);
       }
     } finally {
       setLoading(false);

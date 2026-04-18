@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, Sun, User } from "lucide-react";
 import { useAuth, isAuthApiError } from "../context/AuthContext";
+import { toastError, toastSuccess } from "../lib/toast";
 
 export default function Signup() {
   const [name, setName] = useState("");
@@ -23,7 +24,9 @@ export default function Signup() {
     try {
       const result = await signup({ name, email, password });
       if (!result) {
-        setError("Could not create account.");
+        const msg = "Could not create account.";
+        setError(msg);
+        toastError(msg);
         return;
       }
       if (result.devVerificationUrl) {
@@ -31,16 +34,21 @@ export default function Signup() {
           "Transactional email is not configured on the API yet, so nothing was sent to your inbox. Use the verification link below, then sign in. To get real emails, add RESEND_API_KEY and EMAIL_FROM to em-solar-backend/.env (see .env.example).",
         );
         setDevLink(result.devVerificationUrl);
+        toastSuccess("Account created — use the verification link to continue.");
       } else {
         setInfo(
           "We sent a message to your email with a verification link. After you verify, you can sign in.",
         );
+        toastSuccess("Check your email to complete sign-up.");
       }
     } catch (err) {
       if (isAuthApiError(err)) {
         setError(err.message);
+        toastError(err.message);
       } else {
-        setError("Sign up failed. Please try again.");
+        const msg = "Sign up failed. Please try again.";
+        setError(msg);
+        toastError(msg);
       }
     } finally {
       setLoading(false);

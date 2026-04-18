@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ApiError } from "../../lib/api";
+import { toastError, toastSuccess } from "../../lib/toast";
 import {
   Plus,
   Search,
@@ -193,6 +194,7 @@ export default function AdminProducts() {
             ? err.message
             : "Could not load products.";
       setLoadError(msg);
+      toastError(msg);
       setProducts([]);
     } finally {
       setLoading(false);
@@ -220,8 +222,16 @@ export default function AdminProducts() {
       setAttachmentError(null);
       setFormData(emptyForm());
       void loadProducts();
+      toastSuccess(editingProduct ? "Product updated" : "Product created");
     } catch (err) {
       console.error("Error:", err);
+      const msg =
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Could not save product.";
+      toastError(msg);
     }
   };
 
@@ -251,8 +261,16 @@ export default function AdminProducts() {
         const { deleteProduct } = await import("../../lib/api");
         await deleteProduct(id);
         void loadProducts();
+        toastSuccess("Product deleted");
       } catch (err) {
         console.error("Error:", err);
+        const msg =
+          err instanceof ApiError
+            ? err.message
+            : err instanceof Error
+              ? err.message
+              : "Could not delete product.";
+        toastError(msg);
       }
     }
   };

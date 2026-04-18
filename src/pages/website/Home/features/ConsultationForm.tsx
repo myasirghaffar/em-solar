@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toastError, toastSuccess } from "../../../../lib/toast";
 
 export function ConsultationForm() {
   const [formData, setFormData] = useState({ name: "", phone: "", city: "", monthly_bill: "", message: "" });
@@ -11,9 +12,11 @@ export function ConsultationForm() {
       await createConsultation(formData);
       setSubmitted(true);
       setFormData({ name: "", phone: "", city: "", monthly_bill: "", message: "" });
+      toastSuccess("Thanks — we will contact you soon.");
       setTimeout(() => setSubmitted(false), 3000);
     } catch (err) {
       console.error("Error:", err);
+      toastError("Could not send your request. Please try again.");
     }
   };
 
