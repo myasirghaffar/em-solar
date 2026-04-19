@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AdminPanel } from "../admin/AdminUI";
+import DatePickerField from "../ui/DatePickerField";
+import Select from "../ui/Select";
 import {
   fetchProducts,
   normalizeProduct,
@@ -114,6 +116,21 @@ export default function LeadQuoteBlock({
     }
     return [...map.entries()].sort(([a], [b]) => a.localeCompare(b));
   }, [products]);
+
+  const catalogProductOptions = useMemo(() => {
+    const opts: { value: string; label: string }[] = [
+      { value: "", label: "— Custom line (type description manually) —" },
+    ];
+    for (const [cat, list] of productsByCategory) {
+      for (const p of list) {
+        opts.push({
+          value: String(p.id),
+          label: `${cat} · ${p.name} — PKR ${Number(p.price || 0).toLocaleString("en-PK")}`,
+        });
+      }
+    }
+    return opts;
+  }, [productsByCategory]);
 
   function setLine(i: number, patch: Partial<QuoteLine>) {
     setQuote((q) => {
@@ -265,22 +282,15 @@ export default function LeadQuoteBlock({
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="sm:col-span-2">
                     <label className="text-xs font-medium text-slate-600">Product (shop catalog)</label>
-                    <select
-                      value={line.productId != null ? String(line.productId) : ""}
-                      onChange={(e) => applyProduct(i, e.target.value)}
-                      className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316]"
-                    >
-                      <option value="">— Custom line (type description manually) —</option>
-                      {productsByCategory.map(([cat, list]) => (
-                        <optgroup key={cat} label={cat}>
-                          {list.map((p) => (
-                            <option key={p.id} value={String(p.id)}>
-                              {p.name} — PKR {Number(p.price || 0).toLocaleString("en-PK")}
-                            </option>
-                          ))}
-                        </optgroup>
-                      ))}
-                    </select>
+                    <div className="mt-1 relative z-20">
+                      <Select
+                        options={catalogProductOptions}
+                        value={line.productId != null ? String(line.productId) : ""}
+                        onChange={(v) => applyProduct(i, v)}
+                        placeholder="— Custom line (type description manually) —"
+                        triggerClassName="rounded-full"
+                      />
+                    </div>
                   </div>
 
                   {specEntries.length > 0 && (
@@ -288,21 +298,21 @@ export default function LeadQuoteBlock({
                       <label className="text-xs font-medium text-slate-600">
                         Variation / specification
                       </label>
-                      <select
-                        value={line.variantLabel ?? ""}
-                        onChange={(e) => applyVariant(i, line, e.target.value)}
-                        className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-[#F97316]"
-                      >
-                        <option value="">Default (list price)</option>
-                        {specEntries.map(([k, val]) => {
-                          const label = `${k}: ${val}`;
-                          return (
-                            <option key={k} value={label}>
-                              {label}
-                            </option>
-                          );
-                        })}
-                      </select>
+                      <div className="mt-1 relative z-20">
+                        <Select
+                          options={[
+                            { value: "", label: "Default (list price)" },
+                            ...specEntries.map(([k, val]) => {
+                              const label = `${k}: ${val}`;
+                              return { value: label, label };
+                            }),
+                          ]}
+                          value={line.variantLabel ?? ""}
+                          onChange={(v) => applyVariant(i, line, v)}
+                          placeholder="Default (list price)"
+                          triggerClassName="rounded-full"
+                        />
+                      </div>
                     </div>
                   )}
 
@@ -385,14 +395,18 @@ export default function LeadQuoteBlock({
               className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
             />
           </div>
-          <div>
-            <label className="text-xs font-medium text-slate-600">Valid until</label>
-            <input
-              type="date"
-              value={quote.validUntil?.slice(0, 10) ?? ""}
-              onChange={(e) => setQuote((q) => ({ ...q, validUntil: e.target.value }))}
-              className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
-            />
+          <div className="relative z-20">
+            <label className="text-xs font-medium text-slate-600" htmlFor="quote-valid-until">
+              Valid until
+            </label>
+            <div className="mt-1">
+              <DatePickerField
+                id="quote-valid-until"
+                value={(quote.validUntil?.trim() ?? "").slice(0, 10)}
+                onChange={(iso) => setQuote((q) => ({ ...q, validUntil: iso }))}
+                placeholder="dd/mm/yyyy"
+              />
+            </div>
           </div>
         </div>
         <div className="mt-4">

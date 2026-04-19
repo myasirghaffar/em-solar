@@ -5,13 +5,14 @@ import LeadsTable from "../../components/leads/LeadsTable";
 import LeadStatusChart from "../../components/sales/LeadStatusChart";
 import { useAuth } from "../../context/AuthContext";
 import {
+  deleteLead,
   fetchLeads,
   fetchSalesTeam,
   updateLead,
   type LeadRecord,
   type SalesTeamUser,
 } from "../../lib/api";
-import { toastError } from "../../lib/toast";
+import { toastError, toastSuccess } from "../../lib/toast";
 
 type BasePath = "/admin/leads" | "/salesman/leads";
 
@@ -73,6 +74,16 @@ export default function LeadsListView({ basePath }: { basePath: BasePath }) {
     }
   }
 
+  async function handleDeleteLead(id: number) {
+    try {
+      await deleteLead(id);
+      setLeads((prev) => prev.filter((x) => x.id !== id));
+      toastSuccess("Lead deleted.");
+    } catch {
+      toastError("Could not delete lead.");
+    }
+  }
+
   return (
     <div className="space-y-4">
       <AdminPageHeader
@@ -128,6 +139,7 @@ export default function LeadsListView({ basePath }: { basePath: BasePath }) {
           query={query}
           onQueryChange={setQuery}
           onPatch={handlePatch}
+          onDeleteLead={handleDeleteLead}
         />
       )}
     </div>

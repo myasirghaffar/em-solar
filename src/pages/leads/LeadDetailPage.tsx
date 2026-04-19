@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { AdminPanel } from "../../components/admin/AdminUI";
 import LeadQuoteBlock from "../../components/leads/LeadQuoteBlock";
+import Select from "../../components/ui/Select";
 import {
   fetchLead,
   fetchSalesTeam,
@@ -14,6 +15,9 @@ import { toastError, toastSuccess } from "../../lib/toast";
 
 const STATUS = ["New", "Assigned", "In Progress", "Won", "Lost"] as const;
 const PRODUCTS = ["Solar Panels", "Inverters", "Batteries", "Mounting Systems"];
+
+const STATUS_OPTIONS = STATUS.map((s) => ({ value: s, label: s }));
+const PRODUCT_OPTIONS = PRODUCTS.map((p) => ({ value: p, label: p }));
 
 export default function LeadDetailPage() {
   const { id: idParam } = useParams();
@@ -37,6 +41,14 @@ export default function LeadDetailPage() {
     assignedToUserId: "" as string | null,
     notes: "",
   });
+
+  const assignedOptions = useMemo(
+    () => [
+      { value: "", label: "Unassigned" },
+      ...salesTeam.map((s) => ({ value: s.id, label: s.name })),
+    ],
+    [salesTeam],
+  );
 
   useEffect(() => {
     if (!Number.isFinite(id) || id < 1) return;
@@ -78,6 +90,14 @@ export default function LeadDetailPage() {
     if (location.hash !== "#quote" || !lead) return;
     const t = window.setTimeout(() => {
       document.getElementById("lead-quote")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+    return () => window.clearTimeout(t);
+  }, [location.hash, lead?.id]);
+
+  useEffect(() => {
+    if (location.hash !== "#lead-details" || !lead) return;
+    const t = window.setTimeout(() => {
+      document.getElementById("lead-details")?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 100);
     return () => window.clearTimeout(t);
   }, [location.hash, lead?.id]);
@@ -162,7 +182,7 @@ export default function LeadDetailPage() {
         </Link>
       </div>
 
-      <AdminPanel className="p-4 sm:p-6">
+      <AdminPanel className="p-4 sm:p-6 scroll-mt-20" id="lead-details">
         <h2 className="text-lg font-semibold text-slate-900 mb-4">Lead details</h2>
         <form
           className="grid gap-4 md:grid-cols-2"
@@ -201,17 +221,16 @@ export default function LeadDetailPage() {
           <div>
             <label className="text-xs font-medium text-slate-600">Product interest</label>
             {isAdmin ? (
-              <select
-                value={form.productInterest}
-                onChange={(e) => setForm((f) => ({ ...f, productInterest: e.target.value }))}
-                className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
-              >
-                {PRODUCTS.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </select>
+              <div className="mt-1 relative z-20">
+                <Select
+                  options={PRODUCT_OPTIONS}
+                  value={
+                    PRODUCTS.includes(form.productInterest) ? form.productInterest : PRODUCTS[0]
+                  }
+                  onChange={(v) => setForm((f) => ({ ...f, productInterest: v }))}
+                  triggerClassName="rounded-full"
+                />
+              </div>
             ) : (
               <p className="mt-1 text-sm py-2 text-slate-800">{form.productInterest}</p>
             )}
@@ -219,19 +238,20 @@ export default function LeadDetailPage() {
           <div>
             <label className="text-xs font-medium text-slate-600">Status</label>
             {isAdmin ? (
-              <select
-                value={form.status}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, status: e.target.value as (typeof STATUS)[number] }))
-                }
-                className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
-              >
-                {STATUS.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
+              <div className="mt-1 relative z-20">
+                <Select
+                  options={STATUS_OPTIONS}
+                  value={
+                    STATUS.includes(form.status as (typeof STATUS)[number])
+                      ? form.status
+                      : "New"
+                  }
+                  onChange={(v) =>
+                    setForm((f) => ({ ...f, status: v as (typeof STATUS)[number] }))
+                  }
+                  triggerClassName="rounded-full"
+                />
+              </div>
             ) : (
               <p className="mt-1 text-sm py-2 text-slate-800">{form.status}</p>
             )}
@@ -239,23 +259,19 @@ export default function LeadDetailPage() {
           <div>
             <label className="text-xs font-medium text-slate-600">Assigned to</label>
             {isAdmin ? (
-              <select
-                value={form.assignedToUserId ?? ""}
-                onChange={(e) =>
-                  setForm((f) => ({
-                    ...f,
-                    assignedToUserId: e.target.value === "" ? null : e.target.value,
-                  }))
-                }
-                className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
-              >
-                <option value="">Unassigned</option>
-                {salesTeam.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
+              <div className="mt-1 relative z-20">
+                <Select
+                  options={assignedOptions}
+                  value={form.assignedToUserId ?? ""}
+                  onChange={(v) =>
+                    setForm((f) => ({
+                      ...f,
+                      assignedToUserId: v === "" ? null : v,
+                    }))
+                  }
+                  triggerClassName="rounded-full"
+                />
+              </div>
             ) : (
               <p className="mt-1 text-sm py-2 text-slate-800">{lead.assignedToName ?? "—"}</p>
             )}

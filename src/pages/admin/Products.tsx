@@ -12,6 +12,7 @@ import {
   FileUp,
 } from "lucide-react";
 import Input from "../../components/ui/Input";
+import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import Select from "../../components/ui/Select";
 import {
   AdminPageHeader,
@@ -167,6 +168,8 @@ export default function AdminProducts() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [pendingDeleteProductId, setPendingDeleteProductId] = useState<number | null>(null);
+  const [deleteProductBusy, setDeleteProductBusy] = useState(false);
 
   useScrollLock(showModal);
 
@@ -255,23 +258,27 @@ export default function AdminProducts() {
     setShowModal(true);
   };
 
-  const handleDelete = async (id: number) => {
-    if (confirm("Are you sure you want to delete this product?")) {
-      try {
-        const { deleteProduct } = await import("../../lib/api");
-        await deleteProduct(id);
-        void loadProducts();
-        toastSuccess("Product deleted");
-      } catch (err) {
-        console.error("Error:", err);
-        const msg =
-          err instanceof ApiError
+  const executeDeleteProduct = async () => {
+    if (pendingDeleteProductId == null) return;
+    const id = pendingDeleteProductId;
+    setDeleteProductBusy(true);
+    try {
+      const { deleteProduct } = await import("../../lib/api");
+      await deleteProduct(id);
+      void loadProducts();
+      setPendingDeleteProductId(null);
+      toastSuccess("Product deleted");
+    } catch (err) {
+      console.error("Error:", err);
+      const msg =
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
             ? err.message
-            : err instanceof Error
-              ? err.message
-              : "Could not delete product.";
-        toastError(msg);
-      }
+            : "Could not delete product.";
+      toastError(msg);
+    } finally {
+      setDeleteProductBusy(false);
     }
   };
 
@@ -432,6 +439,11 @@ export default function AdminProducts() {
     });
   };
 
+  const pendingDeleteProductName =
+    pendingDeleteProductId != null
+      ? products.find((p: { id: number }) => p.id === pendingDeleteProductId)?.name
+      : undefined;
+
   return (
     <div className="min-w-0 w-full max-w-full space-y-6">
       <AdminPageHeader
@@ -565,8 +577,10 @@ export default function AdminProducts() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleDelete(product.id)}
-                          className="rounded-lg p-2 text-red-600 transition-colors hover:bg-red-50"
+                          onClick={() => setPendingDeleteProductId(product.id)}
+                          disabled={deleteProductBusy}
+                          className="rounded-lg p-2 text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          aria-label="Delete product"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -1031,6 +1045,24 @@ export default function AdminProducts() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={pendingDeleteProductId !== null}
+        onClose={() => {
+          if (!deleteProductBusy) setPendingDeleteProductId(null);
+        }}
+        onConfirm={() => void executeDeleteProduct()}
+        title="Delete product?"
+        message={
+          pendingDeleteProductName != null
+            ? `Delete “${pendingDeleteProductName}”? This cannot be undone.`
+            : "This cannot be undone."
+        }
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        variant="danger"
+        confirmLoading={deleteProductBusy}
+      />
     </div>
   );
 }

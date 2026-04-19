@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { createLead, type LeadRecord } from "../../lib/api";
 import { toastError, toastSuccess } from "../../lib/toast";
+import Select from "../ui/Select";
+
+const PRODUCT_INTEREST_OPTIONS = [
+  "Solar Panels",
+  "Inverters",
+  "Batteries",
+  "Mounting Systems",
+].map((p) => ({ value: p, label: p }));
 
 type Props = {
   /** Called with the new lead so the list can update without a full refetch. */
@@ -76,16 +84,14 @@ export default function LeadCreateForm({ onCreated, className = "" }: Props) {
       </div>
       <div>
         <label className="text-xs font-medium text-slate-600">Product interest</label>
-        <select
-          value={form.productInterest}
-          onChange={(e) => setForm((f) => ({ ...f, productInterest: e.target.value }))}
-          className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316]"
-        >
-          <option>Solar Panels</option>
-          <option>Inverters</option>
-          <option>Batteries</option>
-          <option>Mounting Systems</option>
-        </select>
+        <div className="mt-1 relative z-20">
+          <Select
+            options={PRODUCT_INTEREST_OPTIONS}
+            value={form.productInterest}
+            onChange={(v) => setForm((f) => ({ ...f, productInterest: v }))}
+            triggerClassName="rounded-full"
+          />
+        </div>
       </div>
       <div>
         <label className="text-xs font-medium text-slate-600">Notes</label>

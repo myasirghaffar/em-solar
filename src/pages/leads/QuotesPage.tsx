@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { FileText, Link2 } from "lucide-react";
 import { AdminPageHeader, AdminPanel } from "../../components/admin/AdminUI";
 import LeadQuoteBlock from "../../components/leads/LeadQuoteBlock";
+import Select from "../../components/ui/Select";
 import { useAuth } from "../../context/AuthContext";
 import { fetchLead, fetchLeads, type LeadRecord } from "../../lib/api";
 import { toastError } from "../../lib/toast";
@@ -42,6 +43,17 @@ export default function QuotesPage({ area }: { area: Area }) {
     const n = leadIdParam ? Number(leadIdParam) : NaN;
     return Number.isFinite(n) && n >= 1 ? n : null;
   }, [leadIdParam]);
+
+  const leadPickerOptions = useMemo(
+    () => [
+      { value: "", label: "— Select a lead —" },
+      ...leads.map((l) => ({
+        value: String(l.id),
+        label: `#${l.id} · ${l.name} (${l.location})`,
+      })),
+    ],
+    [leads],
+  );
 
   useEffect(() => {
     if (initialFromQuery != null) {
@@ -106,24 +118,22 @@ export default function QuotesPage({ area }: { area: Area }) {
           </p>
           <div className="space-y-2">
             <label className="text-xs font-medium text-slate-600">Lead</label>
-            <select
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316]"
-              value={selectedId ?? ""}
-              onChange={(e) => {
-                const v = e.target.value;
-                setSelectedId(v === "" ? null : Number(v));
-                if (v === "") {
-                  setSearchParams({}, { replace: true });
-                }
-              }}
-            >
-              <option value="">— Select a lead —</option>
-              {leads.map((l) => (
-                <option key={l.id} value={l.id}>
-                  #{l.id} · {l.name} ({l.location})
-                </option>
-              ))}
-            </select>
+            <div className="relative z-20">
+              <Select
+                options={leadPickerOptions}
+                value={selectedId != null ? String(selectedId) : ""}
+                onChange={(v) => {
+                  if (v === "") {
+                    setSelectedId(null);
+                    setSearchParams({}, { replace: true });
+                  } else {
+                    setSelectedId(Number(v));
+                  }
+                }}
+                placeholder="— Select a lead —"
+                triggerClassName="rounded-full"
+              />
+            </div>
           </div>
 
           {loadingList ? (

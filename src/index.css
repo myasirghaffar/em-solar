@@ -1,5 +1,40 @@
 @import "tailwindcss";
 
+/* LexKit defaultLexKitTheme uses these class names — map them so toolbar formatting is visible */
+.lexkit-content-editable {
+  outline: none;
+}
+/* LexKit places the placeholder after the contenteditable in the DOM; keep typed text above */
+.lexkit-editor-container .lexkit-content-editable {
+  position: relative;
+  z-index: 2;
+}
+.lexkit-editor-container .lexkit-placeholder {
+  pointer-events: none;
+  user-select: none;
+  z-index: 0 !important;
+}
+.lexkit-placeholder {
+  pointer-events: none;
+  user-select: none;
+}
+.lexkit-text-bold { font-weight: 700; }
+.lexkit-text-italic { font-style: italic; }
+.lexkit-text-underline { text-decoration: underline; }
+.lexkit-text-strikethrough { text-decoration: line-through; }
+.lexkit-text-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.9em;
+  padding: 0.1em 0.25em;
+  border-radius: 0.25rem;
+  background: rgb(241 245 249);
+  color: rgb(15 23 42);
+}
+.prose-invert .lexkit-text-code {
+  background: rgb(30 41 59);
+  color: rgb(241 245 249);
+}
+
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 0;

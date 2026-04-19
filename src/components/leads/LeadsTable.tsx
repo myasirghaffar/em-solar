@@ -1,7 +1,12 @@
-import { Link } from "react-router-dom";
+import { useMemo, useState } from "react";
+import ConfirmDialog from "../ui/ConfirmDialog";
+import DropdownMenu from "../ui/DropdownMenu";
+import Select from "../ui/Select";
 import type { LeadRecord, SalesTeamUser } from "../../lib/api";
 
 const STATUS = ["New", "Assigned", "In Progress", "Won", "Lost"] as const;
+
+const STATUS_OPTIONS = STATUS.map((s) => ({ value: s, label: s }));
 
 type Props = {
   leads: LeadRecord[];
@@ -11,6 +16,7 @@ type Props = {
   query: string;
   onQueryChange: (q: string) => void;
   onPatch: (id: number, patch: Partial<LeadRecord>) => Promise<void>;
+  onDeleteLead: (id: number) => void | Promise<void>;
 };
 
 export default function LeadsTable({
@@ -21,8 +27,11 @@ export default function LeadsTable({
   query,
   onQueryChange,
   onPatch,
+  onDeleteLead,
 }: Props) {
   const quotesBase = basePath.replace(/\/leads$/, "/quotes");
+
+  const [pendingDeleteLeadId, setPendingDeleteLeadId] = useState<number | null>(null);
 
   const filtered = leads.filter((l) => {
     if (!query.trim()) return true;
@@ -34,6 +43,14 @@ export default function LeadsTable({
       String(l.contact).includes(q)
     );
   });
+
+  const assignedOptions = useMemo(
+    () => [
+      { value: "", label: "Unassigned" },
+      ...salesTeam.map((s) => ({ value: s.id, label: s.name })),
+    ],
+    [salesTeam],
+  );
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
@@ -58,7 +75,7 @@ export default function LeadsTable({
               <th className="px-4 py-3 font-medium min-w-[160px]">Assigned</th>
               <th className="px-4 py-3 font-medium">Created by</th>
               <th className="px-4 py-3 font-medium whitespace-nowrap">Updated</th>
-              <th className="px-4 py-3 font-medium text-right">Actions</th>
+              <th className="px-4 py-3 font-medium text-right w-[1%]">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -69,44 +86,36 @@ export default function LeadsTable({
                 <td className="px-4 py-3">{l.contact}</td>
                 <td className="px-4 py-3">{l.location}</td>
                 <td className="px-4 py-3">{l.productInterest}</td>
-                <td className="px-4 py-3">
+                <td className="relative z-20 min-w-[9.5rem] max-w-[11rem] overflow-visible px-4 py-3">
                   {role === "admin" ? (
-                    <select
-                      className="border border-gray-200 rounded-lg px-2 py-1 text-sm w-full max-w-[160px]"
-                      value={l.status}
-                      onChange={(e) =>
-                        void onPatch(l.id, { status: e.target.value as (typeof STATUS)[number] })
+                    <Select
+                      size="sm"
+                      dropdownPosition="above"
+                      options={STATUS_OPTIONS}
+                      value={STATUS.includes(l.status as (typeof STATUS)[number]) ? l.status : "New"}
+                      onChange={(v) =>
+                        void onPatch(l.id, { status: v as (typeof STATUS)[number] })
                       }
-                    >
-                      {STATUS.map((s) => (
-                        <option key={s} value={s}>
-                          {s}
-                        </option>
-                      ))}
-                    </select>
+                      triggerClassName="rounded-full"
+                    />
                   ) : (
                     l.status
                   )}
                 </td>
-                <td className="px-4 py-3">
+                <td className="relative z-20 min-w-[10rem] max-w-[14rem] overflow-visible px-4 py-3">
                   {role === "admin" ? (
-                    <select
-                      className="border border-gray-200 rounded-lg px-2 py-1 text-sm w-full max-w-[180px]"
+                    <Select
+                      size="sm"
+                      dropdownPosition="above"
+                      options={assignedOptions}
                       value={l.assignedToUserId ?? ""}
-                      onChange={(e) => {
-                        const v = e.target.value;
+                      onChange={(v) =>
                         void onPatch(l.id, {
                           assignedToUserId: v === "" ? null : v,
-                        });
-                      }}
-                    >
-                      <option value="">Unassigned</option>
-                      {salesTeam.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.name}
-                        </option>
-                      ))}
-                    </select>
+                        })
+                      }
+                      triggerClassName="rounded-full"
+                    />
                   ) : l.assignedToName ? (
                     l.assignedToName
                   ) : (
@@ -117,20 +126,34 @@ export default function LeadsTable({
                 <td className="px-4 py-3 whitespace-nowrap text-xs text-slate-500">
                   {new Date(l.updatedAt).toLocaleDateString()}
                 </td>
-                <td className="px-4 py-3 text-right">
-                  <div className="flex flex-wrap items-center justify-end gap-2">
-                    <Link
-                      to={`${basePath}/${l.id}`}
-                      className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium border border-[#F97316] text-[#F97316] rounded-lg hover:bg-[#F97316] hover:text-white transition-colors"
-                    >
-                      View
-                    </Link>
-                    <Link
-                      to={`${quotesBase}?leadId=${l.id}`}
-                      className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium bg-[#F97316] text-white rounded-lg hover:bg-[#ea6a0f] transition-colors"
-                    >
-                      Quote
-                    </Link>
+                <td className="relative z-20 px-4 py-3 text-right">
+                  <div className="inline-flex justify-end">
+                    <DropdownMenu
+                      size="sm"
+                      align="end"
+                      dropdownPosition="above"
+                      triggerClassName="rounded-full"
+                      aria-label="Lead actions"
+                      items={[
+                        { id: "view", label: "View", to: `${basePath}/${l.id}` },
+                        { id: "quote", label: "Quote", to: `${quotesBase}?leadId=${l.id}` },
+                        ...(role === "admin"
+                          ? [
+                              {
+                                id: "delete",
+                                label: "Delete",
+                                danger: true,
+                                onSelect: () => setPendingDeleteLeadId(l.id),
+                              },
+                            ]
+                          : []),
+                        {
+                          id: "edit",
+                          label: "Edit",
+                          to: `${basePath}/${l.id}#lead-details`,
+                        },
+                      ]}
+                    />
                   </div>
                 </td>
               </tr>
@@ -145,6 +168,26 @@ export default function LeadsTable({
           </tbody>
         </table>
       </div>
+
+      <ConfirmDialog
+        isOpen={pendingDeleteLeadId !== null}
+        onClose={() => setPendingDeleteLeadId(null)}
+        onConfirm={() => {
+          if (pendingDeleteLeadId == null) return;
+          const id = pendingDeleteLeadId;
+          setPendingDeleteLeadId(null);
+          void onDeleteLead(id);
+        }}
+        title="Delete lead?"
+        message={
+          pendingDeleteLeadId != null
+            ? `Delete lead #${pendingDeleteLeadId}? This cannot be undone.`
+            : ""
+        }
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        variant="danger"
+      />
     </div>
   );
 }

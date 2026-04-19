@@ -24,12 +24,15 @@ export function AdminPageHeader({
 export function AdminPanel({
   children,
   className = "",
+  id,
 }: {
   children: ReactNode;
   className?: string;
+  id?: string;
 }) {
   return (
     <section
+      id={id}
       className={`rounded-2xl bg-white p-4 outline outline-1 outline-offset-[-1px] outline-gray-200 sm:p-6 ${className}`}
     >
       {children}

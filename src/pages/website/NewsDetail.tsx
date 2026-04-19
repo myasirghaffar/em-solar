@@ -67,9 +67,12 @@ export default function NewsDetail() {
             {post.excerpt ? (
               <p className="mt-8 text-lg text-slate-700 leading-relaxed">{post.excerpt}</p>
             ) : null}
-            <div className="prose prose-slate mt-6 max-w-none">
-              <p className="whitespace-pre-wrap text-slate-700 leading-relaxed">{post.body || post.excerpt}</p>
-            </div>
+            {post.body?.trim() ? (
+              <div
+                className="prose prose-slate mt-6 max-w-none text-slate-700 leading-relaxed [&_a]:text-[#FF7A00] [&_a:hover]:underline"
+                dangerouslySetInnerHTML={{ __html: post.body }}
+              />
+            ) : null}
           </article>
         )}
       </div>

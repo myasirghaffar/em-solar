@@ -554,6 +554,13 @@ export async function updateLead(
   });
 }
 
+export async function deleteLead(id: number): Promise<void> {
+  await apiRequest<{ ok: true }>(`/leads/${id}`, {
+    method: "DELETE",
+    auth: true,
+  });
+}
+
 export type SalesTeamUser = {
   id: string;
   name: string;

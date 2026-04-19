@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { Trash2, Pencil, Plus } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ImageIcon, ImagePlus, Trash2, Pencil, Plus, Upload, X } from "lucide-react";
 import {
   AdminPageHeader,
   AdminPanel,
@@ -14,6 +14,9 @@ import {
   type BlogPost,
 } from "../../lib/api";
 import { toastError, toastSuccess } from "../../lib/toast";
+import ConfirmDialog from "../../components/ui/ConfirmDialog";
+import DatePickerField from "../../components/ui/DatePickerField";
+import { BlogBodyEditor } from "../../components/admin/BlogBodyEditor";
 
 function toDatetimeLocal(iso: string): string {
   const d = new Date(iso);
@@ -39,6 +42,17 @@ const emptyForm = {
   publishedAt: "",
 };
 
+const MAX_COVER_IMAGE_BYTES = 2 * 1024 * 1024;
+
+function readFileAsDataURL(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result as string);
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(file);
+  });
+}
+
 export default function AdminBlogs() {
   const [rows, setRows] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,6 +60,8 @@ export default function AdminBlogs() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const coverFileInputRef = useRef<HTMLInputElement>(null);
+  const [coverUploadError, setCoverUploadError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -66,6 +82,7 @@ export default function AdminBlogs() {
 
   function startCreate() {
     setEditingId(null);
+    setCoverUploadError(null);
     setShowForm(true);
     setForm({
       ...emptyForm,
@@ -74,6 +91,7 @@ export default function AdminBlogs() {
   }
 
   function startEdit(b: BlogPost) {
+    setCoverUploadError(null);
     setShowForm(true);
     setEditingId(b.id);
     setForm({
@@ -89,6 +107,10 @@ export default function AdminBlogs() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!form.imageUrl.trim()) {
+      toastError("Please upload a cover image.");
+      return;
+    }
     setSaving(true);
     try {
       const publishedAt = fromDatetimeLocal(form.publishedAt);
@@ -120,6 +142,7 @@ export default function AdminBlogs() {
       invalidateAdminBootstrapCache();
       setEditingId(null);
       setShowForm(false);
+      setCoverUploadError(null);
       setForm(emptyForm);
     } catch {
       toastError("Could not save blog.");
@@ -128,25 +151,58 @@ export default function AdminBlogs() {
     }
   }
 
-  async function onDelete(id: number) {
-    if (!window.confirm("Delete this blog post?")) return;
-    setSaving(true);
+  async function handleCoverFiles(fileList: FileList | File[] | null) {
+    setCoverUploadError(null);
+    const file = fileList?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setCoverUploadError("Only image files (JPEG, PNG, WebP, GIF) are allowed.");
+      return;
+    }
+    if (file.size > MAX_COVER_IMAGE_BYTES) {
+      setCoverUploadError(`“${file.name}” is too large (max 2 MB).`);
+      return;
+    }
+    try {
+      const dataUrl = await readFileAsDataURL(file);
+      setForm((f) => ({ ...f, imageUrl: dataUrl }));
+    } catch {
+      setCoverUploadError(`Could not read “${file.name}”.`);
+    }
+  }
+
+  const [pendingDeleteBlogId, setPendingDeleteBlogId] = useState<number | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+
+  async function executeDeleteBlog() {
+    if (pendingDeleteBlogId == null) return;
+    const id = pendingDeleteBlogId;
+    setDeleteBusy(true);
     try {
       await deleteAdminBlog(id);
       setRows((prev) => prev.filter((x) => x.id !== id));
       if (editingId === id) {
         setEditingId(null);
         setShowForm(false);
+        setCoverUploadError(null);
         setForm(emptyForm);
       }
       invalidateAdminBootstrapCache();
+      setPendingDeleteBlogId(null);
       toastSuccess("Blog deleted");
     } catch {
       toastError("Could not delete blog.");
     } finally {
-      setSaving(false);
+      setDeleteBusy(false);
     }
   }
+
+  const pendingDeleteBlogTitle =
+    pendingDeleteBlogId != null
+      ? rows.find((r) => r.id === pendingDeleteBlogId)?.title
+      : undefined;
+
+  const hasCoverImage = Boolean(form.imageUrl.trim());
 
   return (
     <div className="space-y-6 min-w-0 w-full max-w-full">
@@ -190,23 +246,118 @@ export default function AdminBlogs() {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-slate-600">Published</label>
-              <input
-                type="datetime-local"
-                value={form.publishedAt}
-                onChange={(e) => setForm((f) => ({ ...f, publishedAt: e.target.value }))}
-                className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
-              />
+              <label className="text-xs font-medium text-slate-600" htmlFor="blog-published-at">
+                Published
+              </label>
+              <div className="mt-1">
+                <DatePickerField
+                  id="blog-published-at"
+                  withTime
+                  value={form.publishedAt}
+                  onChange={(next) => setForm((f) => ({ ...f, publishedAt: next }))}
+                />
+              </div>
             </div>
             <div className="md:col-span-2">
-              <label className="text-xs font-medium text-slate-600">Cover image URL</label>
+              <label className="text-xs font-medium text-slate-600">Cover image</label>
+              <p className="mt-0.5 text-xs text-gray-500">
+                Shown on the news carousel and article page. JPEG, PNG, WebP, or GIF — max 2 MB.
+              </p>
+              {!hasCoverImage ? (
+                <p className="mt-1 text-[11px] leading-snug text-gray-400">
+                  Demo mode embeds the file in the form (like product images). In production, upload to
+                  storage and save the returned URL.
+                </p>
+              ) : null}
               <input
-                required
-                value={form.imageUrl}
-                onChange={(e) => setForm((f) => ({ ...f, imageUrl: e.target.value }))}
-                placeholder="https://…"
-                className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                ref={coverFileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="hidden"
+                onChange={async (e) => {
+                  await handleCoverFiles(e.target.files);
+                  e.target.value = "";
+                }}
               />
+              {hasCoverImage ? (
+                <div
+                  className="mt-3 overflow-hidden rounded-xl border border-gray-200 bg-gray-50 shadow-sm"
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  onDrop={async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    await handleCoverFiles(e.dataTransfer.files);
+                  }}
+                >
+                  <div className="relative aspect-[21/9] max-h-56 w-full bg-gray-100 sm:max-h-60">
+                    <img
+                      src={form.imageUrl}
+                      alt="Cover preview"
+                      className="h-full w-full object-cover"
+                    />
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/35 to-transparent pt-14 sm:pt-16" />
+                    <div className="absolute inset-x-0 bottom-0 flex flex-col gap-2 p-3 sm:flex-row sm:items-end sm:justify-between">
+                      <p className="text-xs font-medium text-white drop-shadow-sm">
+                        Cover preview — drop a file here to replace
+                      </p>
+                      <div className="pointer-events-auto flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => coverFileInputRef.current?.click()}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-900 shadow-sm ring-1 ring-black/5 hover:bg-gray-50"
+                        >
+                          <ImagePlus className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                          Replace image
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setForm((f) => ({ ...f, imageUrl: "" }));
+                            setCoverUploadError(null);
+                          }}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-white/50 bg-white/15 px-3 py-2 text-xs font-semibold text-white backdrop-blur-sm hover:bg-white/25"
+                        >
+                          <X className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  className="mt-3 rounded-xl border-2 border-dashed border-gray-300 bg-white/80 px-4 py-8 text-center transition-colors hover:border-[#FF7A00]/45 hover:bg-[#FF7A00]/8"
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  onDrop={async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    await handleCoverFiles(e.dataTransfer.files);
+                  }}
+                >
+                  <ImageIcon className="mx-auto h-10 w-10 text-gray-400" aria-hidden />
+                  <p className="mt-2 text-sm font-medium text-slate-700">Drag & drop an image here</p>
+                  <p className="mt-1 text-xs text-gray-500">or</p>
+                  <button
+                    type="button"
+                    onClick={() => coverFileInputRef.current?.click()}
+                    className="mt-3 inline-flex items-center gap-2 rounded-[10px] bg-[#FF7A00] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#e86e00]"
+                  >
+                    <Upload className="h-4 w-4" aria-hidden />
+                    Choose image
+                  </button>
+                </div>
+              )}
+              {coverUploadError ? (
+                <p className="mt-2 text-sm font-medium text-red-600" role="alert">
+                  {coverUploadError}
+                </p>
+              ) : null}
             </div>
             <div className="md:col-span-2">
               <label className="text-xs font-medium text-slate-600">Excerpt</label>
@@ -219,12 +370,13 @@ export default function AdminBlogs() {
             </div>
             <div className="md:col-span-2">
               <label className="text-xs font-medium text-slate-600">Body (full article)</label>
-              <textarea
-                value={form.body}
-                onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
-                rows={5}
-                className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
-              />
+              <div className="mt-1">
+                <BlogBodyEditor
+                  instanceKey={editingId != null ? `edit-${editingId}` : "create"}
+                  value={form.body}
+                  onChange={(html) => setForm((f) => ({ ...f, body: html }))}
+                />
+              </div>
             </div>
             <div className="md:col-span-2 flex flex-wrap items-center gap-4">
               <label className="inline-flex items-center gap-2 text-sm text-slate-700">
@@ -249,6 +401,7 @@ export default function AdminBlogs() {
                 onClick={() => {
                   setEditingId(null);
                   setShowForm(false);
+                  setCoverUploadError(null);
                   setForm(emptyForm);
                 }}
                 className="rounded-lg border border-gray-200 px-4 py-2 text-sm"
@@ -279,8 +432,8 @@ export default function AdminBlogs() {
             <tbody className="divide-y divide-gray-200">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-slate-500">
-                    Loading…
+                  <td colSpan={5} className="px-4 py-12 text-center">
+                    <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-[#FF7A00]" />
                   </td>
                 </tr>
               ) : rows.length === 0 ? (
@@ -313,8 +466,8 @@ export default function AdminBlogs() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => void onDelete(b.id)}
-                        disabled={saving}
+                        onClick={() => setPendingDeleteBlogId(b.id)}
+                        disabled={saving || deleteBusy}
                         className="ml-3 inline-flex items-center gap-1 rounded-lg px-2 py-1 text-rose-600 font-medium hover:underline"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -328,6 +481,24 @@ export default function AdminBlogs() {
           </table>
         </div>
       </AdminTableShell>
+
+      <ConfirmDialog
+        isOpen={pendingDeleteBlogId !== null}
+        onClose={() => {
+          if (!deleteBusy) setPendingDeleteBlogId(null);
+        }}
+        onConfirm={() => void executeDeleteBlog()}
+        title="Delete blog post?"
+        message={
+          pendingDeleteBlogTitle != null
+            ? `Delete “${pendingDeleteBlogTitle}”? This cannot be undone.`
+            : "This cannot be undone."
+        }
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        variant="danger"
+        confirmLoading={deleteBusy}
+      />
     </div>
   );
 }

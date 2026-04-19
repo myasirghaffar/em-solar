@@ -13,8 +13,8 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { AdminPageHeader, AdminPanel, AdminTablePagination, AdminTableShell, StatusPill } from '../../components/admin/AdminUI';
-import { useAdminTablePagination } from '../../hooks/useAdminTablePagination';
+import { AdminPageHeader, AdminPanel } from '../../components/admin/AdminUI';
+import AdminOrdersTableSection from '../../components/admin/AdminOrdersTableSection';
 
 type ChartPeriod = 'weekly' | 'monthly' | 'yearly';
 
@@ -55,7 +55,6 @@ function normalizeAnalyticsPayload(raw: unknown): any | null {
 
 export default function AdminDashboard() {
   const [analytics, setAnalytics] = useState<any>(null);
-  const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
   const [chartPeriod, setChartPeriod] = useState<ChartPeriod>('monthly');
@@ -71,7 +70,6 @@ export default function AdminDashboard() {
       const { fetchAdminBootstrap } = await import('../../lib/api');
       const boot = await fetchAdminBootstrap();
       setAnalytics(normalizeAnalyticsPayload(boot.analytics));
-      setRecentOrders(Array.isArray(boot.orders) ? boot.orders : []);
     } catch (err) {
       console.error('Fetch error:', err);
       const msg =
@@ -83,7 +81,6 @@ export default function AdminDashboard() {
       setAnalyticsError(msg);
       toastError(msg);
       setAnalytics(null);
-      setRecentOrders([]);
     } finally {
       setLoading(false);
     }
@@ -104,16 +101,6 @@ export default function AdminDashboard() {
   }, [analytics, chartPeriod]);
 
   const periodMeta = CHART_PERIOD_OPTIONS.find((o) => o.id === chartPeriod);
-
-  const {
-    page: ordersPage,
-    setPage: setOrdersPage,
-    pageItems: dashboardOrderRows,
-    totalPages: ordersTotalPages,
-    startItem: ordersStartItem,
-    endItem: ordersEndItem,
-    totalItems: ordersTotalItems,
-  } = useAdminTablePagination(recentOrders);
 
   if (loading) {
     return (
@@ -287,68 +274,16 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Recent Orders */}
-      <AdminTableShell>
-        <div className="p-4 sm:p-6 border-b border-gray-200">
-          <h2 className="text-base font-bold text-slate-900">Orders</h2>
-          <p className="mt-1 text-sm text-gray-500">Newest first · {ordersTotalItems} total</p>
-        </div>
-        <div className="overflow-x-auto overflow-y-visible touch-pan-x min-w-0 admin-table-scroll">
-          <table className="w-full min-w-full">
-            <thead className="bg-gray-50/80">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Order ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Customer</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Total</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Date</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {dashboardOrderRows.map(order => (
-                <tr key={order.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">#{order.id}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{order.customer_name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-[#FF7A00]">
-                    Rs. {order.total_price?.toLocaleString() || 0}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <StatusPill
-                      label={order.order_status || 'pending'}
-                      variant={
-                        order.order_status === 'delivered'
-                          ? 'success'
-                          : order.order_status === 'shipped'
-                          ? 'info'
-                          : order.order_status === 'processing'
-                          ? 'warning'
-                          : 'default'
-                      }
-                    />
-                  </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {order.created_at ? new Date(order.created_at).toLocaleDateString() : '-'}
-                  </td>
-                </tr>
-              ))}
-              {recentOrders.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500">No orders yet</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-        <AdminTablePagination
-          enabled={recentOrders.length > 0}
-          page={ordersPage}
-          totalPages={ordersTotalPages}
-          onPageChange={setOrdersPage}
-          startItem={ordersStartItem}
-          endItem={ordersEndItem}
-          totalItems={ordersTotalItems}
-        />
-      </AdminTableShell>
+      <AdminOrdersTableSection
+        shellHeader={
+          <div className="border-b border-gray-200 p-4 sm:p-6">
+            <h2 className="text-base font-bold text-slate-900">Orders</h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Same list and tools as Orders — search, filter, update status, view details
+            </p>
+          </div>
+        }
+      />
     </div>
   );
 }
