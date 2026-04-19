@@ -51,7 +51,7 @@ function formatDescriptionFromProduct(p: CatalogProduct, variantLabel: string | 
   const brand = (p.brand && String(p.brand).trim()) || "";
   const name = String(p.name ?? "").trim();
   const cat = String(p.category ?? "").trim();
-  const base = [brand ? `〔${brand}〕` : null, name, cat ? `· ${cat}` : null]
+  const base = [brand ? `[${brand}]` : null, name, cat ? `· ${cat}` : null]
     .filter(Boolean)
     .join(" ")
     .replace(/\s+/g, " ")
@@ -233,18 +233,48 @@ export default function LeadQuoteBlock({
     }
   }
 
-  function handleDownloadPdf() {
+  function productFeatureImageUrl(p: CatalogProduct | undefined): string | null {
+    const im = p?.images?.[0];
+    if (!im || typeof im !== "string") return null;
+    const t = im.trim();
+    if (!t) return null;
+    if (t.startsWith("data:") || /^https?:\/\//i.test(t)) return t;
+    const path = t.startsWith("/") ? t : `/${t}`;
+    return `${window.location.origin}${path}`;
+  }
+
+  /** One URL (or null) per distinct catalog product on the quote — order matches first appearance in lines. */
+  function projectPhotoUrlsForQuote(lines: QuoteLine[]): (string | null)[] {
+    const seen = new Set<number>();
+    const result: (string | null)[] = [];
+    for (const line of lines) {
+      if (line.productId == null) continue;
+      if (seen.has(line.productId)) continue;
+      seen.add(line.productId);
+      const p = products.find((x) => x.id === line.productId);
+      result.push(productFeatureImageUrl(p));
+    }
+    return result;
+  }
+
+  async function handleDownloadPdf() {
     const payload = buildQuotePayload();
     if (!payload) {
       toastError("Add line items to generate a PDF.");
       return;
     }
-    downloadLeadQuotePdf({
-      lead: { ...lead, notes: pdfLeadNotes } as LeadRecord,
-      quote: payload,
-      preparedByName,
-    });
-    toastSuccess("PDF download started");
+    try {
+      const projectPhotoUrls = projectPhotoUrlsForQuote(payload.lines);
+      await downloadLeadQuotePdf({
+        lead: { ...lead, notes: pdfLeadNotes } as LeadRecord,
+        quote: payload,
+        preparedByName,
+        projectPhotoUrls,
+      });
+      toastSuccess("PDF download started");
+    } catch {
+      toastError("Could not generate PDF (check network / logo assets).");
+    }
   }
 
   return (
