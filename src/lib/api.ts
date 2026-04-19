@@ -607,3 +607,51 @@ export async function patchSalesTeamMember(
     body: JSON.stringify(body),
   });
 }
+
+/** System accounts (admin, store user, sales) — same shape as sales team rows. */
+export type SystemUserRow = SalesTeamUser;
+
+export async function fetchAdminUsers(): Promise<SystemUserRow[]> {
+  const data = await apiRequest<unknown>("/admin/users", {
+    method: "GET",
+    auth: true,
+  });
+  return ensureArray<SystemUserRow>(data);
+}
+
+export async function createAdminUser(body: {
+  name: string;
+  email: string;
+  password: string;
+  role: "ADMIN" | "USER" | "SALESMAN";
+}): Promise<SystemUserRow> {
+  return apiRequest<SystemUserRow>("/admin/users", {
+    method: "POST",
+    auth: true,
+    body: JSON.stringify(body),
+  });
+}
+
+export async function patchSystemUser(
+  id: string,
+  body: Partial<{
+    name: string;
+    email: string;
+    password: string;
+    role: "ADMIN" | "USER" | "SALESMAN";
+    isActive: boolean;
+  }>,
+): Promise<SystemUserRow> {
+  return apiRequest<SystemUserRow>(`/users/${id}`, {
+    method: "PATCH",
+    auth: true,
+    body: JSON.stringify(body),
+  });
+}
+
+export async function deleteSystemUser(id: string): Promise<void> {
+  await apiRequest<null>(`/admin/users/${id}`, {
+    method: "DELETE",
+    auth: true,
+  });
+}

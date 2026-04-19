@@ -26,6 +26,7 @@ export function humanizeApiError(code: string, message: string): string {
     CONSULTATION_NOT_FOUND: "That consultation could not be found.",
     LEAD_NOT_FOUND: "That lead could not be found.",
     BLOG_NOT_FOUND: "That blog post could not be found.",
+    USER_DELETE_BLOCKED: "This user cannot be removed or changed in that way.",
     TIMEOUT: "The request timed out. Try again in a moment.",
     DATABASE_NOT_CONFIGURED:
       "The live API is not connected to the database yet. Add DATABASE_URL (or Hyperdrive) on the Cloudflare Worker.",

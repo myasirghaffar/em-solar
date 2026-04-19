@@ -14,6 +14,7 @@ import {
   UserCircle2,
   FolderOpen,
   UserPlus,
+  UserCog,
   FileText,
 } from "lucide-react";
 import { useState } from "react";
@@ -33,6 +34,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { path: "/admin/leads", icon: FolderOpen, label: "Leads" },
     { path: "/admin/quotes", icon: FileText, label: "Quotes" },
     { path: "/admin/sales-team", icon: UserPlus, label: "Sales team" },
+    { path: "/admin/users", icon: UserCog, label: "Users" },
     { path: "/admin/products", icon: Package, label: "Products" },
     { path: "/admin/orders", icon: ShoppingCart, label: "Orders" },
     { path: "/admin/customers", icon: Users, label: "Customers" },

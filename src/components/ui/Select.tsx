@@ -8,7 +8,7 @@ import {
   type KeyboardEvent,
 } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDown } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 
 export type SelectOption = { value: string; label: string };
 
@@ -29,8 +29,12 @@ export type SelectProps = {
   size?: "sm" | "md";
   /** Open menu above trigger (helps inside scroll tables) */
   dropdownPosition?: "below" | "above";
+  /** Light (default) or dark panel with optional checkmark on the active option */
+  menuTone?: "light" | "dark";
   id?: string;
   name?: string;
+  /** When set with `label`, overrides label element classes */
+  labelClassName?: string;
 };
 
 export default function Select({
@@ -46,8 +50,10 @@ export default function Select({
   triggerClassName = "",
   size = "md",
   dropdownPosition = "below",
+  menuTone = "light",
   id: idProp,
   name,
+  labelClassName,
 }: SelectProps) {
   const autoId = useId();
   const id = idProp ?? `select-${autoId}`;
@@ -94,7 +100,7 @@ export default function Select({
           width: rect.width,
           bottom: window.innerHeight - rect.top + gap,
           maxHeight: Math.min(maxMenuPx, Math.max(64, spaceAbove)),
-          zIndex: 100,
+          zIndex: 200,
           boxSizing: "border-box",
         });
       } else {
@@ -105,7 +111,7 @@ export default function Select({
           left: rect.left,
           width: rect.width,
           maxHeight: Math.min(maxMenuPx, Math.max(64, spaceBelow)),
-          zIndex: 100,
+          zIndex: 200,
           boxSizing: "border-box",
         });
       }
@@ -183,11 +189,28 @@ export default function Select({
       tabIndex={0}
       style={menuStyle}
       onKeyDown={onListKeyDown}
-      className="overflow-auto rounded-xl border border-gray-200 bg-white py-1 shadow-lg outline-none ring-1 ring-black/5 focus:ring-2 focus:ring-[#FF7A00]"
+      className={[
+        "overflow-auto rounded-xl border py-1 outline-none focus:ring-2",
+        menuTone === "dark"
+          ? "border-slate-600/90 bg-slate-800 py-1.5 shadow-xl ring-1 ring-black/25 focus:ring-[#FF7A00]/50"
+          : "border-gray-200 bg-white shadow-lg ring-1 ring-black/5 focus:ring-[#FF7A00]",
+      ].join(" ")}
     >
       {options.map((opt, index) => {
         const active = index === highlight;
         const isSelected = opt.value === value;
+        const rowDark =
+          menuTone === "dark"
+            ? [
+                "flex cursor-pointer items-center gap-2 px-3 py-2.5 text-sm text-white",
+                active ? "bg-slate-700/95" : "hover:bg-slate-700/70",
+                isSelected ? "font-medium" : "",
+              ].join(" ")
+            : [
+                "flex cursor-pointer items-center px-3 py-2.5 text-sm text-gray-900",
+                active ? "bg-[#FF7A00]/12" : "hover:bg-gray-50",
+                isSelected ? "font-semibold" : "",
+              ].join(" ");
         return (
           <li
             key={opt.value === "" ? "__empty__" : opt.value}
@@ -196,13 +219,19 @@ export default function Select({
             onMouseEnter={() => setHighlight(index)}
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => pick(opt.value)}
-            className={[
-              "flex cursor-pointer items-center px-3 py-2.5 text-sm text-gray-900",
-              active ? "bg-[#FF7A00]/12" : "hover:bg-gray-50",
-              isSelected ? "font-semibold" : "",
-            ].join(" ")}
+            className={rowDark}
           >
-            {opt.label}
+            {menuTone === "dark" ? (
+              <span
+                className="flex h-4 w-4 shrink-0 items-center justify-center"
+                aria-hidden
+              >
+                {isSelected ? (
+                  <Check className="h-4 w-4 text-white" strokeWidth={2.5} />
+                ) : null}
+              </span>
+            ) : null}
+            <span className="min-w-0 flex-1">{opt.label}</span>
           </li>
         );
       })}
@@ -212,7 +241,12 @@ export default function Select({
   return (
     <div className={`relative w-full ${className}`}>
       {label ? (
-        <label htmlFor={id} className="mb-1 block text-sm font-medium text-gray-700">
+        <label
+          htmlFor={id}
+          className={
+            labelClassName ?? "mb-1 block text-sm font-medium text-gray-700"
+          }
+        >
           {label}
           {required ? <span className="text-red-500"> *</span> : null}
         </label>

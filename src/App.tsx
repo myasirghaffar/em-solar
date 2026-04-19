@@ -30,6 +30,7 @@ import AdminSettings from './pages/admin/Settings';
 import AdminBlogs from './pages/admin/AdminBlogs';
 import AdminProfile from './pages/admin/Profile';
 import AdminSalesTeamPage from './pages/admin/AdminSalesTeamPage';
+import AdminUsersPage from './pages/admin/AdminUsersPage';
 import SalesLayout from './components/sales/SalesLayout';
 import SalesDashboard from './pages/sales/Dashboard';
 import SalesProfile from './pages/sales/Profile';
@@ -184,6 +185,7 @@ function App() {
               <Route path="/admin/leads/:id" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><LeadDetailPage /></AdminLayout></ProtectedRoute>} />
               <Route path="/admin/quotes" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><QuotesPage area="admin" /></AdminLayout></ProtectedRoute>} />
               <Route path="/admin/sales-team" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><AdminSalesTeamPage /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><AdminUsersPage /></AdminLayout></ProtectedRoute>} />
 
               <Route path="/salesman" element={<ProtectedRoute allowedRoles={['salesman']}><SalesLayout><SalesDashboard /></SalesLayout></ProtectedRoute>} />
               <Route path="/salesman/leads" element={<ProtectedRoute allowedRoles={['salesman']}><SalesLayout><LeadsListView basePath="/salesman/leads" /></SalesLayout></ProtectedRoute>} />
