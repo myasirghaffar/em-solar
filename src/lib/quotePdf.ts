@@ -12,11 +12,11 @@ const GREY_BG: [number, number, number] = [243, 244, 246];
 const BORDER: [number, number, number] = [224, 227, 232];
 
 const COMPANY = {
-  name: "energymart.pk",
-  tagline: "Your Trusted Energy Solutions Partner",
+  name: "EnergyMart.pk",
+  tagline: "ILLUMINATING YOUR WORLD",
   email: "info@energymart.pk",
   phone: "+92-301-6035666",
-  address: "Plot-310 j2 Johar Town Lahore",
+  address: "64-Lalazar Commercial, Raiwind Road Lahore",
   web: "www.energymart.pk",
   footerTag: "Professional Energy Solutions",
 };
@@ -39,52 +39,10 @@ async function loadImageDataUrl(url: string): Promise<string> {
   });
 }
 
-function imageFormatFromDataUrl(dataUrl: string): "PNG" | "JPEG" | "WEBP" {
-  if (dataUrl.includes("image/jpeg")) return "JPEG";
-  if (dataUrl.includes("image/webp")) return "WEBP";
-  return "PNG";
-}
-
-/** Fit image in box (mm), preserving aspect ratio. */
-async function drawImageDataUrlInBox(
-  doc: jsPDF,
-  dataUrl: string,
-  x: number,
-  y: number,
-  boxW: number,
-  boxH: number,
-): Promise<void> {
-  const fmt = imageFormatFromDataUrl(dataUrl);
-  await new Promise<void>((resolve) => {
-    const img = new Image();
-    img.onload = () => {
-      const iw = img.naturalWidth;
-      const ih = img.naturalHeight;
-      if (!iw || !ih) {
-        resolve();
-        return;
-      }
-      const pad = 3;
-      const maxW = boxW - pad * 2;
-      const maxH = boxH - pad * 2;
-      const scale = Math.min(maxW / iw, maxH / ih, 1);
-      const dw = iw * scale;
-      const dh = ih * scale;
-      const ox = x + (boxW - dw) / 2;
-      const oy = y + (boxH - dh) / 2;
-      doc.addImage(dataUrl, fmt, ox, oy, dw, dh);
-      resolve();
-    };
-    img.onerror = () => resolve();
-    img.src = dataUrl;
-  });
-}
-
 function naturalSize(dataUrl: string): Promise<{ w: number; h: number }> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.onload = () =>
-      resolve({ w: img.naturalWidth, h: img.naturalHeight });
+    img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
     img.onerror = () => reject(new Error("image load"));
     img.src = dataUrl;
   });
@@ -160,8 +118,48 @@ function normalizeProductTitle(s: string): string {
     .trim();
 }
 
-/** Item title for table: product name + optional variant on same line. */
-function lineItemTitle(l: QuoteLine): string {
+/** Bold PDF title: explicit `itemTitle`, else first line of legacy `description`. */
+function pdfItemTitle(l: QuoteLine): string {
+  const t = normalizeProductTitle(String(l.itemTitle ?? "").trim());
+  if (t) return t;
+  const raw = String(l.description ?? "").trim();
+  if (!raw) return "";
+  const nl = raw.indexOf("\n");
+  const first = nl >= 0 ? raw.slice(0, nl) : raw;
+  return normalizeProductTitle(first);
+}
+
+/** Normal-weight detail under title: `itemDescription`, variant, or legacy body after first line. */
+function pdfItemDetail(l: QuoteLine): string {
+  const explicit = String(l.itemDescription ?? "").trim();
+  const v = l.variantLabel?.trim();
+  const variantLine = v ? `(${normalizeProductTitle(v)})` : "";
+  const raw = String(l.description ?? "").trim();
+  let legacyBody = "";
+  if (raw) {
+    const nl = raw.indexOf("\n");
+    if (nl >= 0) legacyBody = raw.slice(nl + 1).trim();
+  }
+  const body = explicit || legacyBody;
+  const parts: string[] = [];
+  if (body) parts.push(body);
+  if (variantLine) parts.push(variantLine);
+  return parts.join("\n").trim();
+}
+
+/** Use two-part layout (bold title + body text); otherwise one legacy block. */
+function useSplitPdfLayout(l: QuoteLine): boolean {
+  if (
+    String(l.itemTitle ?? "").trim() ||
+    String(l.itemDescription ?? "").trim()
+  )
+    return true;
+  if (String(l.description ?? "").includes("\n")) return true;
+  return false;
+}
+
+/** Legacy single-cell title (variant in parentheses on same line). */
+function lineItemTitleLegacy(l: QuoteLine): string {
   const base = normalizeProductTitle(l.description || "");
   const v = l.variantLabel?.trim();
   if (!v) return base;
@@ -272,7 +270,12 @@ function drawInnerPageHeader(
   return ruleY + 8;
 }
 
-function drawOrangeLBorders(doc: jsPDF, pageW: number, pageH: number, t: number) {
+function drawOrangeLBorders(
+  doc: jsPDF,
+  pageW: number,
+  pageH: number,
+  t: number,
+) {
   doc.setFillColor(...ORANGE);
   doc.rect(0, 0, t, pageH, "F");
   doc.rect(0, pageH - t, pageW, t, "F");
@@ -285,7 +288,12 @@ export async function downloadLeadQuotePdf(opts: {
   /** One entry per distinct catalog product (first feature image URL or null) — drives how many project image pages are added. */
   projectPhotoUrls?: (string | null)[] | null;
 }): Promise<void> {
-  const { lead, quote, preparedByName, projectPhotoUrls } = opts;
+  const {
+    lead,
+    quote,
+    preparedByName,
+    projectPhotoUrls: _projectPhotoUrls,
+  } = opts;
   const { subtotal, tax, discount, grand } = computeTotals(quote);
   const quoteRef = quoteRefForLead(lead.id);
 
@@ -297,21 +305,6 @@ export async function downloadLeadQuotePdf(opts: {
     naturalSize(logoDataUrl),
     naturalSize(wmDataUrl),
   ]);
-
-  const projectSlots = projectPhotoUrls ?? [];
-  const projectDataUrls: (string | null)[] = [];
-  for (let i = 0; i < projectSlots.length; i++) {
-    const u = projectSlots[i];
-    if (!u?.trim()) {
-      projectDataUrls.push(null);
-      continue;
-    }
-    try {
-      projectDataUrls.push(await loadImageDataUrl(u.trim()));
-    } catch {
-      projectDataUrls.push(null);
-    }
-  }
 
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
@@ -331,6 +324,71 @@ export async function downloadLeadQuotePdf(opts: {
   const emailGuess = lead.contact.includes("@") ? lead.contact : "—";
   const phoneGuess = lead.contact.includes("@") ? "—" : lead.contact;
 
+  function drawContactInfoBox(doc: jsPDF, y: number): number {
+    const pad = 6;
+    const bodyPt = 10;
+    const titlePt = 10.5;
+    const lineMm = 4.35;
+    const title = "CONTACT INFORMATION";
+    const intro = "For any queries regarding this quotation, please contact:";
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(bodyPt);
+    let innerH = 9;
+    const introLines = doc.splitTextToSize(intro, contentW - pad * 2 - 4);
+    innerH += introLines.length * lineMm + 6;
+    innerH += 3 * 6.5;
+    const boxH = innerH + pad * 2;
+
+    if (y + boxH > pageH - 22) {
+      drawFooter(doc, doc.getNumberOfPages(), pageW, margin, pageH);
+      doc.addPage();
+      drawWatermark(doc, wmDataUrl, pageW, pageH, wmNat.w, wmNat.h);
+      y = drawInnerPageHeader(
+        doc,
+        logoDataUrl,
+        logoWHeader,
+        logoHHeader,
+        pageW,
+        margin,
+        16,
+        quoteRef,
+        issueStr,
+        validStr,
+      );
+    }
+
+    doc.setFillColor(255, 255, 255);
+    doc.setDrawColor(...BORDER);
+    doc.roundedRect(margin, y, contentW, boxH, 2, 2, "FD");
+    let iy = y + 8;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(titlePt);
+    doc.setTextColor(...ORANGE);
+    doc.text(title, margin + pad, iy);
+    iy += 7;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(bodyPt);
+    doc.setTextColor(...BODY);
+
+    doc.text(introLines, margin + pad + 2, iy);
+    iy += introLines.length * lineMm + 5;
+    const rows: { label: string; value: string }[] = [
+      { label: "Email:", value: COMPANY.email },
+      { label: "Phone:", value: COMPANY.phone },
+      { label: "Website:", value: COMPANY.web },
+    ];
+    for (const r of rows) {
+      doc.setFont("helvetica", "bold");
+      doc.text(r.label, margin + pad + 2, iy);
+      const lw = doc.getTextWidth(r.label);
+      doc.setFont("helvetica", "normal");
+      doc.text(r.value, margin + pad + 2 + lw + 2, iy);
+      iy += 6.5;
+    }
+    return y + boxH + 7;
+  }
+
   // ----- Page 1: Cover (large type + vertical rhythm to fill page above footer) -----
   drawWatermark(doc, wmDataUrl, pageW, pageH, wmNat.w, wmNat.h);
   drawOrangeLBorders(doc, pageW, pageH, 4);
@@ -339,7 +397,14 @@ export async function downloadLeadQuotePdf(opts: {
   const coverLogoW = 62;
   const coverLogoH = (logoNat.h / logoNat.w) * coverLogoW;
   let y = 26;
-  doc.addImage(logoDataUrl, "PNG", cx - coverLogoW / 2, y, coverLogoW, coverLogoH);
+  doc.addImage(
+    logoDataUrl,
+    "PNG",
+    cx - coverLogoW / 2,
+    y,
+    coverLogoW,
+    coverLogoH,
+  );
   y += coverLogoH + 20;
 
   doc.setCharSpace(0);
@@ -361,11 +426,29 @@ export async function downloadLeadQuotePdf(opts: {
   doc.setFontSize(12);
   doc.setTextColor(0, 0, 0);
   doc.text("Prepared for:", cx, y, { align: "center" });
-  y += 13;
-  doc.setFontSize(20);
+  y += 11;
+  doc.setFontSize(18);
   doc.setTextColor(...ORANGE);
-  doc.text(lead.name, cx, y, { align: "center" });
-  y += 20;
+  doc.text(lead.name.trim() || "—", cx, y, { align: "center" });
+  y += 10;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.setTextColor(...BODY);
+  const contactStr = (lead.contact || "").trim() || "—";
+  const addressStr = (lead.location || "").trim() || "—";
+  const prepMaxW = contentW - 28;
+  const contactLines = doc.splitTextToSize(`Contact: ${contactStr}`, prepMaxW);
+  for (const line of contactLines) {
+    doc.text(line, cx, y, { align: "center" });
+    y += 4.4;
+  }
+  y += 1;
+  const addressLines = doc.splitTextToSize(`Address: ${addressStr}`, prepMaxW);
+  for (const line of addressLines) {
+    doc.text(line, cx, y, { align: "center" });
+    y += 4.4;
+  }
+  y += 8;
   /** Extra vertical space before quote metadata so the cover uses more of the page. */
   {
     const room = pageH - coverFooterReserve - y;
@@ -437,17 +520,17 @@ export async function downloadLeadQuotePdf(opts: {
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...ORANGE);
   doc.setFontSize(11);
-  doc.text(`${COMPANY.name} Team`, margin, y);
+  doc.text(`Mubashir Zubair & The ${COMPANY.name} Team`, margin, y);
   y += 10;
   doc.setFontSize(10);
-  doc.text("PROFESSIONAL ENERGY SOLUTIONS", margin, y);
+  doc.text(COMPANY.tagline, margin, y);
   doc.setTextColor(...BODY);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(...MUTED);
   doc.text(
     preparedByName
-      ? `Prepared by: ${preparedByName} · ${COMPANY.name}`
+      ? `Prepared by: ${preparedByName}`
       : `Prepared by: Sales · ${COMPANY.name}`,
     margin,
     y + 8,
@@ -524,7 +607,7 @@ export async function downloadLeadQuotePdf(opts: {
     const item = String(idx + 1);
     return [
       item,
-      lineItemTitle(l),
+      " ",
       String(l.quantity),
       `PKR ${formatMoney(l.unitPrice)}`,
       `PKR ${formatMoney(l.quantity * l.unitPrice)}`,
@@ -540,7 +623,7 @@ export async function downloadLeadQuotePdf(opts: {
 
   autoTable(doc, {
     startY: y,
-    head: [["ITEM", "ITEM TITLE", "QTY", "UNIT PRICE", "TOTAL"]],
+    head: [["ITEM", "DETAILS", "QTY", "UNIT PRICE", "TOTAL"]],
     body,
     theme: "striped",
     showHead: "everyPage",
@@ -576,18 +659,124 @@ export async function downloadLeadQuotePdf(opts: {
       if (col === 1) {
         const line = quote.lines[rowIdx];
         if (line) {
-          data.cell.text = [lineItemTitle(line)];
+          const doc = data.doc;
+          // `didParseCell` runs while column widths are still being calculated — `cell.width` is 0 here.
+          // Using it makes `splitTextToSize` wrap at a negative/tiny width → thousands of lines → huge rows.
+          const padL =
+            typeof data.cell.padding === "function"
+              ? data.cell.padding("left")
+              : 2.5;
+          const padR =
+            typeof data.cell.padding === "function"
+              ? data.cell.padding("right")
+              : 2.5;
+          const padT =
+            typeof data.cell.padding === "function"
+              ? data.cell.padding("top")
+              : 2.5;
+          const padB =
+            typeof data.cell.padding === "function"
+              ? data.cell.padding("bottom")
+              : 2.5;
+          const innerW = Math.max(8, colTitle - padL - padR);
+          const title =
+            (pdfItemTitle(line) || lineItemTitleLegacy(line)).trim() || "—";
+          const detail = useSplitPdfLayout(line)
+            ? pdfItemDetail(line).trim()
+            : "";
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(9);
+          const tLines = doc.splitTextToSize(title, innerW);
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(8.5);
+          const dLines = detail ? doc.splitTextToSize(detail, innerW) : [];
+          const lhTitle = 4.05;
+          const lhDet = 3.95;
+          const gap = detail ? 1.2 : 0;
+          const firstBaseline = 3.4;
+          const h =
+            padT +
+            padB +
+            firstBaseline +
+            tLines.length * lhTitle +
+            gap +
+            dLines.length * lhDet +
+            1.5;
+          data.cell.styles.minCellHeight = Math.max(
+            data.cell.styles.minCellHeight ?? 7,
+            h,
+          );
+          data.cell.text = [" "];
         }
       } else {
         let s = data.cell.text as string | string[] | number | undefined;
         if (Array.isArray(s)) s = s.join("");
         data.cell.text = [
-          String(s ?? "").replace(/\u2212/g, "-").replace(/[\u2018\u2019\u201C\u201D]/g, "'"),
+          String(s ?? "")
+            .replace(/\u2212/g, "-")
+            .replace(/[\u2018\u2019\u201C\u201D]/g, "'"),
         ];
       }
     },
+    didDrawCell: (data) => {
+      if (data.section !== "body" || data.column.index !== 1) return;
+      const line = quote.lines[data.row.index];
+      if (!line) return;
+      const doc = data.doc;
+      const cell = data.cell;
+      const padL =
+        typeof cell.padding === "function" ? cell.padding("left") : 2.5;
+      const padT =
+        typeof cell.padding === "function" ? cell.padding("top") : 2.5;
+      const padR =
+        typeof cell.padding === "function" ? cell.padding("right") : 2.5;
+      const x = cell.x + padL;
+      const w = cell.width - padL - padR;
+      const bg: [number, number, number] =
+        data.row.index % 2 === 1 ? [252, 252, 253] : [255, 255, 255];
+      doc.setFillColor(...bg);
+      doc.rect(cell.x, cell.y, cell.width, cell.height, "F");
+      doc.setCharSpace(0);
+      let yText = cell.y + padT + 3.4;
+      if (!useSplitPdfLayout(line)) {
+        const single = lineItemTitleLegacy(line).trim() || "—";
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9);
+        doc.setTextColor(0, 0, 0);
+        for (const tl of doc.splitTextToSize(single, w)) {
+          doc.text(tl, x, yText);
+          yText += 4.05;
+        }
+        return;
+      }
+      const title =
+        (pdfItemTitle(line) || lineItemTitleLegacy(line)).trim() || "—";
+      const detail = pdfItemDetail(line).trim();
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(0, 0, 0);
+      for (const tl of doc.splitTextToSize(title, w)) {
+        doc.text(tl, x, yText);
+        yText += 4.05;
+      }
+      if (detail) {
+        yText += 1.0;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.5);
+        doc.setTextColor(...BODY);
+        for (const dl of doc.splitTextToSize(detail, w)) {
+          doc.text(dl, x, yText);
+          yText += 3.95;
+        }
+      }
+    },
     columnStyles: {
-      0: { cellWidth: colItem, halign: "center", fontStyle: "bold", valign: "top" },
+      0: {
+        cellWidth: colItem,
+        halign: "center",
+        fontStyle: "bold",
+        valign: "top",
+      },
       1: {
         cellWidth: colTitle,
         halign: "left",
@@ -597,7 +786,12 @@ export async function downloadLeadQuotePdf(opts: {
       },
       2: { cellWidth: colQty, halign: "center", valign: "top" },
       3: { cellWidth: colUnit, halign: "right", valign: "top" },
-      4: { cellWidth: colTot, halign: "right", fontStyle: "bold", valign: "top" },
+      4: {
+        cellWidth: colTot,
+        halign: "right",
+        fontStyle: "bold",
+        valign: "top",
+      },
     },
     margin: { left: margin, right: margin, top: 42 },
     willDrawPage: (data) => {
@@ -731,52 +925,9 @@ export async function downloadLeadQuotePdf(opts: {
     doc.text(wrapped, margin + 10, sy);
     sy += wrapped.length * specLineMm + 1.5;
   }
+  y += specBoxH + 10;
+  y = drawContactInfoBox(doc, y);
   drawFooter(doc, doc.getNumberOfPages(), pageW, margin, pageH);
-
-  // ----- Project images (one page per distinct catalog product on the quote) -----
-  for (let n = 0; n < projectDataUrls.length; n++) {
-    doc.addPage();
-    drawWatermark(doc, wmDataUrl, pageW, pageH, wmNat.w, wmNat.h);
-    y = drawInnerPageHeader(
-      doc,
-      logoDataUrl,
-      logoWHeader,
-      logoHHeader,
-      pageW,
-      margin,
-      16,
-      quoteRef,
-      issueStr,
-      validStr,
-    );
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.text(`PROJECT IMAGE ${n + 1}`, margin, y);
-    y += 6;
-    const imgBoxY = y;
-    const imgBoxH = 95;
-    doc.setDrawColor(...BORDER);
-    doc.setFillColor(...GREY_BG);
-    doc.roundedRect(margin, imgBoxY, contentW, imgBoxH, 2, 2, "FD");
-    const slot = projectDataUrls[n];
-    const triedUrl = Boolean(projectSlots[n]?.trim());
-    if (slot) {
-      await drawImageDataUrlInBox(doc, slot, margin, imgBoxY, contentW, imgBoxH);
-    } else {
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(9);
-      doc.setTextColor(...MUTED);
-      doc.text(
-        triedUrl
-          ? "Could not load this product image. Check the image URL or CORS."
-          : "This product has no feature image in the catalog.",
-        pageW / 2,
-        imgBoxY + imgBoxH / 2 - 4,
-        { maxWidth: contentW - 14, align: "center" },
-      );
-    }
-    drawFooter(doc, doc.getNumberOfPages(), pageW, margin, pageH);
-  }
 
   // ----- Terms -----
   doc.addPage();
@@ -800,52 +951,50 @@ export async function downloadLeadQuotePdf(opts: {
   doc.text("TERMS & CONDITIONS", pageW / 2, y, { align: "center" });
   y += 16;
 
-  const termsBlocks: { title: string; bullets: string[]; bulletsPlain?: boolean }[] =
-    [
-      {
-        title: "1. PAYMENT TERMS",
-        bullets: [
-          "50% advance payment required upon order confirmation",
-          "Remaining 50% payment due upon delivery and installation",
-          "All payments to be made via bank transfer or certified cheque",
-          "Payment terms are non-negotiable and must be strictly adhered to",
-        ],
-      },
-      {
-        title: "2. DELIVERY & INSTALLATION",
-        bullets: [
-          "Delivery timeline: 2-3 weeks after order confirmation and advance payment",
-          "Professional installation included in the quoted price",
-          "Site preparation requirements will be communicated in advance",
-          "Installation will be completed by certified technicians",
-        ],
-      },
-      {
-        title: "3. WARRANTY & SUPPORT",
-        bullets: [
-          "1 year manufacturer warranty on all equipment",
-          "Extended warranty options available at additional cost",
-          "Warranty covers manufacturing defects and workmanship",
-          "24/7 technical support available during warranty period",
-        ],
-      },
-      {
-        title: "4. QUOTATION VALIDITY",
-        bullets: [
-          validDt
-            ? `This quotation is valid until ${validStr}.`
-            : "Validity follows the date agreed in writing with your EnergyMart representative.",
-          "Prices are subject to change without prior notice after this date.",
-          "Early confirmation is recommended to secure current pricing.",
-        ],
-        bulletsPlain: true,
-      },
-      {
-        title: "5. CONTACT INFORMATION",
-        bullets: ["For any queries regarding this quotation, please contact:"],
-        bulletsPlain: true,
-      },
-    ];
+  const termsBlocks: {
+    title: string;
+    bullets: string[];
+    bulletsPlain?: boolean;
+  }[] = [
+    {
+      title: "1. PAYMENT TERMS",
+      bullets: [
+        "50% advance payment required upon order confirmation",
+        "Remaining 50% payment due upon delivery and installation",
+        "All payments to be made via bank transfer or certified cheque",
+        "Payment terms are non-negotiable and must be strictly adhered to",
+      ],
+    },
+    {
+      title: "2. DELIVERY & INSTALLATION",
+      bullets: [
+        "Delivery timeline: 2-3 weeks after order confirmation and advance payment",
+        "Professional installation included in the quoted price",
+        "Site preparation requirements will be communicated in advance",
+        "Installation will be completed by certified technicians",
+      ],
+    },
+    {
+      title: "3. WARRANTY & SUPPORT",
+      bullets: [
+        "1 year manufacturer warranty on all equipment",
+        "Extended warranty options available at additional cost",
+        "Warranty covers manufacturing defects and workmanship",
+        "24/7 technical support available during warranty period",
+      ],
+    },
+    {
+      title: "4. QUOTATION VALIDITY",
+      bullets: [
+        validDt
+          ? `This quotation is valid until ${validStr}.`
+          : "Validity follows the date agreed in writing with your EnergyMart representative.",
+        "Prices are subject to change without prior notice after this date.",
+        "Early confirmation is recommended to secure current pricing.",
+      ],
+      bulletsPlain: true,
+    },
+  ];
 
   const pad = 6;
   const termsBodyPt = 10;
@@ -855,21 +1004,13 @@ export async function downloadLeadQuotePdf(opts: {
   for (const block of termsBlocks) {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(termsBodyPt);
-    const isContact = block.title.startsWith("5.");
     let innerH = 9;
-    if (isContact) {
-      const intro = block.bullets[0] ?? "";
-      const iw = doc.splitTextToSize(intro, contentW - pad * 2 - 4);
-      innerH += iw.length * termsLineMm + 6;
-      innerH += 3 * 6.5;
-    } else {
-      for (const b of block.bullets) {
-        const w = doc.splitTextToSize(
-          b,
-          contentW - pad * 2 - (block.bulletsPlain ? 4 : 10),
-        );
-        innerH += w.length * termsLineMm + 1.2;
-      }
+    for (const b of block.bullets) {
+      const w = doc.splitTextToSize(
+        b,
+        contentW - pad * 2 - (block.bulletsPlain ? 4 : 10),
+      );
+      innerH += w.length * termsLineMm + 1.2;
     }
     const boxH = innerH + pad * 2;
     if (y + boxH > pageH - 22) {
@@ -901,37 +1042,16 @@ export async function downloadLeadQuotePdf(opts: {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(termsBodyPt);
     doc.setTextColor(...BODY);
-
-    if (isContact) {
-      const intro = block.bullets[0] ?? "";
-      const introLines = doc.splitTextToSize(intro, contentW - pad * 2 - 4);
-      doc.text(introLines, margin + pad + 2, iy);
-      iy += introLines.length * termsLineMm + 5;
-      const rows: { label: string; value: string }[] = [
-        { label: "Email:", value: COMPANY.email },
-        { label: "Phone:", value: COMPANY.phone },
-        { label: "Website:", value: COMPANY.web },
-      ];
-      for (const r of rows) {
-        doc.setFont("helvetica", "bold");
-        doc.text(r.label, margin + pad + 2, iy);
-        const lw = doc.getTextWidth(r.label);
-        doc.setFont("helvetica", "normal");
-        doc.text(r.value, margin + pad + 2 + lw + 2, iy);
-        iy += 6.5;
-      }
-    } else {
-      for (const b of block.bullets) {
-        if (block.bulletsPlain) {
-          const wrapped = doc.splitTextToSize(b, contentW - pad * 2 - 4);
-          doc.text(wrapped, margin + pad + 2, iy);
-          iy += wrapped.length * termsLineMm + 0.8;
-        } else {
-          doc.text("•", margin + pad + 2, iy);
-          const wrapped = doc.splitTextToSize(b, contentW - pad * 2 - 10);
-          doc.text(wrapped, margin + pad + 7, iy);
-          iy += wrapped.length * termsLineMm + 0.8;
-        }
+    for (const b of block.bullets) {
+      if (block.bulletsPlain) {
+        const wrapped = doc.splitTextToSize(b, contentW - pad * 2 - 4);
+        doc.text(wrapped, margin + pad + 2, iy);
+        iy += wrapped.length * termsLineMm + 0.8;
+      } else {
+        doc.text("•", margin + pad + 2, iy);
+        const wrapped = doc.splitTextToSize(b, contentW - pad * 2 - 10);
+        doc.text(wrapped, margin + pad + 7, iy);
+        iy += wrapped.length * termsLineMm + 0.8;
       }
     }
     y += boxH + 7;

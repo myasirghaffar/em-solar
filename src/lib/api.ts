@@ -193,6 +193,49 @@ export async function fetchProducts(): Promise<any[]> {
   return ensureArray<any>(data).map(normalizeProduct);
 }
 
+export type ProductCategory = { id: number; name: string; sortOrder: number };
+
+export async function fetchProductCategories(): Promise<ProductCategory[]> {
+  const data = await apiRequest<unknown>("/store/product-categories", { method: "GET" });
+  return ensureArray<ProductCategory>(data);
+}
+
+export async function fetchProductCategoriesAdmin(): Promise<ProductCategory[]> {
+  const data = await apiRequest<unknown>("/admin/product-categories", { method: "GET", auth: true });
+  return ensureArray<ProductCategory>(data);
+}
+
+export async function createProductCategory(payload: {
+  name: string;
+  sortOrder?: number;
+}): Promise<ProductCategory> {
+  const created = await apiRequest<ProductCategory>("/admin/product-categories", {
+    method: "POST",
+    auth: true,
+    body: JSON.stringify(payload),
+  });
+  invalidateAdminBootstrapCache();
+  return created;
+}
+
+export async function updateProductCategory(
+  id: number,
+  payload: Partial<{ name: string; sortOrder: number }>,
+): Promise<ProductCategory> {
+  const updated = await apiRequest<ProductCategory>(`/admin/product-categories/${id}`, {
+    method: "PATCH",
+    auth: true,
+    body: JSON.stringify(payload),
+  });
+  invalidateAdminBootstrapCache();
+  return updated;
+}
+
+export async function deleteProductCategory(id: number): Promise<void> {
+  await apiRequest<null>(`/admin/product-categories/${id}`, { method: "DELETE", auth: true });
+  invalidateAdminBootstrapCache();
+}
+
 /** All products including inactive — admin only. */
 export async function fetchProductsAdmin(): Promise<any[]> {
   const data = await apiRequest<unknown>("/admin/products", {
@@ -367,6 +410,7 @@ export async function fetchAnalytics(): Promise<{
 
 type AdminBootstrapPayload = {
   products: any[];
+  productCategories?: ProductCategory[];
   orders: any[];
   customers: any[];
   consultations: any[];
@@ -480,6 +524,14 @@ export type QuoteLine = {
   productId?: number | null;
   /** Selected specification line, e.g. `Power: 550W` */
   variantLabel?: string | null;
+  /** Category dropdown: a known `product_categories.name` or `"__custom__"` */
+  catalogCategoryKey?: string | null;
+  /** When `catalogCategoryKey` is `"__custom__"`, free-text filter / label for that line */
+  catalogCustomCategory?: string | null;
+  /** Bold product / line title on the quotation PDF */
+  itemTitle?: string | null;
+  /** Multi-line supporting copy under the title on the PDF (specs, notes, etc.) */
+  itemDescription?: string | null;
 };
 
 export type LeadQuoteData = {

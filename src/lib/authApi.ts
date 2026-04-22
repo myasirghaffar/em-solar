@@ -114,7 +114,11 @@ async function request<T>(
   const res = await fetch(`${base}${path}`, { ...rest, headers });
   const body = (await parseJson(res)) as ApiEnvelope<T> | null;
   if (!body || typeof body !== "object") {
-    throw new AuthApiError("NETWORK", "Invalid response from server", res.status);
+    throw new AuthApiError(
+      "NETWORK",
+      "Invalid response from server",
+      res.status,
+    );
   }
   if (!body.success) {
     const code = body.code ?? "ERROR";
@@ -196,7 +200,10 @@ export async function authForgotPassword(
   });
 }
 
-export async function authResetPassword(token: string, password: string): Promise<void> {
+export async function authResetPassword(
+  token: string,
+  password: string,
+): Promise<void> {
   await request<null>("/auth/reset-password", {
     method: "POST",
     body: JSON.stringify({ token, password }),
@@ -238,7 +245,11 @@ export async function authFetchMe(accessToken: string): Promise<AuthUser> {
   });
   const body = (await parseJson(res)) as ApiEnvelope<ApiUser> | null;
   if (!body || typeof body !== "object") {
-    throw new AuthApiError("NETWORK", "Invalid response from server", res.status);
+    throw new AuthApiError(
+      "NETWORK",
+      "Invalid response from server",
+      res.status,
+    );
   }
   if (!body.success) {
     const code = body.code ?? "ERROR";

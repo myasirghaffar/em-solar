@@ -30,6 +30,8 @@ type AttachmentRow = { title: string; href: string; fileName?: string };
 type ProductFormState = {
   name: string;
   category: string;
+  categoryMode: "pick" | "custom";
+  customCategory: string;
   price: string;
   stock: string;
   description: string;
@@ -61,6 +63,8 @@ function emptyForm(): ProductFormState {
   return {
     name: "",
     category: "Solar Panels",
+    categoryMode: "pick",
+    customCategory: "",
     price: "",
     stock: "",
     description: "",
@@ -114,7 +118,10 @@ function buildPayload(form: ProductFormState) {
 
   return {
     name: form.name.trim(),
-    category: form.category,
+    category:
+      form.categoryMode === "custom"
+        ? form.customCategory.trim()
+        : form.category,
     price: parseFloat(form.price),
     stock: parseInt(form.stock, 10),
     description: form.description.trim(),
@@ -127,14 +134,7 @@ function buildPayload(form: ProductFormState) {
   };
 }
 
-const categories = [
-  "Solar Panels",
-  "Solar Inverters",
-  "Batteries",
-  "Accessories",
-];
-
-const CATEGORY_OPTIONS = categories.map((c) => ({ value: c, label: c }));
+const CUSTOM_CATEGORY_VALUE = "__custom__";
 const PRODUCT_STATUS_OPTIONS = [
   { value: "active", label: "Active (visible in store)" },
   { value: "inactive", label: "Inactive" },
@@ -161,6 +161,12 @@ export default function AdminProducts() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [categoryOptions, setCategoryOptions] = useState<
+    { value: string; label: string }[]
+  >([
+    { value: "Solar Panels", label: "Solar Panels" },
+    { value: CUSTOM_CATEGORY_VALUE, label: "Custom…" },
+  ]);
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -177,17 +183,60 @@ export default function AdminProducts() {
     setLoadError(null);
     setLoading(true);
     try {
-      const { fetchAdminBootstrap, getAdminBootstrapCache, fetchProductsAdmin: apiFetchProducts } =
-        await import("../../lib/api");
+      const {
+        fetchAdminBootstrap,
+        getAdminBootstrapCache,
+        fetchProductsAdmin: apiFetchProducts,
+        fetchProductCategoriesAdmin,
+      } = await import("../../lib/api");
       const cached = getAdminBootstrapCache();
       if (cached?.products) {
         setProducts(Array.isArray(cached.products) ? cached.products : []);
+        if (Array.isArray(cached.productCategories)) {
+          const cats = cached.productCategories;
+          setCategoryOptions(
+            cats
+              .slice()
+              .sort(
+                (a, b) =>
+                  (a.sortOrder ?? 0) - (b.sortOrder ?? 0) ||
+                  a.name.localeCompare(b.name),
+              )
+              .map((c) => ({ value: c.name, label: c.name }))
+              .concat([{ value: CUSTOM_CATEGORY_VALUE, label: "Custom…" }]),
+          );
+        } else {
+          void fetchProductCategoriesAdmin().then((cats) => {
+            setCategoryOptions(
+              (Array.isArray(cats) ? cats : [])
+                .slice()
+                .sort(
+                  (a, b) =>
+                    (a.sortOrder ?? 0) - (b.sortOrder ?? 0) ||
+                    a.name.localeCompare(b.name),
+                )
+                .map((c) => ({ value: c.name, label: c.name }))
+                .concat([{ value: CUSTOM_CATEGORY_VALUE, label: "Custom…" }]),
+            );
+          });
+        }
         setLoading(false);
         void apiFetchProducts().then((fresh) => setProducts(Array.isArray(fresh) ? fresh : []));
         return;
       }
       const boot = await fetchAdminBootstrap();
       setProducts(Array.isArray(boot.products) ? boot.products : []);
+      const cats = Array.isArray(boot.productCategories) ? boot.productCategories : [];
+      setCategoryOptions(
+        cats
+          .slice()
+          .sort(
+            (a, b) =>
+              (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name),
+          )
+          .map((c) => ({ value: c.name, label: c.name }))
+          .concat([{ value: CUSTOM_CATEGORY_VALUE, label: "Custom…" }]),
+      );
     } catch (err) {
       console.error("Fetch error:", err);
       const msg =
@@ -239,12 +288,18 @@ export default function AdminProducts() {
   };
 
   const handleEdit = (product: any) => {
+    const knownCategory = categoryOptions.some((o) => o.value === product.category);
     setEditingProduct(product);
     setUploadError(null);
     setAttachmentError(null);
     setFormData({
       name: product.name ?? "",
-      category: product.category ?? "Solar Panels",
+      category: knownCategory
+        ? (product.category ?? categoryOptions[0]?.value ?? "Solar Panels")
+        : (categoryOptions.find((o) => o.value !== CUSTOM_CATEGORY_VALUE)?.value ??
+            "Solar Panels"),
+      categoryMode: knownCategory ? "pick" : "custom",
+      customCategory: knownCategory ? "" : String(product.category ?? ""),
       price: String(product.price ?? ""),
       stock: String(product.stock ?? ""),
       description: product.description ?? "",
@@ -646,20 +701,59 @@ export default function AdminProducts() {
                   <Select
                     label="Category"
                     required
-                    options={CATEGORY_OPTIONS}
-                    value={formData.category}
-                    onChange={(category) =>
-                      setFormData({ ...formData, category })
+                    options={categoryOptions}
+                    value={
+                      formData.categoryMode === "custom"
+                        ? CUSTOM_CATEGORY_VALUE
+                        : formData.category
                     }
+                    onChange={(category) => {
+                      if (category === CUSTOM_CATEGORY_VALUE) {
+                        setFormData((f) => ({
+                          ...f,
+                          categoryMode: "custom",
+                          customCategory: f.customCategory || f.category || "",
+                        }));
+                      } else {
+                        setFormData((f) => ({
+                          ...f,
+                          categoryMode: "pick",
+                          category,
+                        }));
+                      }
+                    }}
                   />
-                  <Input
-                    label="Brand"
-                    value={formData.brand}
-                    onChange={(e) =>
-                      setFormData({ ...formData, brand: e.target.value })
-                    }
-                  />
+                  {formData.categoryMode === "custom" ? (
+                    <Input
+                      label="Custom category"
+                      value={formData.customCategory}
+                      onChange={(e) =>
+                        setFormData((f) => ({ ...f, customCategory: e.target.value }))
+                      }
+                      required
+                    />
+                  ) : (
+                    <Input
+                      label="Brand"
+                      value={formData.brand}
+                      onChange={(e) =>
+                        setFormData({ ...formData, brand: e.target.value })
+                      }
+                    />
+                  )}
                 </div>
+                {formData.categoryMode === "custom" ? (
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <Input
+                      label="Brand"
+                      value={formData.brand}
+                      onChange={(e) =>
+                        setFormData({ ...formData, brand: e.target.value })
+                      }
+                    />
+                    <div />
+                  </div>
+                ) : null}
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                   <Input
                     label="Price (PKR)"
