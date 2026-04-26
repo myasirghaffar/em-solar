@@ -532,6 +532,8 @@ export type QuoteLine = {
   itemTitle?: string | null;
   /** Multi-line supporting copy under the title on the PDF (specs, notes, etc.) */
   itemDescription?: string | null;
+  /** When false, line is hidden from the generated PDF (still saved on the lead). Default true. */
+  includeInPdf?: boolean;
 };
 
 export type LeadQuoteData = {

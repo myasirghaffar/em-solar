@@ -10,6 +10,10 @@ const MUTED: [number, number, number] = [100, 116, 139];
 const BODY: [number, number, number] = [68, 68, 68];
 const GREY_BG: [number, number, number] = [243, 244, 246];
 const BORDER: [number, number, number] = [224, 227, 232];
+/** Light rules for quote line-items table (jspdf-autotable; theme striped defaults to no borders). */
+const QUOTE_TABLE_LINE_W = 0.12;
+/** Min distance from page bottom (mm) so table / summary stay above footer rule + text. */
+const QUOTE_PDF_FOOTER_RESERVE_MM = 20;
 
 const COMPANY = {
   name: "EnergyMart.pk",
@@ -294,7 +298,9 @@ export async function downloadLeadQuotePdf(opts: {
     preparedByName,
     projectPhotoUrls: _projectPhotoUrls,
   } = opts;
-  const { subtotal, tax, discount, grand } = computeTotals(quote);
+  const pdfLines = quote.lines.filter((l) => l.includeInPdf !== false);
+  const quoteForPdf: LeadQuoteData = { ...quote, lines: pdfLines };
+  const { subtotal, tax, discount, grand } = computeTotals(quoteForPdf);
   const quoteRef = quoteRefForLead(lead.id);
 
   const [logoDataUrl, wmDataUrl] = await Promise.all([
@@ -613,7 +619,7 @@ export async function downloadLeadQuotePdf(opts: {
       `PKR ${formatMoney(l.quantity * l.unitPrice)}`,
     ];
   };
-  const body = quote.lines.map((l, i) => lineToRow(l, i));
+  const body = pdfLines.map((l, i) => lineToRow(l, i));
 
   const colItem = 11;
   const colQty = 14;
@@ -635,13 +641,21 @@ export async function downloadLeadQuotePdf(opts: {
       cellPadding: 2.6,
       halign: "center",
       valign: "middle",
+      lineWidth: QUOTE_TABLE_LINE_W,
+      lineColor: [...BORDER],
     },
     bodyStyles: {
       valign: "top",
       overflow: "linebreak",
       minCellHeight: 7,
+      lineWidth: QUOTE_TABLE_LINE_W,
+      lineColor: [...BORDER],
     },
-    alternateRowStyles: { fillColor: [252, 252, 253] },
+    alternateRowStyles: {
+      fillColor: [252, 252, 253],
+      lineWidth: QUOTE_TABLE_LINE_W,
+      lineColor: [...BORDER],
+    },
     styles: {
       font: "helvetica",
       fontSize: 9,
@@ -650,14 +664,18 @@ export async function downloadLeadQuotePdf(opts: {
       valign: "top",
       overflow: "linebreak",
       halign: "left",
+      lineWidth: QUOTE_TABLE_LINE_W,
+      lineColor: [...BORDER],
     },
+    tableLineWidth: QUOTE_TABLE_LINE_W,
+    tableLineColor: [...BORDER],
     didParseCell: (data) => {
       data.doc.setCharSpace(0);
       if (data.section !== "body") return;
       const col = data.column.index;
       const rowIdx = data.row.index;
       if (col === 1) {
-        const line = quote.lines[rowIdx];
+        const line = pdfLines[rowIdx];
         if (line) {
           const doc = data.doc;
           // `didParseCell` runs while column widths are still being calculated — `cell.width` is 0 here.
@@ -720,7 +738,7 @@ export async function downloadLeadQuotePdf(opts: {
     },
     didDrawCell: (data) => {
       if (data.section !== "body" || data.column.index !== 1) return;
-      const line = quote.lines[data.row.index];
+      const line = pdfLines[data.row.index];
       if (!line) return;
       const doc = data.doc;
       const cell = data.cell;
@@ -735,7 +753,9 @@ export async function downloadLeadQuotePdf(opts: {
       const bg: [number, number, number] =
         data.row.index % 2 === 1 ? [252, 252, 253] : [255, 255, 255];
       doc.setFillColor(...bg);
-      doc.rect(cell.x, cell.y, cell.width, cell.height, "F");
+      doc.setDrawColor(...BORDER);
+      doc.setLineWidth(QUOTE_TABLE_LINE_W);
+      doc.rect(cell.x, cell.y, cell.width, cell.height, "FD");
       doc.setCharSpace(0);
       let yText = cell.y + padT + 3.4;
       if (!useSplitPdfLayout(line)) {
@@ -793,7 +813,12 @@ export async function downloadLeadQuotePdf(opts: {
         valign: "top",
       },
     },
-    margin: { left: margin, right: margin, top: 42 },
+    margin: {
+      left: margin,
+      right: margin,
+      top: 42,
+      bottom: QUOTE_PDF_FOOTER_RESERVE_MM,
+    },
     willDrawPage: (data) => {
       if (data.pageNumber > 1) {
         drawWatermark(data.doc, wmDataUrl, pageW, pageH, wmNat.w, wmNat.h);
@@ -818,15 +843,37 @@ export async function downloadLeadQuotePdf(opts: {
   });
 
   const docExt = doc as DocExt;
-  let ty = (docExt.lastAutoTable?.finalY ?? y + 40) + 10;
+  const tableFinalY = docExt.lastAutoTable?.finalY ?? y + 40;
+  const summaryGapMm = 10;
+  let ty = tableFinalY + summaryGapMm;
 
   const sumBoxW = 104;
   const sumBoxX = pageW - margin - sumBoxW;
-  const sumBoxY0 = ty - 2;
+  let sumBoxY0 = ty - 2;
   let sumH = 22;
   if (discount > 0) sumH += 5;
   if ((quote.taxPercent ?? 0) > 0) sumH += 5;
   sumH += 10;
+
+  if (sumBoxY0 + sumH > pageH - QUOTE_PDF_FOOTER_RESERVE_MM) {
+    doc.addPage();
+    drawWatermark(doc, wmDataUrl, pageW, pageH, wmNat.w, wmNat.h);
+    const yBelowHeader = drawInnerPageHeader(
+      doc,
+      logoDataUrl,
+      logoWHeader,
+      logoHHeader,
+      pageW,
+      margin,
+      16,
+      quoteRef,
+      issueStr,
+      validStr,
+    );
+    sumBoxY0 = yBelowHeader + 6;
+    ty = sumBoxY0 + 7;
+    drawFooter(doc, doc.getNumberOfPages(), pageW, margin, pageH);
+  }
 
   doc.setFillColor(...GREY_BG);
   doc.roundedRect(sumBoxX, sumBoxY0, sumBoxW, sumH, 2, 2, "F");

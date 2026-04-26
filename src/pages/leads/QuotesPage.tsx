@@ -107,8 +107,8 @@ export default function QuotesPage({ area }: { area: Area }) {
         subtitle="Build EnergyMart.pk-style quotations, save to the lead, and download PDF — same workflow as the CRM reference project."
       />
 
-      <div className="grid gap-6 lg:grid-cols-5">
-        <AdminPanel className="p-4 sm:p-6 lg:col-span-2">
+      <div className="flex flex-col gap-6">
+        <AdminPanel className="p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-slate-900 mb-3 flex items-center gap-2">
             <FileText className="w-5 h-5 text-[#F97316]" />
             Select lead
@@ -179,7 +179,7 @@ export default function QuotesPage({ area }: { area: Area }) {
           </div>
         </AdminPanel>
 
-        <div className="lg:col-span-3 min-h-[320px]">
+        <div className="min-h-[320px]">
           {loadingDetail && selectedId != null ? (
             <AdminPanel className="p-8 text-center text-slate-500">Loading quote…</AdminPanel>
           ) : detail ? (
@@ -195,7 +195,7 @@ export default function QuotesPage({ area }: { area: Area }) {
             />
           ) : (
             <AdminPanel className="p-8 text-center text-slate-500">
-              Select a lead on the left to build or edit a quotation and download the PDF.
+              Select a lead above to build or edit a quotation and download the PDF.
             </AdminPanel>
           )}
         </div>
