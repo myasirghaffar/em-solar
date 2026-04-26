@@ -30,6 +30,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useScrollLock(sidebarOpen);
 
+  const closeMobileDrawer = () => setSidebarOpen(false);
+
   const navItems = [
     { path: "/admin", icon: LayoutDashboard, label: "Dashboard" },
     { path: "/admin/leads", icon: FolderOpen, label: "Leads" },
@@ -49,12 +51,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="min-h-screen bg-slate-100 flex">
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white text-slate-900 transform ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-72 min-h-0 flex-col bg-white text-slate-900 transform ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0 transition-transform duration-300 ease-in-out border-r border-gray-200`}
       >
-        <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
-          <Link to="/admin" className="flex items-center space-x-2">
+        <div className="flex h-16 shrink-0 items-center justify-between px-6 border-b border-gray-200">
+          <Link to="/admin" onClick={closeMobileDrawer} className="flex items-center space-x-2">
             <div className="w-9 h-9 rounded-[10px] bg-[#FF7A00]/10 text-[#FF7A00] flex items-center justify-center">
               <LayoutDashboard className="w-5 h-5" />
             </div>
@@ -68,50 +70,55 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </button>
         </div>
 
-        <nav className="p-4 space-y-2">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive =
-              item.path === "/admin"
-                ? location.pathname === "/admin"
-                : location.pathname === item.path ||
-                  location.pathname.startsWith(`${item.path}/`);
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${
-                  isActive
-                    ? "bg-[#FF7A00] text-white"
-                    : "text-gray-500 hover:bg-gray-50 hover:text-slate-900"
-                }`}
-              >
-                <Icon className="w-5 h-5" />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
+          <nav className="p-4 space-y-2">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive =
+                item.path === "/admin"
+                  ? location.pathname === "/admin"
+                  : location.pathname === item.path ||
+                    location.pathname.startsWith(`${item.path}/`);
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={closeMobileDrawer}
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${
+                    isActive
+                      ? "bg-[#FF7A00] text-white"
+                      : "text-gray-500 hover:bg-gray-50 hover:text-slate-900"
+                  }`}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 space-y-2">
-          <Link
-            to="/"
-            className="flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-slate-900 transition-colors"
-          >
-            <Store className="w-5 h-5" />
-            <span>View Store</span>
-          </Link>
-          <button
-            type="button"
+          <div className="border-t border-gray-200 p-4 space-y-2">
+            <Link
+              to="/"
+              onClick={closeMobileDrawer}
+              className="flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-slate-900 transition-colors"
+            >
+              <Store className="w-5 h-5" />
+              <span>View Store</span>
+            </Link>
+            <button
+              type="button"
             onClick={async () => {
+              closeMobileDrawer();
               await logout();
               navigate("/login", { replace: true });
             }}
-            className="flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-slate-900 transition-colors w-full text-left"
-          >
-            <LogOut className="w-5 h-5" />
-            <span>Logout</span>
-          </button>
+              className="flex w-full items-center space-x-3 px-4 py-3 rounded-xl text-left text-gray-500 transition-colors hover:bg-gray-50 hover:text-slate-900"
+            >
+              <LogOut className="w-5 h-5" />
+              <span>Logout</span>
+            </button>
+          </div>
         </div>
       </aside>
 
