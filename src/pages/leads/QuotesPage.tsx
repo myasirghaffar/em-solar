@@ -114,7 +114,8 @@ export default function QuotesPage({ area }: { area: Area }) {
             Select lead
           </h2>
           <p className="text-sm text-slate-500 mb-4">
-            Choose a lead to edit its quote. All your accessible leads are listed below.
+            Choose a lead to edit its quote. All your accessible leads are
+            listed below.
           </p>
           <div className="space-y-2">
             <label className="text-xs font-medium text-slate-600">Lead</label>
@@ -151,12 +152,17 @@ export default function QuotesPage({ area }: { area: Area }) {
                         : "hover:bg-slate-50 text-slate-700"
                     }`}
                   >
-                    <span className="font-mono text-xs text-slate-500">#{l.id}</span> {l.name}
+                    <span className="font-mono text-xs text-slate-500">
+                      #{l.id}
+                    </span>{" "}
+                    {l.name}
                   </button>
                 </li>
               ))}
               {leads.length === 0 ? (
-                <li className="text-sm text-slate-500 px-2 py-4 text-center">No leads yet.</li>
+                <li className="text-sm text-slate-500 px-2 py-4 text-center">
+                  No leads yet.
+                </li>
               ) : null}
             </ul>
           )}
@@ -174,14 +180,18 @@ export default function QuotesPage({ area }: { area: Area }) {
                 Open lead #{selectedId} (details + quote)
               </Link>
             ) : (
-              <span className="text-sm text-slate-400">Select a lead first</span>
+              <span className="text-sm text-slate-400">
+                Select a lead first
+              </span>
             )}
           </div>
         </AdminPanel>
 
         <div className="min-h-[320px]">
           {loadingDetail && selectedId != null ? (
-            <AdminPanel className="p-8 text-center text-slate-500">Loading quote…</AdminPanel>
+            <AdminPanel className="p-8 text-center text-slate-500">
+              Loading quote…
+            </AdminPanel>
           ) : detail ? (
             <LeadQuoteBlock
               lead={detail}
@@ -189,13 +199,16 @@ export default function QuotesPage({ area }: { area: Area }) {
               preparedByName={user?.name}
               onLeadUpdated={(updated) => {
                 setDetail(updated);
-                setLeads((prev) => prev.map((x) => (x.id === updated.id ? updated : x)));
+                setLeads((prev) =>
+                  prev.map((x) => (x.id === updated.id ? updated : x)),
+                );
               }}
               sectionId="lead-quote"
             />
           ) : (
             <AdminPanel className="p-8 text-center text-slate-500">
-              Select a lead above to build or edit a quotation and download the PDF.
+              Select a lead above to build or edit a quotation and download the
+              PDF.
             </AdminPanel>
           )}
         </div>

@@ -14,6 +14,8 @@ const BORDER: [number, number, number] = [224, 227, 232];
 const QUOTE_TABLE_LINE_W = 0.12;
 /** Min distance from page bottom (mm) so table / summary stay above footer rule + text. */
 const QUOTE_PDF_FOOTER_RESERVE_MM = 20;
+/** Top offset (mm) for inner-page header block — keep modest to save vertical space. */
+const QUOTE_INNER_HEADER_TOP_MM = 12;
 
 const COMPANY = {
   name: "EnergyMart.pk",
@@ -217,6 +219,33 @@ function drawFooter(
   doc.setTextColor(...SLATE);
 }
 
+/**
+ * Geometry for the repeated inner-page header (logo, company block, quotation card, rule).
+ * `yBelowRule` must equal jspdf-autotable `margin.top` on continuation pages: autotable sets
+ * `cursor.y = margin.top` after each page break, then runs willDrawPage (which draws this header),
+ * then prints the orange table head — so margin.top must clear the drawn header.
+ */
+function measureInnerPageHeaderLayout(
+  doc: jsPDF,
+  logoWmm: number,
+  logoHmm: number,
+  pageW: number,
+  margin: number,
+  y0: number,
+): { ruleY: number; yBelowRule: number } {
+  const boxW = 72;
+  const boxX = pageW - margin - boxW;
+  const boxH = 26;
+  const textLeft = margin + logoWmm + 3;
+  const addrW = Math.max(28, boxX - textLeft - 4);
+  const addrParts = doc.splitTextToSize(COMPANY.address, addrW);
+  const addrLineMm = 3.1;
+  const leftAddrBottom = y0 + 19.5 + Math.max(0, addrParts.length - 1) * addrLineMm + 2.8;
+  const blockBottom = Math.max(y0 + logoHmm, y0 + boxH, leftAddrBottom);
+  const ruleY = blockBottom + 2.5;
+  return { ruleY, yBelowRule: ruleY + 5 };
+}
+
 /** Inner pages: logo + brand + quotation box + orange rule. Returns Y below rule. */
 function drawInnerPageHeader(
   doc: jsPDF,
@@ -232,23 +261,34 @@ function drawInnerPageHeader(
 ): number {
   const boxW = 72;
   const boxX = pageW - margin - boxW;
-  const boxH = 30;
+  const boxH = 26;
+  const { ruleY, yBelowRule } = measureInnerPageHeaderLayout(
+    doc,
+    logoWmm,
+    logoHmm,
+    pageW,
+    margin,
+    y0,
+  );
+
   doc.addImage(logoDataUrl, "PNG", margin, y0, logoWmm, logoHmm);
 
   const textLeft = margin + logoWmm + 3;
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
+  doc.setFontSize(10);
   doc.setTextColor(...ORANGE);
-  doc.text(COMPANY.name, textLeft, y0 + 5);
+  doc.text(COMPANY.name, textLeft, y0 + 4);
   doc.setFont("helvetica", "italic");
-  doc.setFontSize(8);
-  doc.setTextColor(...MUTED);
-  doc.text(COMPANY.tagline, textLeft, y0 + 10);
-  doc.setFont("helvetica", "normal");
   doc.setFontSize(7.5);
-  doc.text(`Email: ${COMPANY.email}`, textLeft, y0 + 15);
-  doc.text(`Phone: ${COMPANY.phone}`, textLeft, y0 + 19);
-  doc.text(`Address: ${COMPANY.address}`, textLeft, y0 + 23);
+  doc.setTextColor(...MUTED);
+  doc.text(COMPANY.tagline, textLeft, y0 + 8.5);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  doc.text(`Email: ${COMPANY.email}`, textLeft, y0 + 12.5);
+  doc.text(`Phone: ${COMPANY.phone}`, textLeft, y0 + 16);
+  const addrW = Math.max(28, boxX - textLeft - 4);
+  const addrParts = doc.splitTextToSize(COMPANY.address, addrW);
+  doc.text(addrParts, textLeft, y0 + 19.5);
 
   doc.setFillColor(...GREY_BG);
   doc.roundedRect(boxX, y0, boxW, boxH, 1.5, 1.5, "F");
@@ -256,22 +296,21 @@ function drawInnerPageHeader(
   doc.rect(boxX, y0, 2.2, boxH, "F");
 
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
+  doc.setFontSize(10);
   doc.setTextColor(...SLATE);
-  doc.text("QUOTATION", boxX + 6, y0 + 8);
+  doc.text("QUOTATION", boxX + 6, y0 + 7);
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
+  doc.setFontSize(7.5);
   doc.setTextColor(...MUTED);
-  doc.text(`Quote #: ${quoteRef}`, boxX + 6, y0 + 14);
-  doc.text(`Date: ${issueStr}`, boxX + 6, y0 + 19);
-  doc.text(`Valid Until: ${validStr}`, boxX + 6, y0 + 24);
+  doc.text(`Quote #: ${quoteRef}`, boxX + 6, y0 + 12);
+  doc.text(`Date: ${issueStr}`, boxX + 6, y0 + 16.5);
+  doc.text(`Valid Until: ${validStr}`, boxX + 6, y0 + 21);
 
-  const ruleY = y0 + Math.max(logoHmm, boxH) + 4;
   doc.setDrawColor(...ORANGE);
   doc.setLineWidth(0.9);
   doc.line(margin, ruleY, pageW - margin, ruleY);
   doc.setTextColor(...SLATE);
-  return ruleY + 8;
+  return yBelowRule;
 }
 
 function drawOrangeLBorders(
@@ -303,14 +342,11 @@ export async function downloadLeadQuotePdf(opts: {
   const { subtotal, tax, discount, grand } = computeTotals(quoteForPdf);
   const quoteRef = quoteRefForLead(lead.id);
 
-  const [logoDataUrl, wmDataUrl] = await Promise.all([
-    loadImageDataUrl(publicAsset("em-logo.png")),
-    loadImageDataUrl(publicAsset("em-logo-only.png")),
-  ]);
-  const [logoNat, wmNat] = await Promise.all([
-    naturalSize(logoDataUrl),
-    naturalSize(wmDataUrl),
-  ]);
+  const brandLogoUrl = await loadImageDataUrl(publicAsset("em-logo-only.png"));
+  const logoDataUrl = brandLogoUrl;
+  const wmDataUrl = brandLogoUrl;
+  const logoNat = await naturalSize(brandLogoUrl);
+  const wmNat = logoNat;
 
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
@@ -324,7 +360,8 @@ export async function downloadLeadQuotePdf(opts: {
   const validDt = parseQuoteValidUntil(quote.validUntil);
   const validStr = validDt ? formatDatePK(validDt) : "—";
 
-  const logoWHeader = 38;
+  /** Keep logo shorter than the quotation card (~26mm) and aligned with the text block. */
+  const logoWHeader = 22;
   const logoHHeader = (logoNat.h / logoNat.w) * logoWHeader;
 
   const emailGuess = lead.contact.includes("@") ? lead.contact : "—";
@@ -357,7 +394,7 @@ export async function downloadLeadQuotePdf(opts: {
         logoHHeader,
         pageW,
         margin,
-        16,
+        QUOTE_INNER_HEADER_TOP_MM,
         quoteRef,
         issueStr,
         validStr,
@@ -400,7 +437,7 @@ export async function downloadLeadQuotePdf(opts: {
   drawOrangeLBorders(doc, pageW, pageH, 4);
 
   const coverFooterReserve = 22;
-  const coverLogoW = 62;
+  const coverLogoW = 44;
   const coverLogoH = (logoNat.h / logoNat.w) * coverLogoW;
   let y = 26;
   doc.addImage(
@@ -484,7 +521,7 @@ export async function downloadLeadQuotePdf(opts: {
     logoHHeader,
     pageW,
     margin,
-    16,
+    QUOTE_INNER_HEADER_TOP_MM,
     quoteRef,
     issueStr,
     validStr,
@@ -553,7 +590,7 @@ export async function downloadLeadQuotePdf(opts: {
     logoHHeader,
     pageW,
     margin,
-    16,
+    QUOTE_INNER_HEADER_TOP_MM,
     quoteRef,
     issueStr,
     validStr,
@@ -563,20 +600,32 @@ export async function downloadLeadQuotePdf(opts: {
   doc.setFontSize(10);
   doc.setTextColor(...SLATE);
   doc.text("CLIENT INFORMATION", margin, y);
-  y += 5;
+  y += 4;
 
-  const clientBoxH = 36;
+  const colGap = 6;
+  const colW = (contentW - colGap) / 2;
+  const x1 = margin + 5;
+  const x2 = x1 + colW + colGap;
+  const addrLines = doc.splitTextToSize(lead.location || "—", colW - 2);
+  const clientAddrLineMm = 3.35;
+  const clientBoxTopPad = 6;
+  const clientRowGap = 7;
+  const clientBottomPad = 4;
+  const valueBaselineAfterPhone = clientBoxTopPad + 4 + clientRowGap + 4;
+  const clientBoxH = Math.max(
+    24,
+    valueBaselineAfterPhone +
+      Math.max(1, addrLines.length) * clientAddrLineMm +
+      clientBottomPad,
+  );
+
   doc.setFillColor(...GREY_BG);
   doc.roundedRect(margin, y, contentW, clientBoxH, 2, 2, "F");
   doc.setDrawColor(...BORDER);
   doc.setLineWidth(0.2);
   doc.roundedRect(margin, y, contentW, clientBoxH, 2, 2, "S");
 
-  const colGap = 6;
-  const colW = (contentW - colGap) / 2;
-  const x1 = margin + 5;
-  const x2 = x1 + colW + colGap;
-  let cy = y + 8;
+  let cy = y + clientBoxTopPad;
   doc.setFontSize(8);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...SLATE);
@@ -587,7 +636,7 @@ export async function downloadLeadQuotePdf(opts: {
   doc.setTextColor(0, 0, 0);
   doc.text(lead.name, x1, cy);
   doc.text(emailGuess, x2, cy);
-  cy += 9;
+  cy += clientRowGap;
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...SLATE);
   doc.text("PHONE NUMBER:", x1, cy);
@@ -596,9 +645,8 @@ export async function downloadLeadQuotePdf(opts: {
   doc.setFont("helvetica", "normal");
   doc.setTextColor(0, 0, 0);
   doc.text(phoneGuess, x1, cy);
-  const addrLines = doc.splitTextToSize(lead.location, colW - 2);
   doc.text(addrLines, x2, cy);
-  y += clientBoxH + 8;
+  y += clientBoxH + 6;
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
@@ -607,7 +655,7 @@ export async function downloadLeadQuotePdf(opts: {
   doc.setDrawColor(...ORANGE);
   doc.setLineWidth(0.35);
   doc.line(margin, y + 2, pageW - margin, y + 2);
-  y += 8;
+  y += 5;
 
   const lineToRow = (l: QuoteLine, idx: number) => {
     const item = String(idx + 1);
@@ -627,6 +675,16 @@ export async function downloadLeadQuotePdf(opts: {
   const colTot = 27;
   const colTitle = contentW - colItem - colQty - colUnit - colTot;
 
+  /** Where autotable resets `cursor.y` on each new page — must clear repeated `drawInnerPageHeader`. */
+  const quoteTableContinuationTopMm = measureInnerPageHeaderLayout(
+    doc,
+    logoWHeader,
+    logoHHeader,
+    pageW,
+    margin,
+    QUOTE_INNER_HEADER_TOP_MM,
+  ).yBelowRule;
+
   autoTable(doc, {
     startY: y,
     head: [["ITEM", "DETAILS", "QTY", "UNIT PRICE", "TOTAL"]],
@@ -638,7 +696,7 @@ export async function downloadLeadQuotePdf(opts: {
       textColor: 255,
       fontStyle: "bold",
       fontSize: 9,
-      cellPadding: 2.6,
+      cellPadding: 2,
       halign: "center",
       valign: "middle",
       lineWidth: QUOTE_TABLE_LINE_W,
@@ -647,7 +705,8 @@ export async function downloadLeadQuotePdf(opts: {
     bodyStyles: {
       valign: "top",
       overflow: "linebreak",
-      minCellHeight: 7,
+      minCellHeight: 5,
+      cellPadding: 1.6,
       lineWidth: QUOTE_TABLE_LINE_W,
       lineColor: [...BORDER],
     },
@@ -659,7 +718,7 @@ export async function downloadLeadQuotePdf(opts: {
     styles: {
       font: "helvetica",
       fontSize: 9,
-      cellPadding: 2.5,
+      cellPadding: 1.6,
       textColor: [0, 0, 0],
       valign: "top",
       overflow: "linebreak",
@@ -683,19 +742,19 @@ export async function downloadLeadQuotePdf(opts: {
           const padL =
             typeof data.cell.padding === "function"
               ? data.cell.padding("left")
-              : 2.5;
+              : 1.6;
           const padR =
             typeof data.cell.padding === "function"
               ? data.cell.padding("right")
-              : 2.5;
+              : 1.6;
           const padT =
             typeof data.cell.padding === "function"
               ? data.cell.padding("top")
-              : 2.5;
+              : 1.6;
           const padB =
             typeof data.cell.padding === "function"
               ? data.cell.padding("bottom")
-              : 2.5;
+              : 1.6;
           const innerW = Math.max(8, colTitle - padL - padR);
           const title =
             (pdfItemTitle(line) || lineItemTitleLegacy(line)).trim() || "—";
@@ -708,10 +767,10 @@ export async function downloadLeadQuotePdf(opts: {
           doc.setFont("helvetica", "normal");
           doc.setFontSize(8.5);
           const dLines = detail ? doc.splitTextToSize(detail, innerW) : [];
-          const lhTitle = 4.05;
-          const lhDet = 3.95;
-          const gap = detail ? 1.2 : 0;
-          const firstBaseline = 3.4;
+          const lhTitle = 3.45;
+          const lhDet = 3.25;
+          const gap = detail ? 0.55 : 0;
+          const firstBaseline = 2.85;
           const h =
             padT +
             padB +
@@ -719,9 +778,9 @@ export async function downloadLeadQuotePdf(opts: {
             tLines.length * lhTitle +
             gap +
             dLines.length * lhDet +
-            1.5;
+            0.35;
           data.cell.styles.minCellHeight = Math.max(
-            data.cell.styles.minCellHeight ?? 7,
+            data.cell.styles.minCellHeight ?? 5,
             h,
           );
           data.cell.text = [" "];
@@ -743,11 +802,11 @@ export async function downloadLeadQuotePdf(opts: {
       const doc = data.doc;
       const cell = data.cell;
       const padL =
-        typeof cell.padding === "function" ? cell.padding("left") : 2.5;
+        typeof cell.padding === "function" ? cell.padding("left") : 1.6;
       const padT =
-        typeof cell.padding === "function" ? cell.padding("top") : 2.5;
+        typeof cell.padding === "function" ? cell.padding("top") : 1.6;
       const padR =
-        typeof cell.padding === "function" ? cell.padding("right") : 2.5;
+        typeof cell.padding === "function" ? cell.padding("right") : 1.6;
       const x = cell.x + padL;
       const w = cell.width - padL - padR;
       const bg: [number, number, number] =
@@ -757,7 +816,7 @@ export async function downloadLeadQuotePdf(opts: {
       doc.setLineWidth(QUOTE_TABLE_LINE_W);
       doc.rect(cell.x, cell.y, cell.width, cell.height, "FD");
       doc.setCharSpace(0);
-      let yText = cell.y + padT + 3.4;
+      let yText = cell.y + padT + 2.85;
       if (!useSplitPdfLayout(line)) {
         const single = lineItemTitleLegacy(line).trim() || "—";
         doc.setFont("helvetica", "bold");
@@ -765,7 +824,7 @@ export async function downloadLeadQuotePdf(opts: {
         doc.setTextColor(0, 0, 0);
         for (const tl of doc.splitTextToSize(single, w)) {
           doc.text(tl, x, yText);
-          yText += 4.05;
+          yText += 3.45;
         }
         return;
       }
@@ -777,16 +836,16 @@ export async function downloadLeadQuotePdf(opts: {
       doc.setTextColor(0, 0, 0);
       for (const tl of doc.splitTextToSize(title, w)) {
         doc.text(tl, x, yText);
-        yText += 4.05;
+        yText += 3.45;
       }
       if (detail) {
-        yText += 1.0;
+        yText += 0.55;
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8.5);
         doc.setTextColor(...BODY);
         for (const dl of doc.splitTextToSize(detail, w)) {
           doc.text(dl, x, yText);
-          yText += 3.95;
+          yText += 3.25;
         }
       }
     },
@@ -803,6 +862,7 @@ export async function downloadLeadQuotePdf(opts: {
         fontStyle: "normal",
         valign: "top",
         overflow: "linebreak",
+        cellPadding: { top: 1.35, right: 1.8, bottom: 1.35, left: 1.8 },
       },
       2: { cellWidth: colQty, halign: "center", valign: "top" },
       3: { cellWidth: colUnit, halign: "right", valign: "top" },
@@ -816,7 +876,7 @@ export async function downloadLeadQuotePdf(opts: {
     margin: {
       left: margin,
       right: margin,
-      top: 42,
+      top: quoteTableContinuationTopMm,
       bottom: QUOTE_PDF_FOOTER_RESERVE_MM,
     },
     willDrawPage: (data) => {
@@ -829,7 +889,7 @@ export async function downloadLeadQuotePdf(opts: {
           logoHHeader,
           pageW,
           margin,
-          16,
+          QUOTE_INNER_HEADER_TOP_MM,
           quoteRef,
           issueStr,
           validStr,
@@ -844,7 +904,7 @@ export async function downloadLeadQuotePdf(opts: {
 
   const docExt = doc as DocExt;
   const tableFinalY = docExt.lastAutoTable?.finalY ?? y + 40;
-  const summaryGapMm = 10;
+  const summaryGapMm = 4;
   let ty = tableFinalY + summaryGapMm;
 
   const sumBoxW = 104;
@@ -865,12 +925,12 @@ export async function downloadLeadQuotePdf(opts: {
       logoHHeader,
       pageW,
       margin,
-      16,
+      QUOTE_INNER_HEADER_TOP_MM,
       quoteRef,
       issueStr,
       validStr,
     );
-    sumBoxY0 = yBelowHeader + 6;
+    sumBoxY0 = yBelowHeader + 4;
     ty = sumBoxY0 + 7;
     drawFooter(doc, doc.getNumberOfPages(), pageW, margin, pageH);
   }
@@ -931,7 +991,7 @@ export async function downloadLeadQuotePdf(opts: {
     logoHHeader,
     pageW,
     margin,
-    16,
+    QUOTE_INNER_HEADER_TOP_MM,
     quoteRef,
     issueStr,
     validStr,
@@ -986,7 +1046,7 @@ export async function downloadLeadQuotePdf(opts: {
     logoHHeader,
     pageW,
     margin,
-    16,
+    QUOTE_INNER_HEADER_TOP_MM,
     quoteRef,
     issueStr,
     validStr,
@@ -1071,7 +1131,7 @@ export async function downloadLeadQuotePdf(opts: {
         logoHHeader,
         pageW,
         margin,
-        16,
+        QUOTE_INNER_HEADER_TOP_MM,
         quoteRef,
         issueStr,
         validStr,
@@ -1116,7 +1176,7 @@ export async function downloadLeadQuotePdf(opts: {
         logoHHeader,
         pageW,
         margin,
-        16,
+        QUOTE_INNER_HEADER_TOP_MM,
         quoteRef,
         issueStr,
         validStr,
@@ -1144,7 +1204,7 @@ export async function downloadLeadQuotePdf(opts: {
         logoHHeader,
         pageW,
         margin,
-        16,
+        QUOTE_INNER_HEADER_TOP_MM,
         quoteRef,
         issueStr,
         validStr,
