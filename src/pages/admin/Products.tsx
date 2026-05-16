@@ -41,11 +41,13 @@ type ProductFormState = {
   brand: string;
   specRows: SpecRow[];
   attachmentRows: AttachmentRow[];
+  highlightOptions: string[];
   status: "active" | "inactive";
 };
 
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 const MAX_ATTACHMENT_BYTES = 3 * 1024 * 1024;
+const MAX_HIGHLIGHT_OPTIONS = 4;
 
 const ATTACHMENT_ACCEPT =
   ".pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain,application/zip";
@@ -73,8 +75,17 @@ function emptyForm(): ProductFormState {
     brand: "",
     specRows: [{ key: "", value: "" }],
     attachmentRows: [{ title: "", href: "" }],
+    highlightOptions: [""],
     status: "active",
   };
+}
+
+function highlightsFromProduct(list: string[] | undefined): string[] {
+  if (!Array.isArray(list) || list.length === 0) return [""];
+  const labels = list
+    .filter((o) => typeof o === "string" && o.trim().length > 0)
+    .slice(0, MAX_HIGHLIGHT_OPTIONS);
+  return labels.length > 0 ? labels : [""];
 }
 
 function specsFromProduct(
@@ -130,6 +141,10 @@ function buildPayload(form: ProductFormState) {
     specifications,
     attachments: attachments.length ? attachments : [],
     images: images.length ? images : ["/placeholder-product.jpg"],
+    highlightOptions: form.highlightOptions
+      .map((o) => o.trim())
+      .filter(Boolean)
+      .slice(0, MAX_HIGHLIGHT_OPTIONS),
     status: form.status,
   };
 }
@@ -308,6 +323,7 @@ export default function AdminProducts() {
       brand: product.brand ?? "",
       specRows: specsFromProduct(product.specifications),
       attachmentRows: attachmentsFromProduct(product.attachments),
+      highlightOptions: highlightsFromProduct(product.highlightOptions),
       status: product.status === "inactive" ? "inactive" : "active",
     });
     setShowModal(true);
@@ -355,6 +371,27 @@ export default function AdminProducts() {
       ...f,
       specRows: f.specRows.map((row, i) =>
         i === index ? { ...row, [field]: value } : row,
+      ),
+    }));
+
+  const addHighlightOption = () =>
+    setFormData((f) => {
+      if (f.highlightOptions.length >= MAX_HIGHLIGHT_OPTIONS) return f;
+      return { ...f, highlightOptions: [...f.highlightOptions, ""] };
+    });
+  const removeHighlightOption = (index: number) =>
+    setFormData((f) => ({
+      ...f,
+      highlightOptions:
+        f.highlightOptions.length > 1
+          ? f.highlightOptions.filter((_, i) => i !== index)
+          : f.highlightOptions,
+    }));
+  const updateHighlightOption = (index: number, value: string) =>
+    setFormData((f) => ({
+      ...f,
+      highlightOptions: f.highlightOptions.map((label, i) =>
+        i === index ? value : label,
       ),
     }));
 
@@ -908,6 +945,46 @@ export default function AdminProducts() {
                     use the placeholder.
                   </p>
                 )}
+              </FormSection>
+
+              <FormSection title="Product highlights (product page)">
+                <p className="text-xs text-gray-500">
+                  Short badges shown under the price (e.g. Free Delivery, 2 Year
+                  Warranty). Up to {MAX_HIGHLIGHT_OPTIONS} options. Empty rows are
+                  ignored on save.
+                </p>
+                <div className="space-y-2">
+                  {formData.highlightOptions.map((label, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <input
+                        placeholder={`Option ${index + 1} (e.g. Free Delivery)`}
+                        value={label}
+                        onChange={(e) =>
+                          updateHighlightOption(index, e.target.value)
+                        }
+                        maxLength={120}
+                        className="min-w-0 flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF7A00]/35"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeHighlightOption(index)}
+                        className="rounded-lg p-2 text-red-500 hover:bg-red-50"
+                        aria-label="Remove highlight"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={addHighlightOption}
+                  disabled={formData.highlightOptions.length >= MAX_HIGHLIGHT_OPTIONS}
+                  className="inline-flex items-center gap-1 text-sm font-semibold text-[#FF7A00] hover:text-[#c55a00] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add highlight
+                </button>
               </FormSection>
 
               <FormSection title="Description (storefront tabs)">

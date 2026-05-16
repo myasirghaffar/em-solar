@@ -133,6 +133,7 @@ export function normalizeProduct(p: any) {
       images: [] as string[],
       specifications: {} as Record<string, string>,
       attachments: [] as { title: string; href: string }[],
+      highlightOptions: [] as string[],
     };
   }
   let images = p?.images;
@@ -157,11 +158,20 @@ export function normalizeProduct(p: any) {
     );
   if (!Array.isArray(attachments)) attachments = [];
 
+  let highlightOptions = p?.highlightOptions;
+  if (typeof highlightOptions === "string")
+    highlightOptions = parseJsonField<string[]>(highlightOptions, []);
+  if (!Array.isArray(highlightOptions)) highlightOptions = [];
+  highlightOptions = (highlightOptions as unknown[])
+    .filter((o): o is string => typeof o === "string" && o.trim().length > 0)
+    .slice(0, 4);
+
   return {
     ...p,
     images,
     specifications,
     attachments,
+    highlightOptions,
   };
 }
 
@@ -187,6 +197,12 @@ function productWritePayload(p: Record<string, unknown>) {
         : {},
     attachments: Array.isArray(p.attachments)
       ? (p.attachments as { title: string; href: string }[])
+      : [],
+    highlightOptions: Array.isArray(p.highlightOptions)
+      ? (p.highlightOptions as string[])
+          .map((o) => String(o).trim())
+          .filter(Boolean)
+          .slice(0, 4)
       : [],
   };
 }

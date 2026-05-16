@@ -1,3 +1,4 @@
+import type { LucideIcon } from "lucide-react";
 import {
   ShoppingCart,
   Star,
@@ -8,8 +9,11 @@ import {
   Plus,
   Heart,
 } from "lucide-react";
+
 import { useCart } from "../../../../context/CartContext";
 import { useFavorites } from "../../../../context/FavoritesContext";
+
+const HIGHLIGHT_ICONS: LucideIcon[] = [Truck, Shield, Check, Check];
 
 interface ProductInfoProps {
   product: any;
@@ -24,6 +28,9 @@ export function ProductInfo({ product, quantity, setQuantity, onAddToCart }: Pro
 
   const isInCart = cartItems.some((item: { id: number }) => item.id === product.id);
   const favorited = isFavorite(product.id);
+  const highlightOptions: string[] = Array.isArray(product.highlightOptions)
+    ? product.highlightOptions.filter((o: unknown) => typeof o === "string" && o.trim().length > 0)
+    : [];
 
   return (
     <div className="space-y-8">
@@ -51,24 +58,24 @@ export function ProductInfo({ product, quantity, setQuantity, onAddToCart }: Pro
         <p className="mt-1 text-sm text-gray-500">Inclusive of all taxes</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4">
-        {[
-          { icon: Truck, label: "Free Delivery" },
-          { icon: Shield, label: "2 Year Warranty" },
-          { icon: Check, label: "Certified Product" },
-          { icon: Check, label: "Easy Returns" },
-        ].map(({ icon: Icon, label }) => (
-          <div
-            key={label}
-            className="flex items-center gap-3 rounded-2xl bg-gray-50/90 px-4 py-3.5 ring-1 ring-gray-100 transition-colors hover:bg-gray-50"
-          >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-gray-100">
-              <Icon className="h-4 w-4 text-[#FF7A00]" aria-hidden />
-            </span>
-            <span className="text-sm font-medium leading-snug text-[#0B2A4A]">{label}</span>
-          </div>
-        ))}
-      </div>
+      {highlightOptions.length > 0 ? (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4">
+          {highlightOptions.map((label, index) => {
+            const Icon = HIGHLIGHT_ICONS[index % HIGHLIGHT_ICONS.length];
+            return (
+              <div
+                key={`${label}-${index}`}
+                className="flex items-center gap-3 rounded-2xl bg-gray-50/90 px-4 py-3.5 ring-1 ring-gray-100 transition-colors hover:bg-gray-50"
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-gray-100">
+                  <Icon className="h-4 w-4 text-[#FF7A00]" aria-hidden />
+                </span>
+                <span className="text-sm font-medium leading-snug text-[#0B2A4A]">{label}</span>
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
         <div className="inline-flex h-12 shrink-0 items-stretch overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-200/90 sm:h-[3.25rem]">
