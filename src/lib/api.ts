@@ -1,5 +1,6 @@
 import { getApiBaseUrl } from "../config/api";
 import { humanizeApiError } from "./authApi";
+import { readAccessToken, refreshStoredSession } from "./authSession";
 
 export class ApiError extends Error {
   readonly code: string;
@@ -10,17 +11,6 @@ export class ApiError extends Error {
     this.name = "ApiError";
     this.code = code;
     this.statusCode = statusCode;
-  }
-}
-
-function readAccessToken(): string | null {
-  try {
-    const raw = localStorage.getItem("energymart-auth");
-    if (!raw) return null;
-    const p = JSON.parse(raw) as { accessToken?: string };
-    return typeof p.accessToken === "string" ? p.accessToken : null;
-  } catch {
-    return null;
   }
 }
 
@@ -43,6 +33,7 @@ const API_FETCH_TIMEOUT_MS = 25_000;
 async function apiRequest<T>(
   path: string,
   init: RequestInit & { auth?: boolean } = {},
+  retried = false,
 ): Promise<T> {
   const base = getApiBaseUrl();
   if (!base) {
@@ -96,6 +87,18 @@ async function apiRequest<T>(
     message?: string;
     statusCode?: number;
   } | null;
+
+  const unauthorized =
+    res.status === 401 ||
+    json?.code === "AUTH_UNAUTHORIZED" ||
+    json?.statusCode === 401;
+
+  if (init.auth && unauthorized && !retried) {
+    const session = await refreshStoredSession();
+    if (session?.accessToken) {
+      return apiRequest<T>(path, init, true);
+    }
+  }
 
   if (!json || typeof json !== "object" || json.success !== true) {
     const code = json?.code ?? "ERROR";

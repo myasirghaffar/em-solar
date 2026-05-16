@@ -4,9 +4,15 @@ import {
   authFetchMe,
   authLogin,
   authLogout,
-  authRefresh,
   authRegister,
 } from "../lib/authApi";
+import {
+  AUTH_SESSION_UPDATED,
+  readStoredAuth,
+  refreshStoredSession,
+  writeStoredAuth,
+  type StoredAuth,
+} from "../lib/authSession";
 import type { AuthUser } from "../types/auth";
 
 export type { AuthUser, UserRole } from "../types/auth";
@@ -31,39 +37,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const AUTH_KEY = "energymart-auth";
-
-type StoredAuth = {
-  user: AuthUser;
-  accessToken: string;
-  refreshToken: string;
-};
-
-function readStored(): StoredAuth | null {
-  const raw = localStorage.getItem(AUTH_KEY);
-  if (!raw) return null;
-  try {
-    const parsed = JSON.parse(raw) as Partial<StoredAuth>;
-    if (
-      parsed?.user?.email &&
-      typeof parsed.accessToken === "string" &&
-      typeof parsed.refreshToken === "string"
-    ) {
-      return parsed as StoredAuth;
-    }
-  } catch {
-    /* ignore */
-  }
-  return null;
-}
-
-function writeStored(data: StoredAuth | null): void {
-  if (!data) {
-    localStorage.removeItem(AUTH_KEY);
-    return;
-  }
-  localStorage.setItem(AUTH_KEY, JSON.stringify(data));
-}
+/** Refresh access token before it expires (backend default: 1h). */
+const SESSION_REFRESH_INTERVAL_MS = 50 * 60 * 1000;
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -73,29 +48,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const applySession = useCallback((s: StoredAuth) => {
     setUser(s.user);
     setAccessToken(s.accessToken);
-    writeStored(s);
+    writeStoredAuth(s);
   }, []);
 
   const clearSession = useCallback(() => {
     setUser(null);
     setAccessToken(null);
-    writeStored(null);
+    writeStoredAuth(null);
   }, []);
 
   const refreshSession = useCallback(async () => {
-    const stored = readStored();
-    if (!stored?.refreshToken) {
-      clearSession();
-      return;
-    }
-    try {
-      const next = await authRefresh(stored.refreshToken);
-      applySession({
-        user: next.user,
-        accessToken: next.accessToken,
-        refreshToken: next.refreshToken,
-      });
-    } catch {
+    const next = await refreshStoredSession();
+    if (next) {
+      applySession(next);
+    } else {
       clearSession();
     }
   }, [applySession, clearSession]);
@@ -103,7 +69,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const stored = readStored();
+      const stored = readStoredAuth();
       if (!stored?.refreshToken || !stored.accessToken) {
         if (!cancelled) setIsLoading(false);
         return;
@@ -115,17 +81,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setAccessToken(stored.accessToken);
         }
       } catch {
-        try {
-          const next = await authRefresh(stored.refreshToken);
-          if (!cancelled) {
-            applySession({
-              user: next.user,
-              accessToken: next.accessToken,
-              refreshToken: next.refreshToken,
-            });
-          }
-        } catch {
-          if (!cancelled) clearSession();
+        const next = await refreshStoredSession();
+        if (!cancelled) {
+          if (next) applySession(next);
+          else clearSession();
         }
       } finally {
         if (!cancelled) setIsLoading(false);
@@ -135,6 +94,42 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       cancelled = true;
     };
   }, [applySession, clearSession]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const id = window.setInterval(() => {
+      void refreshSession();
+    }, SESSION_REFRESH_INTERVAL_MS);
+
+    const onSessionUpdated = (e: Event) => {
+      const detail = (e as CustomEvent<StoredAuth>).detail;
+      if (detail?.accessToken) {
+        setUser(detail.user);
+        setAccessToken(detail.accessToken);
+      }
+    };
+
+    const onSessionCleared = () => clearSession();
+
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== "energymart-auth") return;
+      const stored = readStoredAuth();
+      if (stored) applySession(stored);
+      else clearSession();
+    };
+
+    window.addEventListener(AUTH_SESSION_UPDATED, onSessionUpdated);
+    window.addEventListener("energymart-auth-cleared", onSessionCleared);
+    window.addEventListener("storage", onStorage);
+
+    return () => {
+      window.clearInterval(id);
+      window.removeEventListener(AUTH_SESSION_UPDATED, onSessionUpdated);
+      window.removeEventListener("energymart-auth-cleared", onSessionCleared);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, [user, refreshSession, applySession, clearSession]);
 
   const login = async (email: string, password: string): Promise<AuthUser | null> => {
     const result = await authLogin(email, password);
@@ -166,7 +161,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   );
 
   const logout = async (): Promise<void> => {
-    const token = accessToken ?? readStored()?.accessToken;
+    const token = accessToken ?? readStoredAuth()?.accessToken;
     if (token) {
       try {
         await authLogout(token);
