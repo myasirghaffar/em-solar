@@ -128,10 +128,21 @@ body {
   display: none;
 }
 
-/* Categories mobile carousel */
+/* Shop category tabs — horizontal scroll on mobile */
+.shop-category-tabs {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-snap-type: x proximity;
+}
+.shop-category-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+/* Home category icon bar carousel */
 .categories-carousel {
   scrollbar-width: none;
   -ms-overflow-style: none;
+  scroll-snap-type: x mandatory;
 }
 .categories-carousel::-webkit-scrollbar {
   display: none;

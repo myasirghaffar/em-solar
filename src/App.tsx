@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import Header from './components/store/Header';
 import Footer from './components/store/Footer';
 import ScrollToTop from './components/ScrollToTop';
+import { PwaInstallPrompt } from './components/PwaInstallPrompt';
 import Home from './pages/website/Home';
 import About from './pages/website/About';
 import Contact from './pages/website/Contact';
@@ -39,8 +40,9 @@ import LeadsListView from './pages/leads/LeadsListView';
 import LeadDetailPage from './pages/leads/LeadDetailPage';
 import QuotesPage from './pages/leads/QuotesPage';
 import CustomerAccount from './pages/website/CustomerAccount';
-import News from './pages/website/News';
+import Blogs from './pages/website/News';
 import NewsDetail from './pages/website/NewsDetail';
+import Categories from './pages/website/Categories';
 import ProtectedRoute from './components/ProtectedRoute';
 import { CartProvider, type StoreDrawerTab } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
@@ -151,14 +153,16 @@ function App() {
             />
             <AosRouteSync />
             <ScrollToTop />
+            <PwaInstallPrompt />
             <CartDrawer />
             <Routes>
               {/* Store Routes */}
               <Route path="/" element={<><Header cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)} /><Home /><Footer /></>} />
               <Route path="/about" element={<><Header cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)} /><About /><Footer /></>} />
               <Route path="/contact" element={<><Header cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)} /><Contact /><Footer /></>} />
-              <Route path="/news" element={<><Header cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)} /><News /><Footer /></>} />
+              <Route path="/news" element={<><Header cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)} /><Blogs /><Footer /></>} />
               <Route path="/news/:id" element={<><Header cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)} /><NewsDetail /><Footer /></>} />
+              <Route path="/categories" element={<><Header cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)} /><Categories /><Footer /></>} />
               <Route path="/shop" element={<><Header cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)} /><Shop /><Footer /></>} />
               <Route path="/product/:id" element={<><Header cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)} /><ProductDetail /><Footer /></>} />
               <Route path="/checkout" element={<><Header cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)} /><Checkout /><Footer /></>} />

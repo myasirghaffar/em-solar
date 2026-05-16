@@ -20,15 +20,6 @@ export default function Header({ cartCount }: { cartCount: number }) {
   const location = useLocation();
   const isHome = location.pathname === "/";
 
-  const scrollToCategories = () => {
-    if (location.pathname !== "/") return;
-    window.requestAnimationFrame(() => {
-      document.getElementById("categories")?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    });
-  };
   const [scrolled, setScrolled] = useState(false);
 
   const accountHref = isAdmin
@@ -84,17 +75,14 @@ export default function Header({ cartCount }: { cartCount: number }) {
             {[
               { to: "/", label: "Home" },
               { to: "/shop", label: "Shop" },
-              { to: "/#categories", label: "Categories" },
-              { to: "/news", label: "News" },
+              { to: "/categories", label: "Categories" },
+              { to: "/news", label: "Blogs" },
               { to: "/about", label: "About" },
               { to: "/contact", label: "Contact" },
             ].map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
-                onClick={
-                  item.to === "/#categories" ? scrollToCategories : undefined
-                }
                 className="px-4 py-2 rounded-full text-sm font-semibold text-[#0B2A4A] hover:bg-[#0B2A4A]/5 transition-colors"
               >
                 {item.label}
@@ -183,12 +171,9 @@ export default function Header({ cartCount }: { cartCount: number }) {
                     Shop
                   </Link>
                   <Link
-                    to="/#categories"
+                    to="/categories"
                     className="px-3 py-2 rounded-lg text-[#0B2A4A] font-semibold hover:bg-[#0B2A4A]/5"
-                    onClick={() => {
-                      scrollToCategories();
-                      setMobileMenuOpen(false);
-                    }}
+                    onClick={() => setMobileMenuOpen(false)}
                   >
                     Categories
                   </Link>
@@ -197,7 +182,7 @@ export default function Header({ cartCount }: { cartCount: number }) {
                     className="px-3 py-2 rounded-lg text-[#0B2A4A] font-semibold hover:bg-[#0B2A4A]/5"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    News
+                    Blogs
                   </Link>
                   <Link
                     to="/about"

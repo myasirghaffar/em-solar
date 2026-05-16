@@ -163,14 +163,14 @@ export function LatestNewsSection() {
               aria-hidden
             />
             <span className="text-xs font-bold uppercase tracking-[0.2em] sm:text-sm">
-              Media and News
+              Media and Blogs
             </span>
           </div>
           <h2
             id="latest-news-heading"
             className="text-3xl font-bold tracking-tight text-[#0B2A4A] sm:text-4xl md:text-[clamp(2rem,3vw,2.75rem)]"
           >
-            Our Latest News
+            Our Latest Blogs
           </h2>
           <Link
             to="/news"
@@ -268,7 +268,7 @@ export function LatestNewsSection() {
         <div
           className="mt-8 flex w-full items-center justify-center gap-3"
           role="group"
-          aria-label="News carousel controls"
+          aria-label="Blogs carousel controls"
           data-aos="fade-up"
           data-aos-delay="140"
         >

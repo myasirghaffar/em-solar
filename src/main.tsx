@@ -5,6 +5,9 @@ import "react-toastify/dist/ReactToastify.css";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import App from "./App.tsx";
+import { registerSW } from "virtual:pwa-register";
+
+registerSW({ immediate: true });
 
 AOS.init({
   duration: 700,

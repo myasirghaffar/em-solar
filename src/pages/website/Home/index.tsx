@@ -77,22 +77,19 @@ export default function Home() {
   return (
     <>
       <HeroSection />
-      <AboutSection />
       <CategoriesSection />
       <FeaturedProducts products={products} loading={loading} />
 
+      <AboutSection />
       <WhyChooseUs />
       <TestimonialsSection />
-
       <TrustedBrandsSection />
       <StatsSection
         products={stats.products}
         customers={stats.customers}
         installations={stats.installations}
       />
-
       <CompanyCultureSection />
-
       <LatestNewsSection />
       <CTASection />
     </>

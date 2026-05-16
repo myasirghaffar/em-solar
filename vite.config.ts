@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { VitePWA } from 'vite-plugin-pwa'
 import { DEFAULT_PRODUCTION_API_URL } from './src/config/api-default-url'
 
 const LOCAL_API_BASE = 'http://localhost:8787'
@@ -77,5 +78,55 @@ function runtimeConfigPlugin(): Plugin {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [runtimeConfigPlugin(), react(), tailwindcss()],
+  plugins: [
+    runtimeConfigPlugin(),
+    react(),
+    tailwindcss(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.svg', 'pwa-192x192.png', 'pwa-512x512.png'],
+      manifest: {
+        id: '/',
+        name: 'EnergyMart.pk - Solar Energy E-Commerce',
+        short_name: 'EnergyMart',
+        description:
+          "Pakistan's leading solar energy e-commerce platform. Quality solar panels, inverters, batteries, and accessories.",
+        theme_color: '#0B2A4A',
+        background_color: '#ffffff',
+        display: 'standalone',
+        orientation: 'portrait',
+        scope: '/',
+        start_url: '/',
+        icons: [
+          {
+            src: 'pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any',
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any',
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
+        ],
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,webmanifest}'],
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api\//],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+      },
+      devOptions: {
+        enabled: false,
+      },
+    }),
+  ],
 })

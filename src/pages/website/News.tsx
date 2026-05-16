@@ -5,7 +5,7 @@ import { fetchStoreBlogs, type BlogPost } from "../../lib/api";
 import { toastError } from "../../lib/toast";
 import { NewsHeroSection } from "./News/features";
 
-export default function News() {
+export default function Blogs() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
 

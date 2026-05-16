@@ -1,4 +1,12 @@
-import { useState, useEffect, useLayoutEffect, useMemo } from "react";
+import {
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useCallback,
+  type TransitionEvent,
+} from "react";
 import { Quote, Star, ChevronLeft, ChevronRight } from "lucide-react";
 
 const testimonials = [
@@ -63,6 +71,20 @@ function buildLoopPages(paired: boolean) {
 }
 
 const MD_QUERY = "(min-width: 768px)";
+const TRANSITION_MS = 500;
+
+/** Jump without animating (infinite-loop reset). Double rAF avoids re-enabling transition before paint. */
+function jumpToSlide(
+  setWithTransition: (v: boolean) => void,
+  setSlideIndex: (v: number) => void,
+  index: number,
+) {
+  setWithTransition(false);
+  requestAnimationFrame(() => {
+    setSlideIndex(index);
+    requestAnimationFrame(() => setWithTransition(true));
+  });
+}
 
 export function TestimonialsSection() {
   const [isMdUp, setIsMdUp] = useState(() =>
@@ -79,48 +101,90 @@ export function TestimonialsSection() {
 
   const loopPages = useMemo(() => buildLoopPages(isMdUp), [isMdUp]);
   const pageCount = testimonials.length;
+  const lastRealIndex = loopPages.length - 2;
+  const cloneEndIndex = loopPages.length - 1;
 
   const [slideIndex, setSlideIndex] = useState(1);
   const [withTransition, setWithTransition] = useState(true);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const isAnimatingRef = useRef(false);
+  const slideIndexRef = useRef(slideIndex);
+  slideIndexRef.current = slideIndex;
 
   useEffect(() => {
-    setSlideIndex(1);
-    setWithTransition(false);
-    const id = requestAnimationFrame(() => setWithTransition(true));
-    return () => cancelAnimationFrame(id);
+    isAnimatingRef.current = false;
+    jumpToSlide(setWithTransition, setSlideIndex, 1);
   }, [isMdUp]);
 
-  const goToNext = () => {
+  const goToNext = useCallback(() => {
+    if (isAnimatingRef.current) return;
+    isAnimatingRef.current = true;
     setWithTransition(true);
     setSlideIndex((p) => p + 1);
-  };
+  }, []);
 
-  const goToPrev = () => {
+  const goToPrev = useCallback(() => {
+    if (isAnimatingRef.current) return;
+    isAnimatingRef.current = true;
     setWithTransition(true);
     setSlideIndex((p) => p - 1);
-  };
+  }, []);
+
+  const goToSlide = useCallback((index: number) => {
+    if (isAnimatingRef.current || index === slideIndexRef.current) return;
+    isAnimatingRef.current = true;
+    setWithTransition(true);
+    setSlideIndex(index);
+  }, []);
 
   useEffect(() => {
     const t = setInterval(goToNext, 5000);
     return () => clearInterval(t);
-  }, [isMdUp]);
+  }, [goToNext]);
 
-  const handleTrackTransitionEnd = () => {
-    if (slideIndex === loopPages.length - 1) {
-      setWithTransition(false);
-      setSlideIndex(1);
-    } else if (slideIndex === 0) {
-      setWithTransition(false);
-      setSlideIndex(loopPages.length - 2);
-    }
+  const resetLoopIfNeeded = useCallback(
+    (index: number) => {
+      if (index === cloneEndIndex) {
+        jumpToSlide(setWithTransition, setSlideIndex, 1);
+        return true;
+      }
+      if (index === 0) {
+        jumpToSlide(setWithTransition, setSlideIndex, lastRealIndex);
+        return true;
+      }
+      return false;
+    },
+    [cloneEndIndex, lastRealIndex],
+  );
+
+  const handleTrackTransitionEnd = (e: TransitionEvent<HTMLDivElement>) => {
+    if (e.target !== trackRef.current || e.propertyName !== "transform") return;
+    isAnimatingRef.current = false;
+    resetLoopIfNeeded(slideIndexRef.current);
   };
 
+  /** Recover when transitionend never fires (reduced motion, background tab, rapid clicks). */
   useEffect(() => {
-    if (!withTransition) {
-      const t = requestAnimationFrame(() => setWithTransition(true));
-      return () => cancelAnimationFrame(t);
+    const index = slideIndexRef.current;
+
+    if (index < 0 || index >= loopPages.length) {
+      isAnimatingRef.current = false;
+      jumpToSlide(setWithTransition, setSlideIndex, 1);
+      return;
     }
-  }, [withTransition]);
+
+    if (index !== 0 && index !== cloneEndIndex) return;
+
+    const t = window.setTimeout(() => {
+      const current = slideIndexRef.current;
+      if (current === 0 || current === cloneEndIndex) {
+        isAnimatingRef.current = false;
+        resetLoopIfNeeded(current);
+      }
+    }, TRANSITION_MS + 80);
+
+    return () => window.clearTimeout(t);
+  }, [slideIndex, loopPages.length, cloneEndIndex, resetLoopIfNeeded]);
 
   const activeDot = (slideIndex - 1 + pageCount) % pageCount;
 
@@ -140,12 +204,13 @@ export function TestimonialsSection() {
             Real reviews from satisfied customers across Pakistan
           </p>
         </div>
-        <div className="max-w-7xl mx-auto scroll-reveal">
+        <div className="max-w-7xl mx-auto">
           <div
             className={`flex w-full items-center ${isMdUp ? "min-h-[460px]" : "min-h-[400px]"}`}
           >
             <div className="w-full overflow-hidden">
               <div
+                ref={trackRef}
                 className={`flex ${withTransition ? "transition-transform duration-500 ease-out" : ""}`}
                 style={{ transform: `translateX(-${slideIndex * 100}%)` }}
                 onTransitionEnd={handleTrackTransitionEnd}
@@ -202,10 +267,7 @@ export function TestimonialsSection() {
               {testimonials.map((_, i) => (
                 <button
                   key={i}
-                  onClick={() => {
-                    setWithTransition(true);
-                    setSlideIndex(i + 1);
-                  }}
+                  onClick={() => goToSlide(i + 1)}
                   className={`h-2 rounded-full transition-all ${i === activeDot ? "w-6 bg-[#FF7A00]" : "w-2 bg-white/40 hover:bg-white/60"}`}
                 />
               ))}

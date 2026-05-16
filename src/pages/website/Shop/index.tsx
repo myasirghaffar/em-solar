@@ -1,16 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useCart } from "../../../context/CartContext";
-import { ShopHeader, FiltersSidebar, ProductGrid } from "./features";
+import { ShopHeader, CategoryTabs, FiltersSidebar, ProductGrid } from "./features";
+import {
+  getShopCategoryNames,
+  STORE_CATEGORIES,
+} from "../../../data/storeCategories";
 import { toastError } from "../../../lib/toast";
 
-const categories = ["Solar Panels", "Solar Inverters", "Batteries", "Accessories"];
 const SHOP_PAGE_SIZE = 9;
 
 export default function Shop() {
   const [searchParams] = useSearchParams();
   const [products, setProducts] = useState<any[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<string[]>(() =>
+    STORE_CATEGORIES.map((c) => c.name),
+  );
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const { addToCart } = useCart();
@@ -24,17 +30,25 @@ export default function Shop() {
   }, [selectedCategory, priceRange.min, priceRange.max, searchTerm]);
 
   useEffect(() => {
-    (async () => {
+    void (async () => {
       try {
-        const { fetchProducts } = await import("../../../lib/api");
+        const { fetchProducts, fetchProductCategories } = await import(
+          "../../../lib/api"
+        );
         const { withStoreProductFallback } = await import(
           "../../../data/dummyProducts"
         );
-        const data = await fetchProducts();
-        setProducts(withStoreProductFallback(data));
+        const [productData, categoryData] = await Promise.all([
+          fetchProducts(),
+          fetchProductCategories().catch(() => null),
+        ]);
+        const list = withStoreProductFallback(productData);
+        setProducts(list);
+        setCategories(getShopCategoryNames(categoryData, list));
       } catch (err) {
         console.error("Fetch error:", err);
         toastError("Could not load products.");
+        setCategories(getShopCategoryNames(null, []));
       } finally {
         setLoading(false);
       }
@@ -74,6 +88,11 @@ export default function Shop() {
   return (
     <div className="min-h-screen bg-gray-50">
       <ShopHeader />
+      <CategoryTabs
+        categories={categories}
+        selectedCategory={selectedCategory}
+        onSelectCategory={setSelectedCategory}
+      />
       <div className="container mx-auto px-4 py-8 md:py-10">
         <div className="flex flex-col gap-8 lg:flex-row lg:gap-10">
           <div className={showFilters ? "block" : "hidden lg:block"}>

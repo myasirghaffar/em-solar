@@ -2,6 +2,12 @@ import { useRef, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Diamond } from "lucide-react";
 
+function formatProductPrice(price: unknown): string | null {
+  const n = Number(price);
+  if (!Number.isFinite(n) || n < 0) return null;
+  return `Rs. ${n.toLocaleString()}`;
+}
+
 interface FeaturedProductsProps {
   products: any[];
   loading: boolean;
@@ -69,7 +75,7 @@ export function FeaturedProducts({ products, loading }: FeaturedProductsProps) {
     count > 1 ? [...products, ...products, ...products] : products;
 
   return (
-    <section className="scroll-reveal bg-[#0B2A4A] text-white py-20">
+    <section className="scroll-reveal bg-[#0B2A4A] text-white pt-12 pb-20 md:pt-14">
       {/* Header row — mirrors .wp + .hd */}
       <div className="max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-10">
         <div className="flex items-center justify-between gap-4 pb-6 md:pb-8" data-aos="fade-up">
@@ -146,7 +152,9 @@ export function FeaturedProducts({ products, loading }: FeaturedProductsProps) {
             onScroll={handleScroll}
             className="featured-products-carousel flex overflow-x-auto overflow-y-hidden"
           >
-            {loopSlides.map((product, idx) => (
+            {loopSlides.map((product, idx) => {
+              const priceLabel = formatProductPrice(product.price);
+              return (
               <div
                 key={`${product.id}-${idx}`}
                 className="swiper-slide flex-shrink-0 mr-5 last:mr-0"
@@ -159,35 +167,33 @@ export function FeaturedProducts({ products, loading }: FeaturedProductsProps) {
                   <div className="txt h-full">
                     <Link
                       to={`/product/${product.id}`}
-                      className="pad img-hover group relative block overflow-hidden rounded-sm bg-[#0a1524] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+                      className="pad img-hover group flex h-full flex-col overflow-hidden rounded-sm bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF7A00]/50"
                       style={{ height: CARD_HEIGHT }}
                     >
-                      <div
-                        className="img absolute inset-0 bg-center bg-cover bg-no-repeat transition-transform duration-500 ease-out group-hover:scale-[1.5]"
-                        style={{
-                          backgroundImage: `url(${productImageUrl(product)})`,
-                        }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/60" />
-                      <div className="relative z-10 flex h-full flex-col p-6">
-                        <h4 className="text-lg md:text-xl font-semibold leading-snug text-white line-clamp-3">
+                      <div className="relative min-h-0 flex-1 overflow-hidden bg-gradient-to-b from-gray-100 via-gray-200 to-gray-400">
+                        <img
+                          src={productImageUrl(product)}
+                          alt={product.name}
+                          className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                          loading="lazy"
+                        />
+                      </div>
+                      <div className="shrink-0 border-t border-gray-200/80 bg-white px-3 py-3 text-center">
+                        <h4 className="text-base font-semibold leading-snug text-[#0B2A4A] line-clamp-2 md:text-lg">
                           {product.name}
                         </h4>
-                        <span className="more-link mt-5 inline-flex items-center gap-2 text-sm text-white">
-                          <em className="not-italic font-medium underline underline-offset-4 decoration-white/80 group-hover:decoration-white">
-                            Discover
-                          </em>
-                          <ChevronRight
-                            className="h-5 w-5 rounded-full p-1 bg-white/20 text-white transition-all group-hover:translate-x-0.5 group-hover:bg-[#FF7A00]"
-                            strokeWidth={2}
-                          />
-                        </span>
+                        {priceLabel ? (
+                          <p className="mt-2 text-lg font-bold text-[#FF7A00] md:text-xl">
+                            {priceLabel}
+                          </p>
+                        ) : null}
                       </div>
                     </Link>
                   </div>
                 </div>
               </div>
-            ))}
+            );
+            })}
           </div>
         )}
       </div>
