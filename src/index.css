@@ -102,20 +102,36 @@ body {
 }
 
 .trusted-brands-track {
-  animation: trusted-brands-marquee 28s linear infinite;
   will-change: transform;
 }
 
-.trusted-brands-track:hover {
+.trusted-brands-track--left {
+  animation: trusted-brands-marquee-left 45s linear infinite;
+}
+
+.trusted-brands-track--right {
+  animation: trusted-brands-marquee-right 45s linear infinite;
+}
+
+.trusted-brands-marquee:hover .trusted-brands-track {
   animation-play-state: paused;
 }
 
-@keyframes trusted-brands-marquee {
+@keyframes trusted-brands-marquee-left {
   from {
     transform: translateX(0);
   }
   to {
-    transform: translateX(calc(-50%));
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes trusted-brands-marquee-right {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
   }
 }
 

@@ -1,12 +1,7 @@
 import { useRef, useEffect, useCallback, useState, type MouseEvent } from "react";
 import { Link } from "react-router-dom";
-import {
-  Calendar,
-  ChevronRight,
-  Diamond,
-  ArrowRight,
-  Tag,
-} from "lucide-react";
+import { ChevronRight, Diamond } from "lucide-react";
+import { BlogPostCard } from "../../../../components/store/BlogPostCard";
 import { fetchStoreBlogs, type BlogPost } from "../../../../lib/api";
 import { LATEST_NEWS } from "../../../../data/latestNews";
 
@@ -28,7 +23,6 @@ function staticPosts(): BlogPost[] {
 const SLIDE_WIDTH = 380;
 const SLIDE_GAP = 24;
 const SLIDE_STEP = SLIDE_WIDTH + SLIDE_GAP;
-const CARD_HEIGHT = 440;
 
 /** How many duplicate sequences to render (>=3). More = safer edges for infinite wrap. */
 const LOOP_COPIES = 4;
@@ -223,41 +217,7 @@ export function LatestNewsSection() {
                 aria-roledescription="slide"
                 aria-label={`${item.title}`}
               >
-                <article
-                  className="group relative overflow-hidden rounded-[20px] border border-gray-200/80 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.08)] transition-transform duration-300 ease-out will-change-transform hover:z-10 hover:scale-[1.02]"
-                  style={{ height: CARD_HEIGHT }}
-                >
-                  <div
-                    className="absolute inset-0 scale-105 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
-                    style={{ backgroundImage: `url(${item.image})` }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
-
-                  <div className="absolute inset-x-3 bottom-3 z-10 md:inset-x-4 md:bottom-4">
-                    <div className="rounded-2xl bg-white px-4 py-4 shadow-lg md:px-5 md:py-4">
-                      <h3 className="text-left text-base font-bold leading-snug text-gray-900 md:text-lg">
-                        {item.title}
-                      </h3>
-                      <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-                        <span className="inline-flex items-center gap-1.5 font-medium text-[#FF7A00]">
-                          <Calendar className="h-4 w-4 shrink-0" aria-hidden />
-                          {item.date}
-                        </span>
-                        <span className="inline-flex items-center gap-1.5 font-medium text-[#FF7A00]">
-                          <Tag className="h-4 w-4 shrink-0" aria-hidden />
-                          {item.tag}
-                        </span>
-                      </div>
-                      <Link
-                        to={item.id > 0 ? `/news/${item.id}` : "/news"}
-                        className="mt-3 inline-flex translate-y-1 items-center gap-2 rounded-full bg-[#FF7A00] px-4 py-2 text-sm font-semibold text-white opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100"
-                      >
-                        Read more
-                        <ArrowRight className="h-4 w-4" aria-hidden />
-                      </Link>
-                    </div>
-                  </div>
-                </article>
+                <BlogPostCard post={item} className="h-full" />
               </div>
             ))}
           </div>
