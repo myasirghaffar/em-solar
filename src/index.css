@@ -55,6 +55,7 @@ body {
 .admin-table-scroll {
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 transparent;
+  -webkit-overflow-scrolling: touch;
 }
 .admin-table-scroll::-webkit-scrollbar {
   height: 8px;
@@ -66,6 +67,9 @@ body {
 .admin-table-scroll::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 4px;
+}
+.admin-table-scroll > table {
+  min-width: 720px;
 }
 
 /* Featured products carousel — hide scrollbar (still scrollable) */

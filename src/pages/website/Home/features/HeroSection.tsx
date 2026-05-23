@@ -11,15 +11,8 @@ const heroSlides = [
     headingBottom: "Energy",
     subtitle:
       "Custom solar solutions designed to lower energy costs and power your home more efficiently.",
-    tag: "HYBRID SOLAR INVERTER",
-    badge: "Top seller",
     image: "/images/inverter.png",
     title: "High-Efficiency Inverter",
-    details: [
-      { label: "Warranty", value: "5 Years" },
-      { label: "Output", value: "10kW" },
-      { label: "Support", value: "Expert" },
-    ],
   },
   {
     id: "slide-2",
@@ -29,15 +22,8 @@ const heroSlides = [
     headingBottom: "Panels",
     subtitle:
       "High-performance mono panels with strong output and long-term durability for every season.",
-    tag: "MONO SOLAR PANEL",
-    badge: "Best value",
     image: "/images/solar-panel-1.png",
     title: "Premium Solar Panel",
-    details: [
-      { label: "Efficiency", value: "22%" },
-      { label: "Power", value: "550W" },
-      { label: "Durability", value: "25Y" },
-    ],
   },
   {
     id: "slide-3",
@@ -47,15 +33,18 @@ const heroSlides = [
     headingBottom: "Systems",
     subtitle:
       "Advanced lithium storage keeps your home powered day and night with stable and safe backup.",
-    tag: "LITHIUM BATTERY",
-    badge: "Reliable backup",
     image: "/images/battery-1.webp",
     title: "Smart Energy Storage",
-    details: [
-      { label: "Capacity", value: "13.5kWh" },
-      { label: "Cycles", value: "6000+" },
-      { label: "Safety", value: "BMS" },
-    ],
+  },
+  {
+    id: "slide-4",
+    badgeText: "RESCUBE SERIES",
+    headingTop: "SOLAR",
+    headingAccent: "UPS",
+    headingBottom: "",
+    subtitle: "POWER ON SAVE ALONG — 1000W | 2000Wh | 600W Solar",
+    image: "/images/image.png",
+    title: "VESTWOODS Solar UPS",
   },
 ];
 
@@ -134,8 +123,8 @@ export function HeroSection() {
                       {slide.headingTop}{" "}
                       <span className="text-[#FF7A00]">
                         {slide.headingAccent}
-                      </span>{" "}
-                      {slide.headingBottom}
+                      </span>
+                      {slide.headingBottom ? ` ${slide.headingBottom}` : null}
                     </h1>
                     <p
                       data-aos="fade-up"

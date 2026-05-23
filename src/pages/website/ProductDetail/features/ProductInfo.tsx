@@ -8,10 +8,12 @@ import {
   Minus,
   Plus,
   Heart,
+  Share2,
 } from "lucide-react";
 
 import { useCart } from "../../../../context/CartContext";
 import { useFavorites } from "../../../../context/FavoritesContext";
+import { toastError, toastSuccess } from "../../../../lib/toast";
 
 const HIGHLIGHT_ICONS: LucideIcon[] = [Truck, Shield, Check, Check];
 
@@ -31,6 +33,31 @@ export function ProductInfo({ product, quantity, setQuantity, onAddToCart }: Pro
   const highlightOptions: string[] = Array.isArray(product.highlightOptions)
     ? product.highlightOptions.filter((o: unknown) => typeof o === "string" && o.trim().length > 0)
     : [];
+
+  const handleShare = async () => {
+    const url = `${window.location.origin}/product/${product.id}`;
+    const sharePayload = {
+      title: product.name,
+      text: `Check out ${product.name} on EnergyMart`,
+      url,
+    };
+
+    try {
+      if (typeof navigator.share === "function") {
+        await navigator.share(sharePayload);
+        return;
+      }
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
+      toastSuccess("Product link copied to clipboard");
+    } catch {
+      toastError("Could not share this product");
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -123,6 +150,15 @@ export function ProductInfo({ product, quantity, setQuantity, onAddToCart }: Pro
             }`}
           >
             <Heart className={`h-5 w-5 ${favorited ? "fill-current" : ""}`} aria-hidden />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => void handleShare()}
+            aria-label="Share product"
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-gray-500 shadow-sm ring-1 ring-gray-200/90 transition-all hover:bg-gray-50 hover:text-[#0B2A4A] sm:h-[3.25rem] sm:w-[3.25rem]"
+          >
+            <Share2 className="h-5 w-5" aria-hidden />
           </button>
         </div>
       </div>

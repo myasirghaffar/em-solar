@@ -1,6 +1,10 @@
 import { getApiBaseUrl } from "../config/api";
 import { humanizeApiError } from "./authApi";
-import { readAccessToken, refreshStoredSession } from "./authSession";
+import {
+  readAccessToken,
+  readStoredAuth,
+  refreshStoredSession,
+} from "./authSession";
 
 export class ApiError extends Error {
   readonly code: string;
@@ -29,10 +33,97 @@ function ensureArray<T>(data: unknown): T[] {
 }
 
 const API_FETCH_TIMEOUT_MS = 25_000;
+const API_GET_CACHE_STORAGE_KEY = "energymart-api-get-cache-v1";
+const API_GET_CACHE_FRESH_PUBLIC_MS = 5 * 60_000;
+const API_GET_CACHE_FRESH_AUTH_MS = 60_000;
+
+type ApiGetCacheEntry = {
+  data: unknown;
+  updatedAtMs: number;
+  etag?: string;
+  lastModified?: string;
+};
+
+let inMemoryGetCache: Record<string, ApiGetCacheEntry> | null = null;
+
+function canUseStorage(): boolean {
+  return typeof window !== "undefined" && typeof localStorage !== "undefined";
+}
+
+function loadApiGetCache(): Record<string, ApiGetCacheEntry> {
+  if (inMemoryGetCache) return inMemoryGetCache;
+  if (!canUseStorage()) {
+    inMemoryGetCache = {};
+    return inMemoryGetCache;
+  }
+  const raw = localStorage.getItem(API_GET_CACHE_STORAGE_KEY);
+  if (!raw) {
+    inMemoryGetCache = {};
+    return inMemoryGetCache;
+  }
+  try {
+    const parsed = JSON.parse(raw) as Record<string, ApiGetCacheEntry>;
+    inMemoryGetCache = parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    inMemoryGetCache = {};
+  }
+  return inMemoryGetCache;
+}
+
+function saveApiGetCache(next: Record<string, ApiGetCacheEntry>): void {
+  inMemoryGetCache = next;
+  if (!canUseStorage()) return;
+  try {
+    localStorage.setItem(API_GET_CACHE_STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    // Ignore quota / private-mode errors.
+  }
+}
+
+function clearApiGetCache(): void {
+  inMemoryGetCache = {};
+  if (!canUseStorage()) return;
+  localStorage.removeItem(API_GET_CACHE_STORAGE_KEY);
+}
+
+function authScopeKey(auth: boolean | undefined): string {
+  if (!auth) return "public";
+  const email = readStoredAuth()?.user?.email?.trim().toLowerCase();
+  return email ? `auth:${email}` : "auth:anonymous";
+}
+
+function buildApiGetCacheKey(base: string, path: string, authScope: string): string {
+  return `${base}|${path}|${authScope}`;
+}
+
+function readApiGetCacheEntry(key: string): ApiGetCacheEntry | null {
+  const store = loadApiGetCache();
+  return store[key] ?? null;
+}
+
+function writeApiGetCacheEntry(key: string, entry: ApiGetCacheEntry): void {
+  const store = loadApiGetCache();
+  store[key] = entry;
+  saveApiGetCache(store);
+}
+
+function touchApiGetCacheEntry(key: string): void {
+  const store = loadApiGetCache();
+  const current = store[key];
+  if (!current) return;
+  store[key] = { ...current, updatedAtMs: Date.now() };
+  saveApiGetCache(store);
+}
+
+if (typeof window !== "undefined") {
+  window.addEventListener("energymart-auth-cleared", () => {
+    clearApiGetCache();
+  });
+}
 
 async function apiRequest<T>(
   path: string,
-  init: RequestInit & { auth?: boolean } = {},
+  init: RequestInit & { auth?: boolean; forceRefresh?: boolean } = {},
   retried = false,
 ): Promise<T> {
   const base = getApiBaseUrl();
@@ -42,6 +133,7 @@ async function apiRequest<T>(
   const headers: Record<string, string> = {
     ...(init.headers as Record<string, string> | undefined),
   };
+  const method = String(init.method ?? "GET").toUpperCase();
   const body = init.body;
   if (body !== undefined && typeof body === "string") {
     headers["Content-Type"] = "application/json";
@@ -57,7 +149,26 @@ async function apiRequest<T>(
     }
     headers.Authorization = `Bearer ${t}`;
   }
-  const { auth: _auth, ...rest } = init;
+  const { auth: _auth, forceRefresh, ...rest } = init;
+  const isGet = method === "GET";
+  const cacheFreshMs = init.auth
+    ? API_GET_CACHE_FRESH_AUTH_MS
+    : API_GET_CACHE_FRESH_PUBLIC_MS;
+  const scope = authScopeKey(init.auth);
+  const cacheKey = buildApiGetCacheKey(base, path, scope);
+  const cached = isGet ? readApiGetCacheEntry(cacheKey) : null;
+  if (
+    isGet &&
+    !forceRefresh &&
+    cached &&
+    Date.now() - cached.updatedAtMs <= cacheFreshMs
+  ) {
+    return cached.data as T;
+  }
+  if (isGet && cached) {
+    if (cached.etag) headers["If-None-Match"] = cached.etag;
+    if (cached.lastModified) headers["If-Modified-Since"] = cached.lastModified;
+  }
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), API_FETCH_TIMEOUT_MS);
 
@@ -69,6 +180,9 @@ async function apiRequest<T>(
       signal: controller.signal,
     });
   } catch (e) {
+    if (isGet && cached) {
+      return cached.data as T;
+    }
     if (e instanceof DOMException && e.name === "AbortError") {
       throw new ApiError(
         "TIMEOUT",
@@ -100,10 +214,30 @@ async function apiRequest<T>(
     }
   }
 
+  if (isGet && res.status === 304 && cached) {
+    touchApiGetCacheEntry(cacheKey);
+    return cached.data as T;
+  }
+
   if (!json || typeof json !== "object" || json.success !== true) {
+    if (isGet && cached) {
+      // Offline / transient API failures: keep app usable with last known data.
+      return cached.data as T;
+    }
     const code = json?.code ?? "ERROR";
     const msg = humanizeApiError(code, String(json?.message ?? ""));
     throw new ApiError(code, msg, json?.statusCode ?? res.status);
+  }
+  if (isGet) {
+    writeApiGetCacheEntry(cacheKey, {
+      data: json.data as unknown,
+      updatedAtMs: Date.now(),
+      etag: res.headers.get("ETag") ?? undefined,
+      lastModified: res.headers.get("Last-Modified") ?? undefined,
+    });
+  } else if (res.ok) {
+    // Any successful write may change list/detail endpoints.
+    clearApiGetCache();
   }
   return json.data as T;
 }

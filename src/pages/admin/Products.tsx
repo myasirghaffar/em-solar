@@ -10,6 +10,7 @@ import {
   Upload,
   ImageIcon,
   FileUp,
+  Loader2,
 } from "lucide-react";
 import Input from "../../components/ui/Input";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
@@ -191,6 +192,7 @@ export default function AdminProducts() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingDeleteProductId, setPendingDeleteProductId] = useState<number | null>(null);
   const [deleteProductBusy, setDeleteProductBusy] = useState(false);
+  const [submitBusy, setSubmitBusy] = useState(false);
 
   useScrollLock(showModal);
 
@@ -274,6 +276,8 @@ export default function AdminProducts() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitBusy) return;
+    setSubmitBusy(true);
     try {
       const payload = buildPayload(formData);
       const { updateProduct, createProduct } = await import("../../lib/api");
@@ -299,6 +303,8 @@ export default function AdminProducts() {
             ? err.message
             : "Could not save product.";
       toastError(msg);
+    } finally {
+      setSubmitBusy(false);
     }
   };
 
@@ -385,7 +391,7 @@ export default function AdminProducts() {
       highlightOptions:
         f.highlightOptions.length > 1
           ? f.highlightOptions.filter((_, i) => i !== index)
-          : f.highlightOptions,
+          : [""],
     }));
   const updateHighlightOption = (index: number, value: string) =>
     setFormData((f) => ({
@@ -714,11 +720,13 @@ export default function AdminProducts() {
               <button
                 type="button"
                 onClick={() => {
+                  if (submitBusy) return;
                   setUploadError(null);
                   setAttachmentError(null);
                   setShowModal(false);
                 }}
-                className="rounded-lg px-2 py-1 text-2xl leading-none text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                disabled={submitBusy}
+                className="rounded-lg px-2 py-1 text-2xl leading-none text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
                 aria-label="Close"
               >
                 ×
@@ -968,7 +976,8 @@ export default function AdminProducts() {
                       <button
                         type="button"
                         onClick={() => removeHighlightOption(index)}
-                        className="rounded-lg p-2 text-red-500 hover:bg-red-50"
+                        disabled={submitBusy}
+                        className="rounded-lg p-2 text-red-500 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
                         aria-label="Remove highlight"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -979,7 +988,10 @@ export default function AdminProducts() {
                 <button
                   type="button"
                   onClick={addHighlightOption}
-                  disabled={formData.highlightOptions.length >= MAX_HIGHLIGHT_OPTIONS}
+                  disabled={
+                    submitBusy ||
+                    formData.highlightOptions.length >= MAX_HIGHLIGHT_OPTIONS
+                  }
                   className="inline-flex items-center gap-1 text-sm font-semibold text-[#FF7A00] hover:text-[#c55a00] disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <Plus className="h-4 w-4" />
@@ -1197,19 +1209,31 @@ export default function AdminProducts() {
                 <button
                   type="button"
                   onClick={() => {
+                    if (submitBusy) return;
                     setUploadError(null);
                     setAttachmentError(null);
                     setShowModal(false);
                   }}
-                  className="rounded-lg border border-gray-300 px-4 py-2 transition-colors hover:bg-gray-50"
+                  disabled={submitBusy}
+                  className="rounded-lg border border-gray-300 px-4 py-2 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="rounded-[10px] bg-[#FF7A00] px-6 py-2 font-semibold text-white transition-colors hover:bg-[#e86e00]"
+                  disabled={submitBusy}
+                  className="inline-flex items-center justify-center gap-2 rounded-[10px] bg-[#FF7A00] px-6 py-2 font-semibold text-white transition-colors hover:bg-[#e86e00] disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  {editingProduct ? "Update product" : "Add product"}
+                  {submitBusy ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      {editingProduct ? "Updating..." : "Adding..."}
+                    </>
+                  ) : editingProduct ? (
+                    "Update product"
+                  ) : (
+                    "Add product"
+                  )}
                 </button>
               </div>
             </form>
