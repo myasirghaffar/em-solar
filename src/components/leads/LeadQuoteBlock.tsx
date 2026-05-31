@@ -163,14 +163,27 @@ function withCategoryDefaultsIfEmpty(line: QuoteLine, cat: string): QuoteLine {
   const t = String(line.itemTitle ?? "").trim();
   const d = String(line.itemDescription ?? "").trim();
   const legacy = String(line.description ?? "").trim();
-  if (t || d || legacy) return line;
   const preset = resolveCategoryDefaults(cat);
-  return {
-    ...line,
-    itemTitle: preset.title,
-    itemDescription: preset.description,
-    description: composeLineStorage(preset.title, preset.description),
-  };
+
+  if (!t && !d && !legacy) {
+    return {
+      ...line,
+      itemTitle: preset.title,
+      itemDescription: preset.description,
+      description: composeLineStorage(preset.title, preset.description),
+    };
+  }
+
+  // Backfill preset description when title matches category default but detail was cleared.
+  if (t && !d && preset.description && t === preset.title) {
+    return {
+      ...line,
+      itemDescription: preset.description,
+      description: composeLineStorage(t, preset.description),
+    };
+  }
+
+  return line;
 }
 
 /** One row per known category, then any extra lines (custom / duplicates) preserved in order. */
@@ -260,13 +273,8 @@ function defaultItemTitleFromProduct(p: CatalogProduct): string {
   return [brand ? `[${brand}]` : null, name].filter(Boolean).join(" ").replace(/\s+/g, " ").trim() || name;
 }
 
-function defaultItemDescriptionFromProduct(p: CatalogProduct): string {
-  const cat = String(p.category ?? "").trim();
-  const short = String(p.description ?? "").trim();
-  const parts: string[] = [];
-  if (cat) parts.push(`Category: ${cat}`);
-  if (short) parts.push(short);
-  return parts.join("\n");
+function defaultItemDescriptionFromProduct(_p: CatalogProduct): string {
+  return "";
 }
 
 /**
@@ -746,7 +754,7 @@ export default function LeadQuoteBlock({
 
                 return (
                   <tr key={`${isLockedCategory ? computedCategories[i] : "row"}-${i}`} className={stripe}>
-                    <td className="border border-rose-200 align-top px-1 py-2 text-center">
+                    <td className="border border-rose-200 align-top px-1 py-1 text-center">
                       <input
                         type="checkbox"
                         checked={line.includeInPdf !== false}
@@ -756,7 +764,7 @@ export default function LeadQuoteBlock({
                         aria-label={`Include ${isLockedCategory ? computedCategories[i] : "this line"} on PDF`}
                       />
                     </td>
-                    <td className="border border-rose-200 align-top px-2 py-2 text-slate-700">
+                    <td className="border border-rose-200 align-top px-2 py-1 text-slate-700">
                       {isLockedCategory ? (
                         <span className="font-semibold text-slate-800">{computedCategories[i]}</span>
                       ) : (
@@ -779,7 +787,7 @@ export default function LeadQuoteBlock({
                         </div>
                       )}
                     </td>
-                    <td className="border border-rose-200 align-top px-1 py-2">
+                    <td className="border border-rose-200 align-top px-1 py-1">
                       <input
                         type="number"
                         min={0}
@@ -793,7 +801,7 @@ export default function LeadQuoteBlock({
                         className="w-full min-w-0 px-1.5 py-1.5 border border-rose-200 rounded-md text-center text-sm"
                       />
                     </td>
-                    <td className="border border-rose-200 align-top px-2 py-2">
+                    <td className="border border-rose-200 align-top px-2 py-1">
                       {showProductTitlePicker ? (
                         <div className="mb-1.5 relative z-20">
                           <Select
@@ -820,11 +828,11 @@ export default function LeadQuoteBlock({
                       </label>
                       <textarea
                         id={`quote-line-desc-${i}`}
-                        rows={6}
+                        rows={2}
                         value={lineDetailForForm(line)}
                         onChange={(e) => syncLinePdfFields(i, lineTitleForForm(line), e.target.value)}
-                        placeholder="Subtitle / details for PDF — multiple lines OK (specs, brands, numbered lists…)"
-                        className="mt-1.5 w-full px-2 py-2 border border-rose-200 rounded-md text-sm resize-y min-h-[8.5rem] text-slate-700 leading-relaxed whitespace-pre-wrap"
+                        placeholder="Add details for PDF (optional)"
+                        className="mt-1 w-full px-2 py-1.5 border border-rose-200 rounded-md text-sm resize-y min-h-[2.75rem] text-slate-700 leading-snug whitespace-pre-wrap"
                       />
                       {specEntries.length > 0 ? (
                         <div className="mt-1.5 relative z-20">
@@ -844,7 +852,7 @@ export default function LeadQuoteBlock({
                         </div>
                       ) : null}
                     </td>
-                    <td className="border border-rose-200 align-top px-1 py-2">
+                    <td className="border border-rose-200 align-top px-1 py-1">
                       <input
                         type="number"
                         min={0}
@@ -858,10 +866,10 @@ export default function LeadQuoteBlock({
                         className="w-full min-w-0 px-1.5 py-1.5 border border-rose-200 rounded-md text-right text-sm tabular-nums"
                       />
                     </td>
-                    <td className="border border-rose-200 align-top px-2 py-2 text-right font-semibold tabular-nums text-slate-900">
+                    <td className="border border-rose-200 align-top px-2 py-1 text-right font-semibold tabular-nums text-slate-900">
                       PKR {lineTotal.toLocaleString("en-PK")}
                     </td>
-                    <td className="border border-rose-200 align-top px-1 py-2 text-right whitespace-nowrap">
+                    <td className="border border-rose-200 align-top px-1 py-1 text-right whitespace-nowrap">
                       {isLockedCategory ? (
                         <button
                           type="button"

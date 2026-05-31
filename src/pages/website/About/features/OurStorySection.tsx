@@ -13,7 +13,7 @@ export function OurStorySection() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-[#0B2A4A] mb-6">Our Story</h2>
-            <p className="text-lg text-gray-600 leading-relaxed mb-6">Founded with a vision to make solar energy accessible to every Pakistani household and business, EnergyMart.pk has grown into Pakistan's most trusted solar e-commerce platform.</p>
+            <p className="text-lg text-gray-600 leading-relaxed mb-6">Founded with a vision to make solar energy accessible to every Pakistani household and business, energymart.pk has grown into Pakistan's most trusted solar e-commerce platform.</p>
             <p className="text-lg text-gray-600 leading-relaxed">Our team of solar experts brings together years of experience in the renewable energy sector, ensuring that every customer receives personalized solutions tailored to their specific energy needs.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">

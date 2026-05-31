@@ -130,7 +130,7 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="flex flex-col items-center gap-6 border-t border-white/10 pt-8 md:flex-row md:items-center md:justify-between">
           <p className="text-center text-sm text-gray-400 md:text-left">
-            © 2024 EnergyMart.pk. All rights reserved.
+            © 2024 energymart.pk. All rights reserved.
           </p>
           <nav
             aria-label="Legal and account"

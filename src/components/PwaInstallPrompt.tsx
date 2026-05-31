@@ -34,7 +34,7 @@ export function PwaInstallPrompt() {
             id="pwa-install-title"
             className="text-sm font-bold leading-snug text-white"
           >
-            Install EnergyMart.pk
+            Install energymart.pk
           </p>
           {iosHint && !canInstall ? (
             <p className="mt-1 text-xs leading-relaxed text-gray-300">

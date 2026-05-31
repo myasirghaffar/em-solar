@@ -10,7 +10,7 @@ export function NewsHeroSection() {
             Our Latest <span className="text-[#FF7A00]">Blogs</span>
           </h1>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Updates, announcements, and stories from EnergyMart.pk — your partner in solar energy.
+            Updates, announcements, and stories from energymart.pk — your partner in solar energy.
           </p>
         </div>
       </div>

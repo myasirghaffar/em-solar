@@ -18,7 +18,7 @@ const QUOTE_PDF_FOOTER_RESERVE_MM = 20;
 const QUOTE_INNER_HEADER_TOP_MM = 12;
 
 const COMPANY = {
-  name: "EnergyMart.pk",
+  name: "energymart.pk",
   tagline: "ILLUMINATING YOUR WORLD",
   email: "info@energymart.pk",
   phone: "+92-301-6035666",
@@ -278,7 +278,7 @@ function drawInnerPageHeader(
   doc.setFontSize(10);
   doc.setTextColor(...ORANGE);
   doc.text(COMPANY.name, textLeft, y0 + 4);
-  doc.setFont("helvetica", "italic");
+  doc.setFont("helvetica");
   doc.setFontSize(7.5);
   doc.setTextColor(...MUTED);
   doc.text(COMPANY.tagline, textLeft, y0 + 8.5);
@@ -364,7 +364,6 @@ export async function downloadLeadQuotePdf(opts: {
   const logoWHeader = 22;
   const logoHHeader = (logoNat.h / logoNat.w) * logoWHeader;
 
-  const emailGuess = lead.contact.includes("@") ? lead.contact : "—";
   const phoneGuess = lead.contact.includes("@") ? "—" : lead.contact;
 
   function drawContactInfoBox(doc: jsPDF, y: number): number {
@@ -460,7 +459,7 @@ export async function downloadLeadQuotePdf(opts: {
   doc.setTextColor(0, 0, 0);
   doc.text(COMPANY.name, cx, y, { align: "center" });
   y += 11;
-  doc.setFont("helvetica", "italic");
+  doc.setFont("helvetica");
   doc.setFontSize(11);
   doc.setTextColor(...MUTED);
   doc.text(COMPANY.tagline, cx, y, { align: "center" });
@@ -603,21 +602,30 @@ export async function downloadLeadQuotePdf(opts: {
   y += 4;
 
   const colGap = 6;
-  const colW = (contentW - colGap) / 2;
+  const colW = (contentW - 2 * colGap) / 3;
   const x1 = margin + 5;
   const x2 = x1 + colW + colGap;
+  const x3 = x2 + colW + colGap;
   const addrLines = doc.splitTextToSize(lead.location || "—", colW - 2);
-  const clientAddrLineMm = 3.35;
-  const clientBoxTopPad = 6;
-  const clientRowGap = 7;
-  const clientBottomPad = 4;
-  const valueBaselineAfterPhone = clientBoxTopPad + 4 + clientRowGap + 4;
-  const clientBoxH = Math.max(
-    24,
-    valueBaselineAfterPhone +
-      Math.max(1, addrLines.length) * clientAddrLineMm +
-      clientBottomPad,
+  const nameLines = doc.splitTextToSize(lead.name || "—", colW - 2);
+  const phoneLines = doc.splitTextToSize(phoneGuess || "—", colW - 2);
+  const clientBoxTopPad = 4;
+  const clientBoxBottomPad = 4;
+  const clientLabelAscentMm = 2.35;
+  const labelToValueGap = 3.2;
+  const clientValueLineMm = 3.35;
+  const valueLineCount = Math.max(
+    1,
+    nameLines.length,
+    phoneLines.length,
+    addrLines.length,
   );
+  const clientBoxH =
+    clientBoxTopPad +
+    clientLabelAscentMm +
+    labelToValueGap +
+    valueLineCount * clientValueLineMm +
+    clientBoxBottomPad;
 
   doc.setFillColor(...GREY_BG);
   doc.roundedRect(margin, y, contentW, clientBoxH, 2, 2, "F");
@@ -625,28 +633,20 @@ export async function downloadLeadQuotePdf(opts: {
   doc.setLineWidth(0.2);
   doc.roundedRect(margin, y, contentW, clientBoxH, 2, 2, "S");
 
-  let cy = y + clientBoxTopPad;
+  let cy = y + clientBoxTopPad + clientLabelAscentMm;
   doc.setFontSize(8);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...SLATE);
   doc.text("CLIENT NAME:", x1, cy);
-  doc.text("EMAIL ADDRESS:", x2, cy);
-  cy += 4;
+  doc.text("PHONE NUMBER:", x2, cy);
+  doc.text("ADDRESS:", x3, cy);
+  cy += labelToValueGap;
   doc.setFont("helvetica", "normal");
   doc.setTextColor(0, 0, 0);
-  doc.text(lead.name, x1, cy);
-  doc.text(emailGuess, x2, cy);
-  cy += clientRowGap;
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...SLATE);
-  doc.text("PHONE NUMBER:", x1, cy);
-  doc.text("ADDRESS:", x2, cy);
-  cy += 4;
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(0, 0, 0);
-  doc.text(phoneGuess, x1, cy);
-  doc.text(addrLines, x2, cy);
-  y += clientBoxH + 6;
+  doc.text(nameLines, x1, cy);
+  doc.text(phoneLines, x2, cy);
+  doc.text(addrLines, x3, cy);
+  y += clientBoxH + 5;
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
@@ -675,6 +675,11 @@ export async function downloadLeadQuotePdf(opts: {
   const colTot = 27;
   const colTitle = contentW - colItem - colQty - colUnit - colTot;
 
+  /** Balanced vertical padding for quote line-item rows (mm). */
+  const quoteTablePadV = 2.5;
+  const quoteTablePadH = 1.5;
+  const quoteTableTextAscent9 = 2.35;
+
   /** Where autotable resets `cursor.y` on each new page — must clear repeated `drawInnerPageHeader`. */
   const quoteTableContinuationTopMm = measureInnerPageHeaderLayout(
     doc,
@@ -696,17 +701,22 @@ export async function downloadLeadQuotePdf(opts: {
       textColor: 255,
       fontStyle: "bold",
       fontSize: 9,
-      cellPadding: 2,
+      cellPadding: 1.4,
       halign: "center",
       valign: "middle",
       lineWidth: QUOTE_TABLE_LINE_W,
       lineColor: [...BORDER],
     },
     bodyStyles: {
-      valign: "top",
+      valign: "middle",
       overflow: "linebreak",
-      minCellHeight: 5,
-      cellPadding: 1.6,
+      minCellHeight: 0,
+      cellPadding: {
+        top: quoteTablePadV,
+        right: quoteTablePadH,
+        bottom: quoteTablePadV,
+        left: quoteTablePadH,
+      },
       lineWidth: QUOTE_TABLE_LINE_W,
       lineColor: [...BORDER],
     },
@@ -718,9 +728,14 @@ export async function downloadLeadQuotePdf(opts: {
     styles: {
       font: "helvetica",
       fontSize: 9,
-      cellPadding: 1.6,
+      cellPadding: {
+        top: quoteTablePadV,
+        right: quoteTablePadH,
+        bottom: quoteTablePadV,
+        left: quoteTablePadH,
+      },
       textColor: [0, 0, 0],
-      valign: "top",
+      valign: "middle",
       overflow: "linebreak",
       halign: "left",
       lineWidth: QUOTE_TABLE_LINE_W,
@@ -739,22 +754,10 @@ export async function downloadLeadQuotePdf(opts: {
           const doc = data.doc;
           // `didParseCell` runs while column widths are still being calculated — `cell.width` is 0 here.
           // Using it makes `splitTextToSize` wrap at a negative/tiny width → thousands of lines → huge rows.
-          const padL =
-            typeof data.cell.padding === "function"
-              ? data.cell.padding("left")
-              : 1.6;
-          const padR =
-            typeof data.cell.padding === "function"
-              ? data.cell.padding("right")
-              : 1.6;
-          const padT =
-            typeof data.cell.padding === "function"
-              ? data.cell.padding("top")
-              : 1.6;
-          const padB =
-            typeof data.cell.padding === "function"
-              ? data.cell.padding("bottom")
-              : 1.6;
+          const padL = quoteTablePadH;
+          const padR = quoteTablePadH;
+          const padT = quoteTablePadV;
+          const padB = quoteTablePadV;
           const innerW = Math.max(8, colTitle - padL - padR);
           const title =
             (pdfItemTitle(line) || lineItemTitleLegacy(line)).trim() || "—";
@@ -767,25 +770,33 @@ export async function downloadLeadQuotePdf(opts: {
           doc.setFont("helvetica", "normal");
           doc.setFontSize(8.5);
           const dLines = detail ? doc.splitTextToSize(detail, innerW) : [];
-          const lhTitle = 3.45;
-          const lhDet = 3.25;
-          const gap = detail ? 0.55 : 0;
-          const firstBaseline = 2.85;
+          const lhTitle = 3;
+          const lhDet = 2.75;
+          const gap = detail ? 0.35 : 0;
           const h =
             padT +
             padB +
-            firstBaseline +
+            quoteTableTextAscent9 +
             tLines.length * lhTitle +
             gap +
-            dLines.length * lhDet +
-            0.35;
-          data.cell.styles.minCellHeight = Math.max(
-            data.cell.styles.minCellHeight ?? 5,
-            h,
-          );
+            dLines.length * lhDet;
+          data.cell.styles.minCellHeight = h;
+          data.row.height = h;
+          data.cell.styles.cellPadding = {
+            top: padT,
+            right: padR,
+            bottom: padB,
+            left: padL,
+          };
           data.cell.text = [" "];
         }
       } else {
+        data.cell.styles.cellPadding = {
+          top: quoteTablePadV,
+          right: quoteTablePadH,
+          bottom: quoteTablePadV,
+          left: quoteTablePadH,
+        };
         let s = data.cell.text as string | string[] | number | undefined;
         if (Array.isArray(s)) s = s.join("");
         data.cell.text = [
@@ -801,12 +812,9 @@ export async function downloadLeadQuotePdf(opts: {
       if (!line) return;
       const doc = data.doc;
       const cell = data.cell;
-      const padL =
-        typeof cell.padding === "function" ? cell.padding("left") : 1.6;
-      const padT =
-        typeof cell.padding === "function" ? cell.padding("top") : 1.6;
-      const padR =
-        typeof cell.padding === "function" ? cell.padding("right") : 1.6;
+      const padL = quoteTablePadH;
+      const padT = quoteTablePadV;
+      const padR = quoteTablePadH;
       const x = cell.x + padL;
       const w = cell.width - padL - padR;
       const bg: [number, number, number] =
@@ -816,7 +824,7 @@ export async function downloadLeadQuotePdf(opts: {
       doc.setLineWidth(QUOTE_TABLE_LINE_W);
       doc.rect(cell.x, cell.y, cell.width, cell.height, "FD");
       doc.setCharSpace(0);
-      let yText = cell.y + padT + 2.85;
+      let yText = cell.y + padT + quoteTableTextAscent9;
       if (!useSplitPdfLayout(line)) {
         const single = lineItemTitleLegacy(line).trim() || "—";
         doc.setFont("helvetica", "bold");
@@ -824,7 +832,7 @@ export async function downloadLeadQuotePdf(opts: {
         doc.setTextColor(0, 0, 0);
         for (const tl of doc.splitTextToSize(single, w)) {
           doc.text(tl, x, yText);
-          yText += 3.45;
+          yText += 3;
         }
         return;
       }
@@ -836,16 +844,16 @@ export async function downloadLeadQuotePdf(opts: {
       doc.setTextColor(0, 0, 0);
       for (const tl of doc.splitTextToSize(title, w)) {
         doc.text(tl, x, yText);
-        yText += 3.45;
+        yText += 3;
       }
       if (detail) {
-        yText += 0.55;
+        yText += 0.25;
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8.5);
         doc.setTextColor(...BODY);
         for (const dl of doc.splitTextToSize(detail, w)) {
           doc.text(dl, x, yText);
-          yText += 3.25;
+          yText += 2.75;
         }
       }
     },
@@ -854,7 +862,7 @@ export async function downloadLeadQuotePdf(opts: {
         cellWidth: colItem,
         halign: "center",
         fontStyle: "bold",
-        valign: "top",
+        valign: "middle",
       },
       1: {
         cellWidth: colTitle,
@@ -862,15 +870,20 @@ export async function downloadLeadQuotePdf(opts: {
         fontStyle: "normal",
         valign: "top",
         overflow: "linebreak",
-        cellPadding: { top: 1.35, right: 1.8, bottom: 1.35, left: 1.8 },
+        cellPadding: {
+          top: quoteTablePadV,
+          right: quoteTablePadH,
+          bottom: quoteTablePadV,
+          left: quoteTablePadH,
+        },
       },
-      2: { cellWidth: colQty, halign: "center", valign: "top" },
-      3: { cellWidth: colUnit, halign: "right", valign: "top" },
+      2: { cellWidth: colQty, halign: "center", valign: "middle" },
+      3: { cellWidth: colUnit, halign: "right", valign: "middle" },
       4: {
         cellWidth: colTot,
         halign: "right",
         fontStyle: "bold",
-        valign: "top",
+        valign: "middle",
       },
     },
     margin: {
@@ -1263,7 +1276,7 @@ export async function downloadLeadQuotePdf(opts: {
   doc.setTextColor(...MUTED);
   doc.text(COMPANY.name, cx, y, { align: "center" });
   y += 8;
-  doc.setFont("helvetica", "italic");
+  doc.setFont("helvetica");
   doc.setFontSize(10);
   doc.text(COMPANY.tagline, cx, y, { align: "center" });
 

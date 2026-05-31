@@ -61,11 +61,11 @@ export default function Header({ cartCount }: { cartCount: number }) {
           <Link
             to="/"
             className="flex shrink-0 items-center"
-            aria-label="EnergyMart.pk home"
+            aria-label="energymart.pk home"
           >
             <img
               src="/em-logo.png"
-              alt="EnergyMart.pk"
+              alt="energymart.pk"
               className="h-9 w-auto max-w-[min(100vw-8rem,280px)] object-contain object-left sm:h-16"
               decoding="async"
             />

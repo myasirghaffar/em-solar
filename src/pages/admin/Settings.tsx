@@ -6,7 +6,7 @@ import { toastSuccess } from "../../lib/toast";
 export default function AdminSettings() {
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState({
-    storeName: "EnergyMart.pk",
+    storeName: "energymart.pk",
     supportEmail: "support@energymart.pk",
     orderNotifications: true,
     lowStockAlerts: true,

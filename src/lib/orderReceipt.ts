@@ -24,7 +24,7 @@ function formatMoney(n: number | undefined | null): string {
   return `Rs. ${Number(n ?? 0).toLocaleString()}`;
 }
 
-const STORE_NAME = "EnergyMart.pk";
+const STORE_NAME = "energymart.pk";
 
 export function buildOrderReceiptHtml(order: Record<string, unknown>): string {
   const orderId = String(order.id ?? "");

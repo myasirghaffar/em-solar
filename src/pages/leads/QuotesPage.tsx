@@ -104,7 +104,7 @@ export default function QuotesPage({ area }: { area: Area }) {
     <div className="space-y-6 w-full min-w-0 max-w-full">
       <AdminPageHeader
         title="Quotes"
-        subtitle="Build EnergyMart.pk-style quotations, save to the lead, and download PDF — same workflow as the CRM reference project."
+        subtitle="Build energymart.pk-style quotations, save to the lead, and download PDF — same workflow as the CRM reference project."
       />
 
       <div className="flex flex-col gap-6">

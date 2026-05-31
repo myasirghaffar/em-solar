@@ -18,7 +18,7 @@ function buildSeedProducts(): any[] {
     ...clone(p),
     brand: BRANDS[i % BRANDS.length],
     specifications: { Power: "550W", Type: "Monocrystalline" },
-    longDescription: `Order ${p.name} from EnergyMart.pk for genuine stock, invoice-backed warranty, and nationwide logistics support. Our team can help you match this item with inverters, mounting, and cabling for your site.`,
+    longDescription: `Order ${p.name} from energymart.pk for genuine stock, invoice-backed warranty, and nationwide logistics support. Our team can help you match this item with inverters, mounting, and cabling for your site.`,
     attachments:
       i % 2 === 0
         ? [
@@ -43,7 +43,7 @@ function buildSeedProducts(): any[] {
       brand: "Victron",
       specifications: { Amps: "60A", Voltage: "12–48V" },
       longDescription:
-        "Suitable for off-grid and backup systems. Configure charging profiles via the companion app or front panel. EnergyMart.pk supplies factory-sealed units with manufacturer warranty registration support.",
+        "Suitable for off-grid and backup systems. Configure charging profiles via the companion app or front panel. energymart.pk supplies factory-sealed units with manufacturer warranty registration support.",
       attachments: [
         { title: "User manual (PDF)", href: "#" },
         { title: "Wiring diagram (PDF)", href: "#" },
@@ -97,7 +97,7 @@ function buildSeedProducts(): any[] {
       brand: "SolarMax",
       specifications: { Rating: "30A", IP: "IP67" },
       longDescription:
-        "Install between panel strings and combiner inputs. Locking collars match standard MC4 tooling. EnergyMart.pk stocks genuine-spec connectors for warranty-safe arrays.",
+        "Install between panel strings and combiner inputs. Locking collars match standard MC4 tooling. energymart.pk stocks genuine-spec connectors for warranty-safe arrays.",
       attachments: [{ title: "Installation torque guide (PDF)", href: "#" }],
     },
     {

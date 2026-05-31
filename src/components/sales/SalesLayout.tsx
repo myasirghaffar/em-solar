@@ -43,7 +43,7 @@ export default function SalesLayout({ children }: { children: React.ReactNode })
               <LayoutDashboard className="w-5 h-5" />
             </div>
             <div className="flex flex-col">
-              <span className="text-lg font-bold leading-tight">EnergyMart.pk</span>
+              <span className="text-lg font-bold leading-tight">energymart.pk</span>
               <span className="text-xs text-slate-500 capitalize">Sales</span>
             </div>
           </Link>

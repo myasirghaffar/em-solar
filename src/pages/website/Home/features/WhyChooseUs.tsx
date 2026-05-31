@@ -38,7 +38,7 @@ export function WhyChooseUs() {
             id="why-energy-mart-heading"
             className="text-3xl font-bold tracking-tight text-[#0B2A4A] md:text-4xl"
           >
-            Why Choose EnergyMart.pk?
+            Why Choose energymart.pk?
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-base text-gray-500 md:text-lg">
             We are a leading solar energy e-commerce platform, empowering homes

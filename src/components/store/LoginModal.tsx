@@ -98,7 +98,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
           <p className="text-gray-300 mt-2">
             {isLogin
               ? "Sign in to access your account"
-              : "Join EnergyMart.pk — verify your email after signing up"}
+              : "Join energymart.pk — verify your email after signing up"}
           </p>
         </div>
 

@@ -87,7 +87,7 @@ export default defineConfig({
       includeAssets: ['favicon.svg', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {
         id: '/',
-        name: 'EnergyMart.pk - Solar Energy E-Commerce',
+        name: 'energymart.pk - Solar Energy E-Commerce',
         short_name: 'EnergyMart',
         description:
           "Pakistan's leading solar energy e-commerce platform. Quality solar panels, inverters, batteries, and accessories.",
