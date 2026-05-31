@@ -5,6 +5,7 @@ import {
   ShoppingCart,
   Users,
   MessageSquare,
+  Mail,
   Newspaper,
   Settings,
   Menu,
@@ -43,6 +44,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { path: "/admin/orders", icon: ShoppingCart, label: "Orders" },
     { path: "/admin/customers", icon: Users, label: "Customers" },
     { path: "/admin/consultations", icon: MessageSquare, label: "Consultations" },
+    { path: "/admin/contact-messages", icon: Mail, label: "Contact messages" },
     { path: "/admin/blogs", icon: Newspaper, label: "Blog & news" },
     { path: "/admin/settings", icon: Settings, label: "Settings" },
   ];

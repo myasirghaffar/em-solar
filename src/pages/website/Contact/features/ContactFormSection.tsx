@@ -1,15 +1,28 @@
 import { useState } from "react";
-import { Send } from "lucide-react";
+import { Loader2, Send } from "lucide-react";
+import { toastError, toastSuccess } from "../../../../lib/toast";
 
 export function ContactFormSection() {
   const [formData, setFormData] = useState({ name: "", email: "", phone: "", subject: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 3000);
-    setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
+    setLoading(true);
+    try {
+      const { createContactMessage } = await import("../../../../lib/api");
+      await createContactMessage(formData);
+      setSubmitted(true);
+      setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
+      toastSuccess("Message sent! We'll get back to you soon.");
+      setTimeout(() => setSubmitted(false), 5000);
+    } catch (err) {
+      console.error("Contact form error:", err);
+      toastError("Could not send your message. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -29,28 +42,28 @@ export function ContactFormSection() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Your Name</label>
-                <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A00]" placeholder="John Doe" />
+                <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required disabled={loading} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A00] disabled:opacity-60" placeholder="John Doe" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A00]" placeholder="john@example.com" />
+                <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required disabled={loading} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A00] disabled:opacity-60" placeholder="john@example.com" />
               </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-              <input type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A00]" placeholder="+92 300 1234567" />
+              <input type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} disabled={loading} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A00] disabled:opacity-60" placeholder="+92 300 1234567" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
-              <input type="text" value={formData.subject} onChange={(e) => setFormData({ ...formData, subject: e.target.value })} required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A00]" placeholder="How can we help you?" />
+              <input type="text" value={formData.subject} onChange={(e) => setFormData({ ...formData, subject: e.target.value })} required disabled={loading} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A00] disabled:opacity-60" placeholder="How can we help you?" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
-              <textarea value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} rows={5} required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A00] resize-none" placeholder="Tell us more about your inquiry..." />
+              <textarea value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} rows={5} required disabled={loading} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A00] resize-none disabled:opacity-60" placeholder="Tell us more about your inquiry..." />
             </div>
-            <button type="submit" className="w-full bg-[#FF7A00] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#FF7A00]/90 transition-colors flex items-center justify-center space-x-2">
-              <Send className="w-5 h-5" />
-              <span>Send Message</span>
+            <button type="submit" disabled={loading} className="w-full bg-[#FF7A00] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#FF7A00]/90 transition-colors flex items-center justify-center space-x-2 disabled:opacity-70">
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+              <span>{loading ? "Sending…" : "Send Message"}</span>
             </button>
           </form>
         )}

@@ -543,6 +543,46 @@ export async function createConsultation(payload: any): Promise<boolean> {
   return true;
 }
 
+export async function createContactMessage(payload: {
+  name: string;
+  email: string;
+  phone?: string;
+  subject: string;
+  message: string;
+}): Promise<boolean> {
+  await apiRequest("/store/contact-messages", {
+    method: "POST",
+    body: JSON.stringify({
+      name: payload.name,
+      email: payload.email,
+      phone: payload.phone ?? "",
+      subject: payload.subject,
+      message: payload.message,
+    }),
+  });
+  return true;
+}
+
+export async function fetchContactMessages(): Promise<any[]> {
+  const data = await apiRequest<unknown>("/admin/contact-messages", {
+    method: "GET",
+    auth: true,
+  });
+  return ensureArray<any>(data);
+}
+
+export async function updateContactMessageStatus(
+  id: number,
+  status: string,
+): Promise<boolean> {
+  await apiRequest(`/admin/contact-messages/${id}`, {
+    method: "PATCH",
+    auth: true,
+    body: JSON.stringify({ status }),
+  });
+  return true;
+}
+
 export type ChartPoint = { label: string; sales: number; orders: number };
 
 export async function fetchAnalytics(): Promise<{
@@ -567,6 +607,7 @@ type AdminBootstrapPayload = {
   orders: any[];
   customers: any[];
   consultations: any[];
+  contactMessages?: any[];
   analytics: any;
   blogs?: any[];
 };
