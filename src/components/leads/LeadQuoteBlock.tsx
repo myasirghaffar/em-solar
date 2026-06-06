@@ -1,25 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AdminPanel } from "../admin/AdminUI";
 import DatePickerField from "../ui/DatePickerField";
-import Select from "../ui/Select";
 import {
-  fetchProductCategories,
-  fetchProducts,
-  normalizeProduct,
+  fetchQuoteTemplates,
   updateLead,
   type LeadQuoteData,
   type LeadRecord,
+  type QuoteTemplate,
   type QuoteLine,
 } from "../../lib/api";
 import { downloadLeadQuotePdf } from "../../lib/quotePdf";
 import { toastError, toastSuccess } from "../../lib/toast";
 
-type CatalogProduct = ReturnType<typeof normalizeProduct>;
-
 /** Select value when the line uses a typed category not in the admin list */
 const CUSTOM_CATALOG_CATEGORY = "__custom__";
-/** Product picker: no catalog product — user types title manually */
-const CUSTOM_TITLE_PRODUCT = "__manual_title__";
 
 /** Join title + detail for `description` JSON field. Preserves spaces and newlines while typing. */
 function composeLineStorage(itemTitle: string, itemDescription: string): string {
@@ -48,138 +42,41 @@ function emptyLine(): QuoteLine {
   };
 }
 
-/**
- * Starter title + description per category (matches common EnergyMart-style quotation wording).
- * Keys are matched case-insensitively; add aliases for alternate category names from Admin.
- */
-const CATEGORY_QUOTE_DEFAULTS: Record<string, { title: string; description: string }> = {
-  Inverter: {
-    title: "Inverter 06KW Hybrid IP66",
-    description: "(Hybrid Inverter 06KW SOLIS)",
-  },
-  "Solar Panels": {
-    title: "Panels 620W Mono Perc",
-    description:
-      "(World No .1, Tier 1 Bloomberg certified Solar Panel IEC 61215: 2005 TUV Certifications. TCL Solar /JINKO Solar / Canadian Solar or equivalent, depending upon stock availability)",
-  },
-  Panels: {
-    title: "Panels 620W Mono Perc",
-    description:
-      "(World No .1, Tier 1 Bloomberg certified Solar Panel IEC 61215: 2005 TUV Certifications. TCL Solar /JINKO Solar / Canadian Solar or equivalent, depending upon stock availability)",
-  },
-  Structure: {
-    title: "Weather Protected Frames",
-    description: "(Customized Structure uplifted)",
-  },
-  Wires: {
-    title: "Imported Flexible electric wire",
-    description:
-      "for System interconnections 1) PV Module Interconnections 2) Module to Controller 3) DC Wires",
-  },
-  Batteries: {
-    title: "Power Bank Lithium Ion",
-    description: "(Lithium Ion Battery 5.12KWH PYLON TECH)",
-  },
-  Battery: {
-    title: "Power Bank Lithium Ion",
-    description: "(Lithium Ion Battery 5.12KWH PYLON TECH)",
-  },
-  Installation: {
-    title: "Installation Service Charges",
-    description: "(Installation, Testing and Commissioning of Solar Power System)",
-  },
-  Transportation: {
-    title: "Transportation Charges",
-    description: "",
-  },
-  Other: {
-    title: "Fitting Nut Bolt",
-    description: "(Mc4 Connectors, Nut Bolt, Cable Ties, PVC duct, Cable Tray)",
-  },
-  Accessories: {
-    title: "Fitting Nut Bolt",
-    description: "(Mc4 Connectors, Nut Bolt, Cable Ties, PVC duct, Cable Tray)",
-  },
-  "Balance of System": {
-    title: "Circuit Breakers & Combiner Box",
-    description:
-      "(Circuit Breakers /SDPDs/Fuses for equipment protection and safety with Photo Voltaic modules combiner boxed with rated DC Circuit Breakers for series and parallel connections for PV Module)",
-  },
-  Combiner: {
-    title: "Circuit Breakers & Combiner Box",
-    description:
-      "(Circuit Breakers /SDPDs/Fuses for equipment protection and safety with Photo Voltaic modules combiner boxed with rated DC Circuit Breakers for series and parallel connections for PV Module)",
-  },
-};
-
-/**
- * Fixed quote grid rows (order preserved). Does not wait on Admin / API — same idea as always having "Other".
- * Extra names from products or `fetchProductCategories` append after this list.
- */
-const STATIC_QUOTE_TABLE_CATEGORIES: string[] = [
-  "Inverter",
-  "Solar Panels",
-  "Structure",
-  "Wires",
-  "Batteries",
-  "Balance of System",
-  "Installation",
-  "Transportation",
-  "Other",
-];
-
-function resolveCategoryDefaults(cat: string): { title: string; description: string } {
-  const trimmed = cat.trim();
-  if (!trimmed) {
-    return { title: "", description: "" };
-  }
-  const exact = CATEGORY_QUOTE_DEFAULTS[trimmed];
-  if (exact) return exact;
-  const lower = trimmed.toLowerCase();
-  const hit = Object.entries(CATEGORY_QUOTE_DEFAULTS).find(
-    ([k]) => k.toLowerCase() === lower,
-  );
-  if (hit) return hit[1];
-  return {
-    title: trimmed,
-    description: `Details for ${trimmed} — add specifications, brand, model, and what is included on the PDF.`,
-  };
-}
-
-function lineForCategory(cat: string): QuoteLine {
-  const preset = resolveCategoryDefaults(cat);
+function lineForTemplate(template: Pick<QuoteTemplate, "category" | "title" | "description">): QuoteLine {
   return {
     ...emptyLine(),
-    catalogCategoryKey: cat,
+    catalogCategoryKey: template.category,
     catalogCustomCategory: null,
-    itemTitle: preset.title,
-    itemDescription: preset.description,
-    description: composeLineStorage(preset.title, preset.description),
+    itemTitle: template.title,
+    itemDescription: template.description,
+    description: composeLineStorage(template.title, template.description),
   };
 }
 
 /** If a saved row has no text yet, fill starter copy so the grid is not blank. */
-function withCategoryDefaultsIfEmpty(line: QuoteLine, cat: string): QuoteLine {
+function withTemplateDefaultsIfEmpty(
+  line: QuoteLine,
+  template: Pick<QuoteTemplate, "title" | "description">,
+): QuoteLine {
   const t = String(line.itemTitle ?? "").trim();
   const d = String(line.itemDescription ?? "").trim();
   const legacy = String(line.description ?? "").trim();
-  const preset = resolveCategoryDefaults(cat);
 
   if (!t && !d && !legacy) {
     return {
       ...line,
-      itemTitle: preset.title,
-      itemDescription: preset.description,
-      description: composeLineStorage(preset.title, preset.description),
+      itemTitle: template.title,
+      itemDescription: template.description,
+      description: composeLineStorage(template.title, template.description),
     };
   }
 
   // Backfill preset description when title matches category default but detail was cleared.
-  if (t && !d && preset.description && t === preset.title) {
+  if (t && !d && template.description && t === template.title) {
     return {
       ...line,
-      itemDescription: preset.description,
-      description: composeLineStorage(t, preset.description),
+      itemDescription: template.description,
+      description: composeLineStorage(t, template.description),
     };
   }
 
@@ -187,8 +84,9 @@ function withCategoryDefaultsIfEmpty(line: QuoteLine, cat: string): QuoteLine {
 }
 
 /** One row per known category, then any extra lines (custom / duplicates) preserved in order. */
-function mergeCategoryGridLines(lines: QuoteLine[], categories: string[]): QuoteLine[] {
-  const normalized = categories.filter(Boolean);
+function mergeTemplateGridLines(lines: QuoteLine[], templates: QuoteTemplate[]): QuoteLine[] {
+  const normalized = templates.filter((t) => t.category.trim());
+  const categories = normalized.map((t) => t.category);
   const byCat = new Map<string, QuoteLine>();
   const extras: QuoteLine[] = [];
 
@@ -198,9 +96,9 @@ function mergeCategoryGridLines(lines: QuoteLine[], categories: string[]): Quote
       key = String(l.catalogCategoryKey).trim();
     } else if (l.catalogCategoryKey === CUSTOM_CATALOG_CATEGORY) {
       const c = String(l.catalogCustomCategory ?? "").trim();
-      if (c && normalized.includes(c)) key = c;
+      if (c && categories.includes(c)) key = c;
     }
-    if (key && normalized.includes(key)) {
+    if (key && categories.includes(key)) {
       if (!byCat.has(key)) {
         byCat.set(key, {
           ...l,
@@ -216,9 +114,9 @@ function mergeCategoryGridLines(lines: QuoteLine[], categories: string[]): Quote
   }
 
   const ordered: QuoteLine[] = [];
-  for (const cat of normalized) {
-    const row = byCat.get(cat) ?? lineForCategory(cat);
-    ordered.push(withCategoryDefaultsIfEmpty(row, cat));
+  for (const template of normalized) {
+    const row = byCat.get(template.category) ?? lineForTemplate(template);
+    ordered.push(withTemplateDefaultsIfEmpty(row, template));
   }
   for (const x of extras) {
     ordered.push(x);
@@ -267,16 +165,6 @@ function normalizeQuote(q: LeadQuoteData | null | undefined): LeadQuoteData {
   };
 }
 
-function defaultItemTitleFromProduct(p: CatalogProduct): string {
-  const brand = (p.brand && String(p.brand).trim()) || "";
-  const name = String(p.name ?? "").trim();
-  return [brand ? `[${brand}]` : null, name].filter(Boolean).join(" ").replace(/\s+/g, " ").trim() || name;
-}
-
-function defaultItemDescriptionFromProduct(_p: CatalogProduct): string {
-  return "";
-}
-
 /**
  * Value for the title input. Must not `.trim()` — onChange passes this into sync while the other
  * field updates; trimming would strip spaces/newlines from the sibling on every keystroke.
@@ -316,66 +204,36 @@ export default function LeadQuoteBlock({
 }: LeadQuoteBlockProps) {
   const [quote, setQuote] = useState<LeadQuoteData>(() => normalizeQuote(lead.quoteData));
   const [saving, setSaving] = useState(false);
-  const [products, setProducts] = useState<CatalogProduct[]>([]);
-  const [catalogLoading, setCatalogLoading] = useState(true);
-  const [categories, setCategories] = useState<string[]>([]);
+  const [templateLoading, setTemplateLoading] = useState(true);
+  const [quoteTemplates, setQuoteTemplates] = useState<QuoteTemplate[]>([]);
   const leadSyncKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      setCatalogLoading(true);
+      setTemplateLoading(true);
       try {
-        const rows = await fetchProducts();
-        if (!cancelled) {
-          setProducts(rows.map(normalizeProduct));
-        }
+        const rows = await fetchQuoteTemplates();
+        if (!cancelled) setQuoteTemplates(rows.filter((r) => r.isActive !== false));
       } catch {
-        if (!cancelled) setProducts([]);
+        if (!cancelled) setQuoteTemplates([]);
       } finally {
-        if (!cancelled) setCatalogLoading(false);
+        if (!cancelled) setTemplateLoading(false);
       }
-      if (cancelled) return;
-      fetchProductCategories()
-        .then((cats) => {
-          if (cancelled) return;
-          const names = (Array.isArray(cats) ? cats : [])
-            .map((c) => String((c as { name?: string })?.name ?? "").trim())
-            .filter(Boolean);
-          setCategories(names);
-        })
-        .catch(() => {});
     })();
     return () => {
       cancelled = true;
     };
   }, []);
 
-  const computedCategories = useMemo(() => {
-    const base = [...STATIC_QUOTE_TABLE_CATEGORIES];
-    const seen = new Set(base.map((c) => c.toLowerCase()));
-    const extras: string[] = [];
-    for (const c of categories) {
-      const t = String(c ?? "").trim();
-      if (t && !seen.has(t.toLowerCase())) {
-        seen.add(t.toLowerCase());
-        extras.push(t);
-      }
-    }
-    for (const p of products) {
-      const t = (p.category || "Other").trim();
-      if (t && !seen.has(t.toLowerCase())) {
-        seen.add(t.toLowerCase());
-        extras.push(t);
-      }
-    }
-    extras.sort((a, b) => a.localeCompare(b));
-    return [...base, ...extras];
-  }, [categories, products]);
+  const activeQuoteTemplates = useMemo(
+    () => quoteTemplates.filter((t) => t.category.trim() && t.title.trim()),
+    [quoteTemplates],
+  );
 
   useEffect(() => {
     const leadSyncKey = `${lead.id}:${lead.updatedAt}`;
-    if (computedCategories.length === 0) {
+    if (activeQuoteTemplates.length === 0) {
       leadSyncKeyRef.current = leadSyncKey;
       setQuote(normalizeQuote(lead.quoteData));
       return;
@@ -387,106 +245,18 @@ export default function LeadQuoteBlock({
       const linesSource = leadChanged ? base.lines : prev.lines;
       return {
         ...(leadChanged ? base : prev),
-        lines: mergeCategoryGridLines(linesSource, computedCategories),
+        lines: mergeTemplateGridLines(linesSource, activeQuoteTemplates),
       };
     });
-  }, [lead.id, lead.updatedAt, lead.quoteData, computedCategories]);
-
-  const categoryDropdownOptions = useMemo(() => {
-    const opts = computedCategories.map((c) => ({ value: c, label: c }));
-    return [...opts, { value: CUSTOM_CATALOG_CATEGORY, label: "Custom…" }];
-  }, [computedCategories]);
-
-  /** Category string used to filter shop products (no fallback to a random default). */
-  function productFilterCategory(line: QuoteLine): string {
-    if (line.catalogCategoryKey === CUSTOM_CATALOG_CATEGORY) {
-      return (line.catalogCustomCategory ?? "").trim();
-    }
-    if (line.catalogCategoryKey && line.catalogCategoryKey !== CUSTOM_CATALOG_CATEGORY) {
-      return line.catalogCategoryKey.trim();
-    }
-    const p =
-      line.productId != null ? products.find((x) => x.id === line.productId) : undefined;
-    if (p?.category) return String(p.category).trim();
-    return "";
-  }
-
-  function catalogProductOptionsForLine(filterCat: string) {
-    const opts: { value: string; label: string }[] = [
-      { value: CUSTOM_TITLE_PRODUCT, label: "— Custom title (type below) —" },
-    ];
-    if (!filterCat) return opts;
-    const list = products.filter((p) => String(p.category ?? "").trim() === filterCat);
-    list.sort((a, b) => String(a.name).localeCompare(String(b.name)));
-    for (const p of list) {
-      opts.push({
-        value: String(p.id),
-        label: `${filterCat} · ${p.name} — PKR ${Number(p.price || 0).toLocaleString("en-PK")}`,
-      });
-    }
-    return opts;
-  }
-
-  function categorySelectValue(line: QuoteLine): string {
-    if (line.catalogCategoryKey === CUSTOM_CATALOG_CATEGORY) return CUSTOM_CATALOG_CATEGORY;
-    if (line.catalogCategoryKey && computedCategories.includes(line.catalogCategoryKey)) {
-      return line.catalogCategoryKey;
-    }
-    const p =
-      line.productId != null ? products.find((x) => x.id === line.productId) : undefined;
-    if (p?.category && computedCategories.includes(String(p.category))) return String(p.category);
-    const inferred = productFilterCategory(line);
-    if (computedCategories.includes(inferred)) return inferred;
-    if (inferred) return CUSTOM_CATALOG_CATEGORY;
-    return computedCategories[0] ?? CUSTOM_CATALOG_CATEGORY;
-  }
-
-  function applyCatalogCategory(i: number, nextKey: string) {
-    const line = quote.lines[i];
-    const p =
-      line.productId != null ? products.find((x) => x.id === line.productId) : undefined;
-    if (nextKey === CUSTOM_CATALOG_CATEGORY) {
-      const nextCustom =
-        line.catalogCategoryKey === CUSTOM_CATALOG_CATEGORY
-          ? (line.catalogCustomCategory ?? "")
-          : p?.category
-            ? String(p.category)
-            : "";
-      const patch: Partial<QuoteLine> = {
-        catalogCategoryKey: CUSTOM_CATALOG_CATEGORY,
-        catalogCustomCategory: nextCustom,
-      };
-      if (p && nextCustom.trim() && p.category.trim() !== nextCustom.trim()) {
-        patch.productId = null;
-        patch.variantLabel = null;
-      }
-      setLine(i, patch);
-      return;
-    }
-    const patch: Partial<QuoteLine> = {
-      catalogCategoryKey: nextKey,
-      catalogCustomCategory: null,
-    };
-    if (p && String(p.category) !== nextKey) {
-      patch.productId = null;
-      patch.variantLabel = null;
-    }
-    setLine(i, patch);
-  }
+  }, [lead.id, lead.updatedAt, lead.quoteData, activeQuoteTemplates]);
 
   function applyCatalogCustomCategory(i: number, text: string) {
-    const line = quote.lines[i];
-    const p =
-      line.productId != null ? products.find((x) => x.id === line.productId) : undefined;
-    const patch: Partial<QuoteLine> = {
+    setLine(i, {
       catalogCategoryKey: CUSTOM_CATALOG_CATEGORY,
       catalogCustomCategory: text,
-    };
-    if (p && text.trim() && p.category.trim() !== text.trim()) {
-      patch.productId = null;
-      patch.variantLabel = null;
-    }
-    setLine(i, patch);
+      productId: null,
+      variantLabel: null,
+    });
   }
 
   function setLine(i: number, patch: Partial<QuoteLine>) {
@@ -519,8 +289,7 @@ export default function LeadQuoteBlock({
     }));
   }
 
-  const categoryRowCount =
-    computedCategories.length > 0 ? computedCategories.length : 0;
+  const categoryRowCount = activeQuoteTemplates.length;
 
   function removeLine(i: number) {
     if (i < categoryRowCount) return;
@@ -532,60 +301,14 @@ export default function LeadQuoteBlock({
 
   function clearLine(i: number) {
     if (i < categoryRowCount && categoryRowCount > 0) {
-      const cat = computedCategories[i];
-      if (cat) setLine(i, lineForCategory(cat));
+      const template = activeQuoteTemplates[i];
+      if (template) setLine(i, lineForTemplate(template));
       return;
     }
     setLine(i, {
       ...emptyLine(),
       catalogCategoryKey: CUSTOM_CATALOG_CATEGORY,
       catalogCustomCategory: "",
-    });
-  }
-
-  function applyProduct(i: number, productIdStr: string) {
-    if (!productIdStr || productIdStr === CUSTOM_TITLE_PRODUCT) {
-      setLine(i, { productId: null, variantLabel: null });
-      return;
-    }
-    const id = Number(productIdStr);
-    const p = products.find((x) => x.id === id);
-    if (!p) return;
-    const cat = String(p.category ?? "").trim();
-    const inList = Boolean(cat && computedCategories.includes(cat));
-    const title = defaultItemTitleFromProduct(p);
-    const detail = defaultItemDescriptionFromProduct(p);
-    setLine(i, {
-      productId: p.id,
-      variantLabel: null,
-      itemTitle: title,
-      itemDescription: detail,
-      description: composeLineStorage(title, detail),
-      unitPrice: Number(p.price) || 0,
-      catalogCategoryKey: inList ? cat : CUSTOM_CATALOG_CATEGORY,
-      catalogCustomCategory: inList ? null : cat || null,
-    });
-  }
-
-  function applyVariant(i: number, line: QuoteLine, variantLabel: string) {
-    const id = line.productId;
-    const p = id != null ? products.find((x) => x.id === id) : undefined;
-    if (!p) {
-      setLine(i, { variantLabel: variantLabel || null });
-      return;
-    }
-    const v = variantLabel.trim() || null;
-    const title =
-      (line.itemTitle && String(line.itemTitle).trim()) || defaultItemTitleFromProduct(p);
-    const detailBase =
-      (line.itemDescription && String(line.itemDescription).trim()) ||
-      defaultItemDescriptionFromProduct(p);
-    setLine(i, {
-      variantLabel: v,
-      itemTitle: title,
-      itemDescription: detailBase,
-      description: composeLineStorage(title, detailBase),
-      unitPrice: Number(p.price) || 0,
     });
   }
 
@@ -674,20 +397,17 @@ export default function LeadQuoteBlock({
       <AdminPanel className="p-4 sm:p-6">
         <h2 className="text-lg font-semibold text-slate-900 mb-2">Quote & PDF</h2>
         <p className="text-sm text-slate-500 mb-4">
-          Each standard <strong>category</strong> has a row immediately (no wait for the server). Extra
-          categories from your shop appear once products load. Use the <strong>✓</strong> column to choose
-          which lines appear on the PDF. On the <strong>last line only</strong>, pick a <strong>shop product</strong>{" "}
-          in place of the title to load price and text, or choose <strong>Custom title</strong> and type
-          manually. Other lines use the title field only. Subtitle stays multi-line. Line totals and the
-          footer subtotal count only checked lines.
+          Default rows come from Admin → Quote templates. Use the <strong>✓</strong> column to choose
+          which lines appear on the PDF. Added lines are fully editable, and the footer subtotal counts
+          only checked lines.
         </p>
 
-        {catalogLoading ? (
-          <p className="text-sm text-slate-500 mb-4">Loading products for the shop picker…</p>
-        ) : products.length === 0 ? (
+        {templateLoading ? (
+          <p className="text-sm text-slate-500 mb-4">Loading quote templates…</p>
+        ) : activeQuoteTemplates.length === 0 ? (
           <p className="text-sm text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 mb-4">
-            No products in the catalog yet. Add products in Admin → Products, or enter custom
-            lines below.
+            No quote templates are active yet. Add templates in Admin → Quote templates, or enter
+            custom lines below.
           </p>
         ) : null}
 
@@ -726,34 +446,17 @@ export default function LeadQuoteBlock({
             </thead>
             <tbody>
               {quote.lines.map((line, i) => {
-                const selectedProduct =
-                  line.productId != null ? products.find((p) => p.id === line.productId) : undefined;
-                const specEntries = selectedProduct?.specifications
-                  ? Object.entries(selectedProduct.specifications as Record<string, string>)
-                  : [];
                 const isLockedCategory = categoryRowCount > 0 && i < categoryRowCount;
-                const catSelectValue = categorySelectValue(line);
-                const customCatInput =
-                  line.catalogCategoryKey === CUSTOM_CATALOG_CATEGORY
-                    ? (line.catalogCustomCategory ?? "")
-                    : catSelectValue === CUSTOM_CATALOG_CATEGORY &&
-                        selectedProduct &&
-                        !computedCategories.includes(String(selectedProduct.category))
-                      ? String(selectedProduct.category)
-                      : "";
+                const categoryLabel = isLockedCategory
+                  ? (activeQuoteTemplates[i]?.category ?? "")
+                  : (line.catalogCustomCategory ?? line.catalogCategoryKey ?? "");
                 const stripe = i % 2 === 1 ? "bg-rose-50/60" : "bg-white";
                 const qn = Math.max(0, Number(line.quantity) || 0);
                 const up = Math.max(0, Number(line.unitPrice) || 0);
                 const lineTotal = qn * up;
-                const filterCat = productFilterCategory(line);
-                const isLastRow = i === quote.lines.length - 1;
-                const showProductTitlePicker =
-                  isLastRow && filterCat.length > 0 && products.length > 0;
-                const productPickerValue =
-                  line.productId != null ? String(line.productId) : CUSTOM_TITLE_PRODUCT;
 
                 return (
-                  <tr key={`${isLockedCategory ? computedCategories[i] : "row"}-${i}`} className={stripe}>
+                  <tr key={`${isLockedCategory ? categoryLabel : "row"}-${i}`} className={stripe}>
                     <td className="border border-rose-200 align-top px-1 py-1 text-center">
                       <input
                         type="checkbox"
@@ -761,30 +464,19 @@ export default function LeadQuoteBlock({
                         onChange={(e) => setLine(i, { includeInPdf: e.target.checked })}
                         className="h-4 w-4 rounded border-rose-300 text-[#9f1239] focus:ring-[#9f1239]"
                         title="Include this line on the PDF"
-                        aria-label={`Include ${isLockedCategory ? computedCategories[i] : "this line"} on PDF`}
+                        aria-label={`Include ${isLockedCategory ? categoryLabel : "this line"} on PDF`}
                       />
                     </td>
                     <td className="border border-rose-200 align-top px-2 py-1 text-slate-700">
                       {isLockedCategory ? (
-                        <span className="font-semibold text-slate-800">{computedCategories[i]}</span>
+                        <span className="font-semibold text-slate-800">{categoryLabel}</span>
                       ) : (
-                        <div className="space-y-1 relative z-30">
-                          <Select
-                            options={categoryDropdownOptions}
-                            value={catSelectValue}
-                            onChange={(v) => applyCatalogCategory(i, v)}
-                            placeholder="Category"
-                            triggerClassName="rounded-md text-xs h-9"
-                          />
-                          {catSelectValue === CUSTOM_CATALOG_CATEGORY ? (
-                            <input
-                              value={customCatInput}
-                              onChange={(e) => applyCatalogCustomCategory(i, e.target.value)}
-                              placeholder="Custom category name"
-                              className="w-full px-2 py-1.5 border border-rose-200 rounded-md text-xs"
-                            />
-                          ) : null}
-                        </div>
+                        <input
+                          value={categoryLabel === CUSTOM_CATALOG_CATEGORY ? "" : categoryLabel}
+                          onChange={(e) => applyCatalogCustomCategory(i, e.target.value)}
+                          placeholder="Category"
+                          className="w-full px-2 py-1.5 border border-rose-200 rounded-md text-xs font-semibold"
+                        />
                       )}
                     </td>
                     <td className="border border-rose-200 align-top px-1 py-1">
@@ -802,27 +494,14 @@ export default function LeadQuoteBlock({
                       />
                     </td>
                     <td className="border border-rose-200 align-top px-2 py-1">
-                      {showProductTitlePicker ? (
-                        <div className="mb-1.5 relative z-20">
-                          <Select
-                            options={catalogProductOptionsForLine(filterCat)}
-                            value={productPickerValue}
-                            onChange={(v) => applyProduct(i, v)}
-                            placeholder="Product for this category"
-                            triggerClassName="rounded-md text-xs h-9 font-semibold"
-                          />
-                        </div>
-                      ) : null}
-                      {(!showProductTitlePicker || line.productId == null) ? (
-                        <input
-                          value={lineTitleForForm(line)}
-                          onChange={(e) =>
-                            syncLinePdfFields(i, e.target.value, lineDetailForForm(line))
-                          }
-                          placeholder="Title (bold on PDF)"
-                          className="w-full px-2 py-1.5 border border-rose-200 rounded-md text-sm font-semibold mb-1.5"
-                        />
-                      ) : null}
+                      <input
+                        value={lineTitleForForm(line)}
+                        onChange={(e) =>
+                          syncLinePdfFields(i, e.target.value, lineDetailForForm(line))
+                        }
+                        placeholder="Title (bold on PDF)"
+                        className="w-full px-2 py-1.5 border border-rose-200 rounded-md text-sm font-semibold mb-1.5"
+                      />
                       <label className="sr-only" htmlFor={`quote-line-desc-${i}`}>
                         Subtitle and details for PDF (multi-line)
                       </label>
@@ -834,23 +513,6 @@ export default function LeadQuoteBlock({
                         placeholder="Add details for PDF (optional)"
                         className="mt-1 w-full px-2 py-1.5 border border-rose-200 rounded-md text-sm resize-y min-h-[2.75rem] text-slate-700 leading-snug whitespace-pre-wrap"
                       />
-                      {specEntries.length > 0 ? (
-                        <div className="mt-1.5 relative z-20">
-                          <Select
-                            options={[
-                              { value: "", label: "Default (list price)" },
-                              ...specEntries.map(([k, val]) => {
-                                const label = `${k}: ${val}`;
-                                return { value: label, label };
-                              }),
-                            ]}
-                            value={line.variantLabel ?? ""}
-                            onChange={(v) => applyVariant(i, line, v)}
-                            placeholder="Variation"
-                            triggerClassName="rounded-md text-xs h-8"
-                          />
-                        </div>
-                      ) : null}
                     </td>
                     <td className="border border-rose-200 align-top px-1 py-1">
                       <input

@@ -25,6 +25,7 @@ import AdminLayout from './components/admin/AdminLayout';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminProducts from './pages/admin/Products';
 import AdminProductCategories from './pages/admin/ProductCategories';
+import AdminQuoteTemplates from './pages/admin/QuoteTemplates';
 import AdminOrders from './pages/admin/Orders';
 import AdminCustomers from './pages/admin/Customers';
 import AdminConsultations from './pages/admin/Consultations';
@@ -182,6 +183,7 @@ function App() {
               <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><AdminDashboard /></AdminLayout></ProtectedRoute>} />
               <Route path="/admin/products" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><AdminProducts /></AdminLayout></ProtectedRoute>} />
               <Route path="/admin/product-categories" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><AdminProductCategories /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/quote-templates" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><AdminQuoteTemplates /></AdminLayout></ProtectedRoute>} />
               <Route path="/admin/orders" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><AdminOrders /></AdminLayout></ProtectedRoute>} />
               <Route path="/admin/customers" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><AdminCustomers /></AdminLayout></ProtectedRoute>} />
               <Route path="/admin/consultations" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><AdminConsultations /></AdminLayout></ProtectedRoute>} />

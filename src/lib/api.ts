@@ -389,6 +389,73 @@ export async function deleteProductCategory(id: number): Promise<void> {
   invalidateAdminBootstrapCache();
 }
 
+export type QuoteTemplate = {
+  id: number;
+  category: string;
+  title: string;
+  description: string;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export async function fetchQuoteTemplates(): Promise<QuoteTemplate[]> {
+  const data = await apiRequest<unknown>("/leads/quote-templates", {
+    method: "GET",
+    auth: true,
+  });
+  return ensureArray<QuoteTemplate>(data);
+}
+
+export async function fetchQuoteTemplatesAdmin(): Promise<QuoteTemplate[]> {
+  const data = await apiRequest<unknown>("/admin/quote-templates", {
+    method: "GET",
+    auth: true,
+  });
+  return ensureArray<QuoteTemplate>(data);
+}
+
+export async function createQuoteTemplate(payload: {
+  category: string;
+  title: string;
+  description?: string;
+  sortOrder?: number;
+  isActive?: boolean;
+}): Promise<QuoteTemplate> {
+  const created = await apiRequest<QuoteTemplate>("/admin/quote-templates", {
+    method: "POST",
+    auth: true,
+    body: JSON.stringify(payload),
+  });
+  invalidateAdminBootstrapCache();
+  return created;
+}
+
+export async function updateQuoteTemplate(
+  id: number,
+  payload: Partial<{
+    category: string;
+    title: string;
+    description: string;
+    sortOrder: number;
+    isActive: boolean;
+  }>,
+): Promise<QuoteTemplate> {
+  const updated = await apiRequest<QuoteTemplate>(`/admin/quote-templates/${id}`, {
+    method: "PATCH",
+    auth: true,
+    body: JSON.stringify(payload),
+  });
+  invalidateAdminBootstrapCache();
+  return updated;
+}
+
+export async function deleteQuoteTemplate(id: number): Promise<void> {
+  await apiRequest<null>(`/admin/quote-templates/${id}`, { method: "DELETE", auth: true });
+  invalidateAdminBootstrapCache();
+}
+
 /** All products including inactive — admin only. */
 export async function fetchProductsAdmin(): Promise<any[]> {
   const data = await apiRequest<unknown>("/admin/products", {
@@ -604,6 +671,7 @@ export async function fetchAnalytics(): Promise<{
 type AdminBootstrapPayload = {
   products: any[];
   productCategories?: ProductCategory[];
+  quoteTemplates?: QuoteTemplate[];
   orders: any[];
   customers: any[];
   consultations: any[];

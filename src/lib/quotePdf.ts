@@ -18,10 +18,10 @@ const QUOTE_PDF_FOOTER_RESERVE_MM = 20;
 const QUOTE_INNER_HEADER_TOP_MM = 12;
 
 const COMPANY = {
-  name: "energymart.pk",
+  name: "ENERGYMART.PK",
   tagline: "ILLUMINATING YOUR WORLD",
   email: "info@energymart.pk",
-  phone: "+92-301-6035666",
+  phone: "+92-301-4756516",
   address: "64-Lalazar Commercial, Raiwind Road Lahore",
   web: "www.energymart.pk",
   footerTag: "Professional Energy Solutions",
