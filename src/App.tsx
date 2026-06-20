@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import { toastInfo, toastSuccess } from './lib/toast';
 import { AosRouteSync } from './components/AosRouteSync';
@@ -202,6 +202,8 @@ function App() {
               <Route path="/salesman/leads/:id" element={<ProtectedRoute allowedRoles={['salesman']}><SalesLayout><LeadDetailPage /></SalesLayout></ProtectedRoute>} />
               <Route path="/salesman/quotes" element={<ProtectedRoute allowedRoles={['salesman']}><SalesLayout><QuotesPage area="salesman" /></SalesLayout></ProtectedRoute>} />
               <Route path="/salesman/profile" element={<ProtectedRoute allowedRoles={['salesman']}><SalesLayout><SalesProfile /></SalesLayout></ProtectedRoute>} />
+
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </BrowserRouter>
         </CartProvider>
