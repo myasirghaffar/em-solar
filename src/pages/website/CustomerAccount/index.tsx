@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
 import { StatusPill } from "../../../components/admin/AdminUI";
+import { ButtonSpinner } from "../../../components/ui/Button";
 import { toastError, toastSuccess } from "../../../lib/toast";
 
 type TabId = "account" | "orders" | "addresses";
@@ -40,6 +41,7 @@ export default function CustomerAccount() {
   const [orders, setOrders] = useState<any[]>([]);
   const [customerRow, setCustomerRow] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -139,13 +141,22 @@ export default function CustomerAccount() {
             <button
               type="button"
               onClick={async () => {
-                await logout();
-                toastSuccess("Signed out");
-                navigate("/", { replace: true });
+                if (loggingOut) return;
+                setLoggingOut(true);
+                try {
+                  await logout();
+                  toastSuccess("Signed out");
+                  navigate("/", { replace: true });
+                } finally {
+                  setLoggingOut(false);
+                }
               }}
-              className="mt-4 w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+              disabled={loggingOut}
+              className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+              aria-busy={loggingOut}
             >
-              Log out
+              {loggingOut ? <ButtonSpinner /> : null}
+              {loggingOut ? "Logging out..." : "Log out"}
             </button>
           </aside>
 

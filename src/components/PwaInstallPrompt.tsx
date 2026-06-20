@@ -1,6 +1,7 @@
 import { Download, Share, X } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { usePwaInstall } from "../hooks/usePwaInstall";
+import { ButtonSpinner } from "./ui/Button";
 
 const HIDDEN_PREFIXES = ["/admin", "/salesman", "/login", "/signup"];
 
@@ -55,9 +56,14 @@ export function PwaInstallPrompt() {
                 type="button"
                 onClick={() => void install()}
                 disabled={installing}
-                className="inline-flex items-center gap-1.5 rounded-full bg-[#FF7A00] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#e86e00] disabled:opacity-60"
+                className="inline-flex items-center gap-1.5 rounded-full bg-[#FF7A00] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#e86e00] disabled:cursor-not-allowed disabled:opacity-60"
+                aria-busy={installing}
               >
-                <Download className="h-4 w-4" aria-hidden />
+                {installing ? (
+                  <ButtonSpinner className="h-4 w-4" />
+                ) : (
+                  <Download className="h-4 w-4" aria-hidden />
+                )}
                 {installing ? "Installing…" : "Install app"}
               </button>
             )}

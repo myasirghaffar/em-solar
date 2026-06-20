@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Mail, Sun } from "lucide-react";
+import { ButtonSpinner } from "../components/ui/Button";
 import { authForgotPassword } from "../lib/authApi";
 import { isAuthApiError } from "../context/AuthContext";
 import { toastError, toastSuccess } from "../lib/toast";
@@ -86,8 +87,10 @@ export default function ForgotPassword() {
           <button
             type="submit"
             disabled={loading || done}
-            className="w-full bg-[#FF7A00] text-white py-3 rounded-lg font-semibold hover:bg-[#FF7A00]/90 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#FF7A00] py-3 font-semibold text-white transition-colors hover:bg-[#FF7A00]/90 disabled:cursor-not-allowed disabled:opacity-70"
+            aria-busy={loading}
           >
+            {loading ? <ButtonSpinner /> : null}
             {loading ? "Sending..." : "Send reset link"}
           </button>
 

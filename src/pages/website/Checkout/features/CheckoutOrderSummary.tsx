@@ -1,4 +1,5 @@
 import { useCart } from "../../../../context/CartContext";
+import { ButtonSpinner } from "../../../../components/ui/Button";
 
 interface CartItem {
   id: number;
@@ -66,7 +67,9 @@ export function CheckoutOrderSummary({ cartItems, subtotal, shipping, total, loa
           type="submit"
           disabled={loading}
           className="mt-6 flex h-12 w-full items-center justify-center rounded-2xl bg-[#FF7A00] text-sm font-semibold text-white shadow-md shadow-orange-500/20 transition-all hover:bg-[#e86e00] hover:shadow-lg hover:shadow-orange-500/25 disabled:cursor-not-allowed disabled:opacity-50 md:h-[3.25rem] md:text-base"
+          aria-busy={loading}
         >
+          {loading ? <ButtonSpinner className="mr-2" /> : null}
           {loading ? "Processing…" : "Place order"}
         </button>
         <button

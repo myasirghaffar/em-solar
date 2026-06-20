@@ -673,8 +673,8 @@ type AdminBootstrapPayload = {
   productCategories?: ProductCategory[];
   quoteTemplates?: QuoteTemplate[];
   orders: any[];
-  customers: any[];
-  consultations: any[];
+  customers?: any[];
+  consultations?: any[];
   contactMessages?: any[];
   analytics: any;
   blogs?: any[];

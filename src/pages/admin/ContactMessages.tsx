@@ -20,6 +20,7 @@ export default function AdminContactMessages() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [updatingStatusId, setUpdatingStatusId] = useState<number | null>(null);
 
   useEffect(() => {
     void loadMessages();
@@ -39,6 +40,8 @@ export default function AdminContactMessages() {
   };
 
   const updateStatus = async (id: number, status: string) => {
+    if (updatingStatusId != null) return;
+    setUpdatingStatusId(id);
     try {
       const { updateContactMessageStatus } = await import('../../lib/api');
       await updateContactMessageStatus(id, status);
@@ -47,6 +50,8 @@ export default function AdminContactMessages() {
     } catch (err) {
       console.error('Error:', err);
       toastError('Could not update status.');
+    } finally {
+      setUpdatingStatusId(null);
     }
   };
 
@@ -171,6 +176,7 @@ export default function AdminContactMessages() {
                           options={STATUS_ROW_OPTIONS}
                           value={m.status || 'new'}
                           onChange={(v) => updateStatus(m.id, v)}
+                          disabled={updatingStatusId === m.id}
                           triggerClassName={`rounded-full border-0 shadow-none ring-0 ${config.bgColor} ${config.color}`}
                         />
                       </td>

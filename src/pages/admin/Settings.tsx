@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Save, Shield, Bell, Store, Check } from "lucide-react";
 import { AdminPageHeader, AdminPanel } from "../../components/admin/AdminUI";
+import { ButtonSpinner } from "../../components/ui/Button";
 import { toastSuccess } from "../../lib/toast";
 
 export default function AdminSettings() {
@@ -13,6 +14,7 @@ export default function AdminSettings() {
   });
 
   const onSave = async () => {
+    if (saving) return;
     setSaving(true);
     await new Promise((r) => setTimeout(r, 600));
     setSaving(false);
@@ -56,11 +58,13 @@ export default function AdminSettings() {
 
           <div className="mt-6 flex justify-end">
             <button
+              type="button"
               onClick={onSave}
               disabled={saving}
               className="inline-flex items-center gap-2 px-5 py-3 rounded-[10px] bg-[#FF7A00] text-white font-semibold hover:bg-[#e86e00] disabled:opacity-60"
+              aria-busy={saving}
             >
-              <Save className="w-5 h-5" />
+              {saving ? <ButtonSpinner className="h-5 w-5" /> : <Save className="w-5 h-5" />}
               {saving ? "Saving..." : "Save changes"}
             </button>
           </div>
@@ -135,4 +139,3 @@ function SettingsCheckbox({
     </label>
   );
 }
-

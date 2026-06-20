@@ -20,6 +20,7 @@ export default function AdminConsultations() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [updatingStatusId, setUpdatingStatusId] = useState<number | null>(null);
 
   useEffect(() => {
     fetchConsultations();
@@ -27,20 +28,9 @@ export default function AdminConsultations() {
 
   const fetchConsultations = async () => {
     try {
-      const {
-        fetchAdminBootstrap,
-        getAdminBootstrapCache,
-        fetchConsultations: apiFetchConsultations,
-      } = await import('../../lib/api');
-      const cached = getAdminBootstrapCache();
-      if (cached?.consultations) {
-        setConsultations(Array.isArray(cached.consultations) ? cached.consultations : []);
-        setLoading(false);
-        void apiFetchConsultations().then((fresh) => setConsultations(Array.isArray(fresh) ? fresh : []));
-        return;
-      }
-      const boot = await fetchAdminBootstrap();
-      setConsultations(Array.isArray(boot.consultations) ? boot.consultations : []);
+      const { fetchConsultations: apiFetchConsultations } = await import('../../lib/api');
+      const data = await apiFetchConsultations();
+      setConsultations(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Fetch error:', err);
       toastError('Could not load consultations.');
@@ -50,6 +40,8 @@ export default function AdminConsultations() {
   };
 
   const updateStatus = async (id: number, status: string) => {
+    if (updatingStatusId != null) return;
+    setUpdatingStatusId(id);
     try {
       const { updateConsultationStatus } = await import('../../lib/api');
       await updateConsultationStatus(id, status);
@@ -58,6 +50,8 @@ export default function AdminConsultations() {
     } catch (err) {
       console.error('Error:', err);
       toastError('Could not update status.');
+    } finally {
+      setUpdatingStatusId(null);
     }
   };
 
@@ -191,6 +185,7 @@ export default function AdminConsultations() {
                           options={CONSULTATION_STATUS_ROW_OPTIONS}
                           value={consultation.status || 'new'}
                           onChange={(v) => updateStatus(consultation.id, v)}
+                          disabled={updatingStatusId === consultation.id}
                           triggerClassName={`rounded-full border-0 shadow-none ring-0 ${config.bgColor} ${config.color}`}
                         />
                       </td>

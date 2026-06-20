@@ -1,12 +1,16 @@
 import { useState } from "react";
+import { ButtonSpinner } from "../../../../components/ui/Button";
 import { toastError, toastSuccess } from "../../../../lib/toast";
 
 export function ConsultationForm() {
   const [formData, setFormData] = useState({ name: "", phone: "", city: "", monthly_bill: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
+    setLoading(true);
     try {
       const { createConsultation } = await import("../../../../lib/api");
       await createConsultation(formData);
@@ -17,6 +21,8 @@ export function ConsultationForm() {
     } catch (err) {
       console.error("Error:", err);
       toastError("Could not send your request. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -37,7 +43,15 @@ export function ConsultationForm() {
         <input type="text" placeholder="Monthly Electricity Bill (PKR)" value={formData.monthly_bill} onChange={(e) => setFormData({ ...formData, monthly_bill: e.target.value })} className="px-4 py-3 rounded-lg bg-white/90 text-[#0B2A4A] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white" />
       </div>
       <textarea placeholder="Your Message" value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} rows={3} className="w-full px-4 py-3 rounded-lg bg-white/90 text-[#0B2A4A] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white mb-4" />
-      <button type="submit" className="w-full bg-[#0B2A4A] text-white py-3 rounded-lg font-semibold hover:bg-[#0B2A4A]/90 transition-colors">Request Consultation</button>
+      <button
+        type="submit"
+        disabled={loading}
+        className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#0B2A4A] py-3 font-semibold text-white transition-colors hover:bg-[#0B2A4A]/90 disabled:cursor-not-allowed disabled:opacity-70"
+        aria-busy={loading}
+      >
+        {loading ? <ButtonSpinner /> : null}
+        {loading ? "Requesting..." : "Request Consultation"}
+      </button>
     </form>
   );
 }

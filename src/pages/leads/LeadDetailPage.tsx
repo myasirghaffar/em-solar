@@ -3,6 +3,7 @@ import { Link, useParams, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { AdminPanel } from "../../components/admin/AdminUI";
 import LeadQuoteBlock from "../../components/leads/LeadQuoteBlock";
+import { ButtonSpinner } from "../../components/ui/Button";
 import Select from "../../components/ui/Select";
 import {
   fetchLead,
@@ -125,7 +126,7 @@ export default function LeadDetailPage() {
   }
 
   async function saveLeadAdmin() {
-    if (!isAdmin) return;
+    if (!isAdmin || saving) return;
     setSaving(true);
     try {
       const updated = await updateLead(id, {
@@ -147,6 +148,7 @@ export default function LeadDetailPage() {
   }
 
   async function saveNotesSales() {
+    if (saving) return;
     setSaving(true);
     try {
       const updated = await updateLead(id, { notes: form.notes });
@@ -290,18 +292,22 @@ export default function LeadDetailPage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="px-4 py-2 rounded-lg bg-[#F97316] text-white text-sm font-medium hover:bg-[#ea6a0f] disabled:opacity-60"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#F97316] px-4 py-2 text-sm font-medium text-white hover:bg-[#ea6a0f] disabled:cursor-not-allowed disabled:opacity-60"
+                aria-busy={saving}
               >
-                Save lead
+                {saving ? <ButtonSpinner /> : null}
+                {saving ? "Saving..." : "Save lead"}
               </button>
             ) : (
               <button
                 type="button"
                 onClick={() => void saveNotesSales()}
                 disabled={saving}
-                className="px-4 py-2 rounded-lg bg-[#F97316] text-white text-sm font-medium hover:bg-[#ea6a0f] disabled:opacity-60"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#F97316] px-4 py-2 text-sm font-medium text-white hover:bg-[#ea6a0f] disabled:cursor-not-allowed disabled:opacity-60"
+                aria-busy={saving}
               >
-                Save notes
+                {saving ? <ButtonSpinner /> : null}
+                {saving ? "Saving..." : "Save notes"}
               </button>
             )}
           </div>

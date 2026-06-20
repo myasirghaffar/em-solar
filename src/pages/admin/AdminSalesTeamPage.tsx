@@ -8,6 +8,7 @@ import {
   StatusPill,
 } from "../../components/admin/AdminUI";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
+import { ButtonSpinner } from "../../components/ui/Button";
 import DropdownMenu from "../../components/ui/DropdownMenu";
 import { useAdminTablePagination } from "../../hooks/useAdminTablePagination";
 import {
@@ -343,8 +344,10 @@ export default function AdminSalesTeamPage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="flex-1 rounded-lg bg-[#FF7A00] py-2 text-sm font-medium text-white hover:bg-[#e86e00] disabled:opacity-60"
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#FF7A00] py-2 text-sm font-medium text-white hover:bg-[#e86e00] disabled:cursor-not-allowed disabled:opacity-60"
+                aria-busy={saving}
               >
+                {saving ? <ButtonSpinner /> : null}
                 {saving ? "Saving…" : editing ? "Save" : "Add"}
               </button>
               {editing ? (
@@ -354,7 +357,8 @@ export default function AdminSalesTeamPage() {
                     setEditing(null);
                     setForm({ name: "", email: "", password: "" });
                   }}
-                  className="rounded-lg border border-gray-200 px-4 py-2 text-sm"
+                  disabled={saving}
+                  className="rounded-lg border border-gray-200 px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   Cancel
                 </button>

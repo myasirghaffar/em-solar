@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Plus, Edit, Trash2, Search } from "lucide-react";
 import { ApiError } from "../../lib/api";
 import { toastError, toastSuccess } from "../../lib/toast";
+import { ButtonSpinner } from "../../components/ui/Button";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import Input from "../../components/ui/Input";
 import {
@@ -29,6 +30,7 @@ export default function AdminProductCategories() {
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<CategoryRow | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
+  const [saving, setSaving] = useState(false);
 
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
@@ -89,6 +91,8 @@ export default function AdminProductCategories() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (saving) return;
+    setSaving(true);
     try {
       const { createProductCategory, updateProductCategory } = await import(
         "../../lib/api"
@@ -116,6 +120,8 @@ export default function AdminProductCategories() {
             ? err.message
             : "Could not save category.";
       toastError(msg);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -275,8 +281,11 @@ export default function AdminProductCategories() {
               </h2>
               <button
                 type="button"
-                onClick={() => setShowModal(false)}
-                className="rounded-lg px-2 py-1 text-2xl leading-none text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                onClick={() => {
+                  if (!saving) setShowModal(false);
+                }}
+                disabled={saving}
+                className="rounded-lg px-2 py-1 text-2xl leading-none text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
                 aria-label="Close"
               >
                 ×
@@ -301,15 +310,19 @@ export default function AdminProductCategories() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="rounded-lg border border-gray-300 px-4 py-2 transition-colors hover:bg-gray-50"
+                  disabled={saving}
+                  className="rounded-lg border border-gray-300 px-4 py-2 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="rounded-[10px] bg-[#FF7A00] px-6 py-2 font-semibold text-white transition-colors hover:bg-[#e86e00]"
+                  disabled={saving}
+                  className="inline-flex items-center justify-center gap-2 rounded-[10px] bg-[#FF7A00] px-6 py-2 font-semibold text-white transition-colors hover:bg-[#e86e00] disabled:cursor-not-allowed disabled:opacity-70"
+                  aria-busy={saving}
                 >
-                  {editing ? "Update category" : "Add category"}
+                  {saving ? <ButtonSpinner /> : null}
+                  {saving ? "Saving..." : editing ? "Update category" : "Add category"}
                 </button>
               </div>
             </form>
@@ -337,4 +350,3 @@ export default function AdminProductCategories() {
     </div>
   );
 }
-

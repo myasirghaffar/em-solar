@@ -50,6 +50,7 @@ export default function AdminOrdersTableSection({ shellHeader }: AdminOrdersTabl
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [statusFilter, setStatusFilter] = useState("");
+  const [updatingOrderId, setUpdatingOrderId] = useState<number | null>(null);
 
   useScrollLock(!!selectedOrder);
 
@@ -79,6 +80,8 @@ export default function AdminOrdersTableSection({ shellHeader }: AdminOrdersTabl
   };
 
   const updateOrderStatus = async (id: number, status: string) => {
+    if (updatingOrderId != null) return;
+    setUpdatingOrderId(id);
     try {
       const { updateOrderStatus: apiUpdateOrderStatus } = await import("../../lib/api");
       await apiUpdateOrderStatus(id, status);
@@ -87,6 +90,8 @@ export default function AdminOrdersTableSection({ shellHeader }: AdminOrdersTabl
     } catch (err) {
       console.error("Error:", err);
       toastError("Could not update order status.");
+    } finally {
+      setUpdatingOrderId(null);
     }
   };
 
@@ -201,6 +206,7 @@ export default function AdminOrdersTableSection({ shellHeader }: AdminOrdersTabl
                         options={ORDER_STATUS_ROW_OPTIONS}
                         value={order.order_status || "pending"}
                         onChange={(v) => void updateOrderStatus(order.id, v)}
+                        disabled={updatingOrderId === order.id}
                         triggerClassName={`rounded-full border-0 shadow-none ring-0 ${statusColors[order.order_status || "pending"]}`}
                       />
                     </td>

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { X, Mail, Lock, User } from "lucide-react";
 import { useScrollLock } from "../../hooks/useScrollLock";
 import { useAuth, isAuthApiError } from "../../context/AuthContext";
+import { ButtonSpinner } from "../ui/Button";
 import { toastError, toastSuccess } from "../../lib/toast";
 
 interface LoginModalProps {
@@ -179,8 +180,10 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
           <button
             type="submit"
             disabled={loading || Boolean(info)}
-            className="w-full bg-[#FF7A00] text-white py-3 rounded-lg font-semibold hover:bg-[#FF7A00]/90 transition-colors disabled:opacity-70"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#FF7A00] py-3 font-semibold text-white transition-colors hover:bg-[#FF7A00]/90 disabled:cursor-not-allowed disabled:opacity-70"
+            aria-busy={loading}
           >
+            {loading ? <ButtonSpinner /> : null}
             {loading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
           </button>
 

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AdminPanel } from "../admin/AdminUI";
+import { ButtonSpinner } from "../ui/Button";
 import DatePickerField from "../ui/DatePickerField";
 import {
   fetchQuoteTemplates,
@@ -636,9 +637,11 @@ export default function LeadQuoteBlock({
             type="button"
             onClick={() => void saveQuoteOnly()}
             disabled={saving}
-            className="px-4 py-2 rounded-lg border border-[#F97316] text-[#F97316] text-sm font-medium hover:bg-[#F97316]/10 disabled:opacity-60"
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#F97316] px-4 py-2 text-sm font-medium text-[#F97316] hover:bg-[#F97316]/10 disabled:cursor-not-allowed disabled:opacity-60"
+            aria-busy={saving}
           >
-            Save quote
+            {saving ? <ButtonSpinner /> : null}
+            {saving ? "Saving..." : "Save quote"}
           </button>
           <button
             type="button"

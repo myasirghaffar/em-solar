@@ -32,6 +32,8 @@ export default function LeadsTable({
   const quotesBase = basePath.replace(/\/leads$/, "/quotes");
 
   const [pendingDeleteLeadId, setPendingDeleteLeadId] = useState<number | null>(null);
+  const [patchBusyKey, setPatchBusyKey] = useState<string | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
 
   const filtered = leads.filter((l) => {
     if (!query.trim()) return true;
@@ -51,6 +53,28 @@ export default function LeadsTable({
     ],
     [salesTeam],
   );
+
+  async function handlePatch(id: number, key: string, patch: Partial<LeadRecord>) {
+    if (patchBusyKey) return;
+    setPatchBusyKey(`${id}:${key}`);
+    try {
+      await onPatch(id, patch);
+    } finally {
+      setPatchBusyKey(null);
+    }
+  }
+
+  async function confirmDeleteLead() {
+    if (pendingDeleteLeadId == null || deleteBusy) return;
+    const id = pendingDeleteLeadId;
+    setDeleteBusy(true);
+    try {
+      await onDeleteLead(id);
+      setPendingDeleteLeadId(null);
+    } finally {
+      setDeleteBusy(false);
+    }
+  }
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
@@ -93,8 +117,11 @@ export default function LeadsTable({
                       dropdownPosition="above"
                       options={STATUS_OPTIONS}
                       value={STATUS.includes(l.status as (typeof STATUS)[number]) ? l.status : "New"}
+                      disabled={patchBusyKey === `${l.id}:status`}
                       onChange={(v) =>
-                        void onPatch(l.id, { status: v as (typeof STATUS)[number] })
+                        void handlePatch(l.id, "status", {
+                          status: v as (typeof STATUS)[number],
+                        })
                       }
                       triggerClassName="rounded-full"
                     />
@@ -109,8 +136,9 @@ export default function LeadsTable({
                       dropdownPosition="above"
                       options={assignedOptions}
                       value={l.assignedToUserId ?? ""}
+                      disabled={patchBusyKey === `${l.id}:assigned`}
                       onChange={(v) =>
-                        void onPatch(l.id, {
+                        void handlePatch(l.id, "assigned", {
                           assignedToUserId: v === "" ? null : v,
                         })
                       }
@@ -171,13 +199,10 @@ export default function LeadsTable({
 
       <ConfirmDialog
         isOpen={pendingDeleteLeadId !== null}
-        onClose={() => setPendingDeleteLeadId(null)}
-        onConfirm={() => {
-          if (pendingDeleteLeadId == null) return;
-          const id = pendingDeleteLeadId;
-          setPendingDeleteLeadId(null);
-          void onDeleteLead(id);
+        onClose={() => {
+          if (!deleteBusy) setPendingDeleteLeadId(null);
         }}
+        onConfirm={() => void confirmDeleteLead()}
         title="Delete lead?"
         message={
           pendingDeleteLeadId != null
@@ -187,6 +212,7 @@ export default function LeadsTable({
         confirmLabel="Delete"
         cancelLabel="Cancel"
         variant="danger"
+        confirmLoading={deleteBusy}
       />
     </div>
   );

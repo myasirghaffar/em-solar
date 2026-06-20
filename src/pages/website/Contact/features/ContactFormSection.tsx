@@ -9,6 +9,7 @@ export function ContactFormSection() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
     try {
       const { createContactMessage } = await import("../../../../lib/api");
@@ -61,7 +62,7 @@ export function ContactFormSection() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
               <textarea value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} rows={5} required disabled={loading} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF7A00] resize-none disabled:opacity-60" placeholder="Tell us more about your inquiry..." />
             </div>
-            <button type="submit" disabled={loading} className="w-full bg-[#FF7A00] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#FF7A00]/90 transition-colors flex items-center justify-center space-x-2 disabled:opacity-70">
+            <button type="submit" disabled={loading} aria-busy={loading} className="w-full bg-[#FF7A00] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#FF7A00]/90 transition-colors flex items-center justify-center space-x-2 disabled:cursor-not-allowed disabled:opacity-70">
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
               <span>{loading ? "Sending…" : "Send Message"}</span>
             </button>

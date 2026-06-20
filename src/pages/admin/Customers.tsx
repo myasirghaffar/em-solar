@@ -15,18 +15,9 @@ export default function AdminCustomers() {
 
   const fetchCustomers = async () => {
     try {
-      const { fetchAdminBootstrap, getAdminBootstrapCache, fetchCustomers: apiFetchCustomers } = await import(
-        '../../lib/api'
-      );
-      const cached = getAdminBootstrapCache();
-      if (cached?.customers) {
-        setCustomers(Array.isArray(cached.customers) ? cached.customers : []);
-        setLoading(false);
-        void apiFetchCustomers().then((fresh) => setCustomers(Array.isArray(fresh) ? fresh : []));
-        return;
-      }
-      const boot = await fetchAdminBootstrap();
-      setCustomers(Array.isArray(boot.customers) ? boot.customers : []);
+      const { fetchCustomers: apiFetchCustomers } = await import('../../lib/api');
+      const data = await apiFetchCustomers();
+      setCustomers(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Fetch error:', err);
       toastError('Could not load customers.');
@@ -40,6 +31,12 @@ export default function AdminCustomers() {
     customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     customer.phone?.includes(searchTerm)
   );
+
+  const sourceLabel = (source: string | undefined) => {
+    if (source === 'account_checkout') return 'Account + checkout';
+    if (source === 'account') return 'Account';
+    return 'Checkout';
+  };
 
   const {
     page,
@@ -79,13 +76,14 @@ export default function AdminCustomers() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Customer</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Contact</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Location</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Source</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Joined</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {loading ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center">
+                  <td colSpan={5} className="px-6 py-12 text-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF7A00] mx-auto" />
                   </td>
                 </tr>
@@ -98,7 +96,10 @@ export default function AdminCustomers() {
                           {customer.name?.charAt(0) || 'C'}
                         </div>
                         <div>
-                          <p className="font-medium text-slate-900 whitespace-nowrap">{customer.name}</p>
+                          <p className="font-medium text-slate-900 whitespace-nowrap">{customer.name || 'Customer'}</p>
+                          {customer.email_verified === false ? (
+                            <p className="mt-0.5 text-xs font-medium text-amber-600">Email pending</p>
+                          ) : null}
                         </div>
                       </div>
                     </td>
@@ -108,17 +109,24 @@ export default function AdminCustomers() {
                           <Mail className="w-4 h-4 text-gray-400" />
                           <span>{customer.email}</span>
                         </div>
-                        <div className="flex items-center space-x-2 text-sm text-gray-700">
-                          <Phone className="w-4 h-4 text-gray-400" />
-                          <span>{customer.phone}</span>
-                        </div>
+                        {customer.phone ? (
+                          <div className="flex items-center space-x-2 text-sm text-gray-700">
+                            <Phone className="w-4 h-4 text-gray-400" />
+                            <span>{customer.phone}</span>
+                          </div>
+                        ) : null}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center space-x-2 text-sm text-gray-700">
                         <MapPin className="w-4 h-4 text-gray-400" />
-                        <span>{customer.city}</span>
+                        <span>{customer.city || '—'}</span>
                       </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
+                        {sourceLabel(customer.source)}
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(customer.created_at).toLocaleDateString()}
@@ -127,7 +135,7 @@ export default function AdminCustomers() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-gray-500">No customers found</td>
+                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500">No customers found</td>
                 </tr>
               )}
             </tbody>

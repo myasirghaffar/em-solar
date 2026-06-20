@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createLead, type LeadRecord } from "../../lib/api";
 import { toastError, toastSuccess } from "../../lib/toast";
+import { ButtonSpinner } from "../ui/Button";
 import Select from "../ui/Select";
 
 const PRODUCT_INTEREST_OPTIONS = [
@@ -28,6 +29,7 @@ export default function LeadCreateForm({ onCreated, className = "" }: Props) {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (saving) return;
     setSaving(true);
     try {
       const created = await createLead({
@@ -104,8 +106,10 @@ export default function LeadCreateForm({ onCreated, className = "" }: Props) {
       <button
         type="submit"
         disabled={saving}
-        className="w-full py-2.5 rounded-lg bg-[#F97316] text-white text-sm font-medium hover:bg-[#ea6a0f] disabled:opacity-60"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#F97316] py-2.5 text-sm font-medium text-white hover:bg-[#ea6a0f] disabled:cursor-not-allowed disabled:opacity-60"
+        aria-busy={saving}
       >
+        {saving ? <ButtonSpinner /> : null}
         {saving ? "Saving…" : "Create lead"}
       </button>
     </form>

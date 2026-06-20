@@ -12,12 +12,14 @@ import {
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useScrollLock } from "../../hooks/useScrollLock";
+import { ButtonSpinner } from "../ui/Button";
 
 export default function SalesLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const [loggingOut, setLoggingOut] = useState(false);
 
   useScrollLock(sidebarOpen);
 
@@ -93,14 +95,22 @@ export default function SalesLayout({ children }: { children: React.ReactNode })
             <button
               type="button"
               onClick={async () => {
-                closeMobileDrawer();
-                await logout();
-                navigate("/login", { replace: true });
+                if (loggingOut) return;
+                setLoggingOut(true);
+                try {
+                  closeMobileDrawer();
+                  await logout();
+                  navigate("/login", { replace: true });
+                } finally {
+                  setLoggingOut(false);
+                }
               }}
-              className="flex w-full items-center space-x-3 px-4 py-3 rounded-xl text-left text-gray-500 transition-colors hover:bg-gray-50 hover:text-slate-900"
+              disabled={loggingOut}
+              className="flex w-full items-center space-x-3 px-4 py-3 rounded-xl text-left text-gray-500 transition-colors hover:bg-gray-50 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+              aria-busy={loggingOut}
             >
-              <LogOut className="w-5 h-5" />
-              <span>Logout</span>
+              {loggingOut ? <ButtonSpinner className="h-5 w-5" /> : <LogOut className="w-5 h-5" />}
+              <span>{loggingOut ? "Logging out..." : "Logout"}</span>
             </button>
           </div>
         </div>

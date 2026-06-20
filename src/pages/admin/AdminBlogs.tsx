@@ -15,6 +15,7 @@ import {
 } from "../../lib/api";
 import { toastError, toastSuccess } from "../../lib/toast";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
+import { ButtonSpinner } from "../../components/ui/Button";
 import DatePickerField from "../../components/ui/DatePickerField";
 import { BlogBodyEditor } from "../../components/admin/BlogBodyEditor";
 
@@ -107,6 +108,7 @@ export default function AdminBlogs() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (saving) return;
     if (!form.imageUrl.trim()) {
       toastError("Please upload a cover image.");
       return;
@@ -392,19 +394,23 @@ export default function AdminBlogs() {
               <button
                 type="submit"
                 disabled={saving}
-                className="rounded-lg bg-[#FF7A00] px-4 py-2 text-sm font-semibold text-white hover:bg-[#e86e00] disabled:opacity-60"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#FF7A00] px-4 py-2 text-sm font-semibold text-white hover:bg-[#e86e00] disabled:cursor-not-allowed disabled:opacity-60"
+                aria-busy={saving}
               >
+                {saving ? <ButtonSpinner /> : null}
                 {saving ? "Saving…" : editingId != null ? "Save changes" : "Create post"}
               </button>
               <button
                 type="button"
                 onClick={() => {
+                  if (saving) return;
                   setEditingId(null);
                   setShowForm(false);
                   setCoverUploadError(null);
                   setForm(emptyForm);
                 }}
-                className="rounded-lg border border-gray-200 px-4 py-2 text-sm"
+                disabled={saving}
+                className="rounded-lg border border-gray-200 px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Cancel
               </button>
