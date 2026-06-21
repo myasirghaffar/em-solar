@@ -8,7 +8,11 @@ import { CheckoutEmpty, CheckoutForm, CheckoutOrderSummary } from "./features";
 
 const COD_LIMIT = 10_000;
 const BANK_TRANSFER_DETAILS = {
-  accountTitle: "Mubashir Zubair",
+  bankName: "Meezan Bank",
+  branch: "J-III Johar Town, LHR",
+  accountTitle: "ENERGYMART.PK",
+  accountNumber: "02470112819462",
+  iban: "PK23MEZN0002470112819462",
   whatsapp: "+92 301 4756516",
   whatsappDigits: "923014756516",
 };
@@ -118,7 +122,11 @@ function CheckoutSuccess({ order }: { order: StoreOrder }) {
   const copyText = [
     `Order ID: #${order.id}`,
     `Amount: Rs. ${total.toLocaleString()}`,
+    `Bank: ${BANK_TRANSFER_DETAILS.bankName}`,
+    `Branch: ${BANK_TRANSFER_DETAILS.branch}`,
     `Account title: ${BANK_TRANSFER_DETAILS.accountTitle}`,
+    `Account number: ${BANK_TRANSFER_DETAILS.accountNumber}`,
+    `IBAN: ${BANK_TRANSFER_DETAILS.iban}`,
     `WhatsApp payment proof: ${BANK_TRANSFER_DETAILS.whatsapp}`,
   ].join("\n");
 
@@ -185,8 +193,24 @@ function CheckoutSuccess({ order }: { order: StoreOrder }) {
                   <dd className="mt-1 font-bold text-[#0B2A4A]">Rs. {total.toLocaleString()}</dd>
                 </div>
                 <div>
+                  <dt className="text-gray-500">Bank</dt>
+                  <dd className="mt-1 font-bold text-[#0B2A4A]">{BANK_TRANSFER_DETAILS.bankName}</dd>
+                </div>
+                <div>
+                  <dt className="text-gray-500">Branch</dt>
+                  <dd className="mt-1 font-bold text-[#0B2A4A]">{BANK_TRANSFER_DETAILS.branch}</dd>
+                </div>
+                <div>
                   <dt className="text-gray-500">Account title</dt>
                   <dd className="mt-1 font-bold text-[#0B2A4A]">{BANK_TRANSFER_DETAILS.accountTitle}</dd>
+                </div>
+                <div>
+                  <dt className="text-gray-500">Account number</dt>
+                  <dd className="mt-1 font-bold text-[#0B2A4A]">{BANK_TRANSFER_DETAILS.accountNumber}</dd>
+                </div>
+                <div className="sm:col-span-2">
+                  <dt className="text-gray-500">IBAN</dt>
+                  <dd className="mt-1 break-all font-bold text-[#0B2A4A]">{BANK_TRANSFER_DETAILS.iban}</dd>
                 </div>
                 <div>
                   <dt className="text-gray-500">Send slip on WhatsApp</dt>
@@ -195,7 +219,7 @@ function CheckoutSuccess({ order }: { order: StoreOrder }) {
               </dl>
 
               <ol className="mt-5 list-decimal space-y-2 pl-5 text-sm leading-6 text-amber-950">
-                <li>Transfer Rs. {total.toLocaleString()} to the provided account title.</li>
+                <li>Transfer Rs. {total.toLocaleString()} to the Meezan Bank account shown above.</li>
                 <li>Take a screenshot or photo of the payment slip.</li>
                 <li>Send the slip on WhatsApp with order ID #{order.id}.</li>
                 <li>After admin verification, your order will move to shipping.</li>
