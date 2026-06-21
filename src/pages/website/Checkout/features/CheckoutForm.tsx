@@ -1,4 +1,4 @@
-import { CheckCircle, Truck, CreditCard } from "lucide-react";
+import { CheckCircle, Truck, CreditCard, Landmark } from "lucide-react";
 import Input from "../../../../components/ui/Input";
 
 const panelClass =
@@ -15,9 +15,11 @@ interface CheckoutFormProps {
     payment_method: string;
   };
   setFormData: (v: any) => void;
+  codUnavailable: boolean;
+  codLimit: number;
 }
 
-export function CheckoutForm({ formData, setFormData }: CheckoutFormProps) {
+export function CheckoutForm({ formData, setFormData, codUnavailable, codLimit }: CheckoutFormProps) {
   return (
     <div className="space-y-6 lg:col-span-2">
       <div className={panelClass}>
@@ -72,26 +74,40 @@ export function CheckoutForm({ formData, setFormData }: CheckoutFormProps) {
           </div>
         </div>
         <div className="space-y-3">
-          <label
-            className={`flex cursor-pointer items-center gap-4 rounded-2xl p-4 ring-1 transition-all ${
-              formData.payment_method === "cod"
-                ? "bg-[#FF7A00]/5 ring-2 ring-[#FF7A00] shadow-sm"
-                : "bg-gray-50/80 ring-gray-200/90 hover:bg-gray-50"
-            }`}
-          >
-            <input
-              type="radio"
-              name="payment"
-              value="cod"
-              checked={formData.payment_method === "cod"}
-              onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
-              className="h-4 w-4 shrink-0 text-[#FF7A00] focus:ring-[#FF7A00]"
-            />
-            <div className="min-w-0">
-              <p className="font-semibold text-[#0B2A4A]">Cash on delivery</p>
-              <p className="text-sm text-gray-500">Pay when you receive your order.</p>
+          {codUnavailable ? (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+              <div className="flex gap-3">
+                <Landmark className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
+                <div>
+                  <p className="font-semibold text-[#0B2A4A]">Bank transfer required</p>
+                  <p className="mt-1">
+                    Cash on delivery is available only up to Rs. {codLimit.toLocaleString()}. Please place this order with bank transfer.
+                  </p>
+                </div>
+              </div>
             </div>
-          </label>
+          ) : (
+            <label
+              className={`flex cursor-pointer items-center gap-4 rounded-2xl p-4 ring-1 transition-all ${
+                formData.payment_method === "cod"
+                  ? "bg-[#FF7A00]/5 ring-2 ring-[#FF7A00] shadow-sm"
+                  : "bg-gray-50/80 ring-gray-200/90 hover:bg-gray-50"
+              }`}
+            >
+              <input
+                type="radio"
+                name="payment"
+                value="cod"
+                checked={formData.payment_method === "cod"}
+                onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
+                className="h-4 w-4 shrink-0 text-[#FF7A00] focus:ring-[#FF7A00]"
+              />
+              <div className="min-w-0">
+                <p className="font-semibold text-[#0B2A4A]">Cash on delivery</p>
+                <p className="text-sm text-gray-500">Pay when you receive your order.</p>
+              </div>
+            </label>
+          )}
           <label
             className={`flex cursor-pointer items-center gap-4 rounded-2xl p-4 ring-1 transition-all ${
               formData.payment_method === "bank"
@@ -109,7 +125,9 @@ export function CheckoutForm({ formData, setFormData }: CheckoutFormProps) {
             />
             <div className="min-w-0">
               <p className="font-semibold text-[#0B2A4A]">Bank transfer</p>
-              <p className="text-sm text-gray-500">Transfer to our bank account.</p>
+              <p className="text-sm text-gray-500">
+                Transfer first, then send payment proof with your order ID on WhatsApp.
+              </p>
             </div>
           </label>
         </div>

@@ -1,5 +1,5 @@
 import { useEffect, useReducer, useRef, useState } from "react";
-import { $getSelection, $isRangeSelection } from "lexical";
+import { $getSelection, $isRangeSelection, INDENT_CONTENT_COMMAND, OUTDENT_CONTENT_COMMAND } from "lexical";
 import { $getSelectionStyleValueForProperty, $patchStyleText } from "@lexical/selection";
 import {
   blockFormatExtension,
@@ -210,6 +210,14 @@ function Toolbar({ dark, onToggleDark }: { dark: boolean; onToggleDark: () => vo
   const [inlineCode, setInlineCode] = useState(false);
   const [fontSizeValue, setFontSizeValue] = useState("");
 
+  function runWithEditorFocus(action: () => void) {
+    if (!editor) {
+      action();
+      return;
+    }
+    editor.focus(action);
+  }
+
   useEffect(() => {
     return listeners.registerUpdate(() => {
       try {
@@ -254,15 +262,19 @@ function Toolbar({ dark, onToggleDark }: { dark: boolean; onToggleDark: () => vo
     const url = window.prompt("Link URL", "https://");
     if (url === null) return;
     const trimmed = url.trim();
-    if (trimmed) commands.insertLink(trimmed);
-    else commands.insertLink();
+    runWithEditorFocus(() => {
+      if (trimmed) commands.insertLink(trimmed);
+      else commands.insertLink();
+    });
   }
 
   function onBlockSelect(next: BlockSelectValue) {
     setBlockValue(next);
-    if (next === "p") commands.toggleParagraph();
-    else if (next === "quote") commands.toggleQuote();
-    else commands.toggleHeading(next);
+    runWithEditorFocus(() => {
+      if (next === "p") commands.toggleParagraph();
+      else if (next === "quote") commands.toggleQuote();
+      else commands.toggleHeading(next);
+    });
   }
 
   function onInsertImageFromUrl() {
@@ -282,7 +294,7 @@ function Toolbar({ dark, onToggleDark }: { dark: boolean; onToggleDark: () => vo
         const dataUrl = await readFileAsDataUrl(file);
         const alt = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ").trim() || "Image";
         /* Pass a real `src` — empty src + `file` only produced a blob: URL that often failed to render in the decorator */
-        commands.insertImage({ src: dataUrl, alt });
+        runWithEditorFocus(() => commands.insertImage({ src: dataUrl, alt }));
       } catch {
         /* ignore */
       }
@@ -298,7 +310,7 @@ function Toolbar({ dark, onToggleDark }: { dark: boolean; onToggleDark: () => vo
     const colN = Number.isFinite(c) && c > 0 ? c : 3;
     const headers =
       window.confirm("Include header row?") === true;
-    commands.insertTable({ rows: rowN, columns: colN, includeHeaders: headers });
+    runWithEditorFocus(() => commands.insertTable({ rows: rowN, columns: colN, includeHeaders: headers }));
   }
 
   function onInsertHtmlEmbed() {
@@ -307,7 +319,7 @@ function Toolbar({ dark, onToggleDark }: { dark: boolean; onToggleDark: () => vo
       '<div class="embed">Your HTML</div>',
     );
     if (snippet == null) return;
-    commands.insertHTMLEmbed(snippet);
+    runWithEditorFocus(() => commands.insertHTMLEmbed(snippet));
   }
 
   function applyFontSize(next: string) {
@@ -332,6 +344,7 @@ function Toolbar({ dark, onToggleDark }: { dark: boolean; onToggleDark: () => vo
   const fontSelectCls = dark
     ? "h-8 max-w-[120px] rounded-md border border-slate-600 bg-slate-800 px-2 text-xs text-slate-100"
     : "h-8 max-w-[120px] rounded-md border border-gray-200 bg-white px-2 text-xs text-slate-800";
+  const keepEditorSelection = (e: React.MouseEvent<HTMLButtonElement>) => e.preventDefault();
 
   return (
     <div className={`flex flex-col gap-1 border-b px-2 py-1.5 ${bar}`}>
@@ -339,6 +352,7 @@ function Toolbar({ dark, onToggleDark }: { dark: boolean; onToggleDark: () => vo
         <button
           type="button"
           title="Bold"
+          onMouseDown={keepEditorSelection}
           onClick={() => commands.toggleBold()}
           className={tbBtn(!!activeStates.bold, dark)}
         >
@@ -347,6 +361,7 @@ function Toolbar({ dark, onToggleDark }: { dark: boolean; onToggleDark: () => vo
         <button
           type="button"
           title="Italic"
+          onMouseDown={keepEditorSelection}
           onClick={() => commands.toggleItalic()}
           className={tbBtn(!!activeStates.italic, dark)}
         >
@@ -355,6 +370,7 @@ function Toolbar({ dark, onToggleDark }: { dark: boolean; onToggleDark: () => vo
         <button
           type="button"
           title="Underline"
+          onMouseDown={keepEditorSelection}
           onClick={() => commands.toggleUnderline()}
           className={tbBtn(!!activeStates.underline, dark)}
         >
@@ -363,6 +379,7 @@ function Toolbar({ dark, onToggleDark }: { dark: boolean; onToggleDark: () => vo
         <button
           type="button"
           title="Strikethrough"
+          onMouseDown={keepEditorSelection}
           onClick={() => commands.toggleStrikethrough()}
           className={tbBtn(!!activeStates.strikethrough, dark)}
         >
@@ -371,12 +388,13 @@ function Toolbar({ dark, onToggleDark }: { dark: boolean; onToggleDark: () => vo
         <button
           type="button"
           title="Inline code"
-          onClick={() => commands.formatText("code")}
+          onMouseDown={keepEditorSelection}
+          onClick={() => runWithEditorFocus(() => commands.formatText("code"))}
           className={tbBtn(inlineCode, dark)}
         >
           <Code2 className="h-4 w-4" />
         </button>
-        <button type="button" title="Link" onClick={onLink} className={tbBtn(false, dark)}>
+        <button type="button" title="Link" onMouseDown={keepEditorSelection} onClick={onLink} className={tbBtn(false, dark)}>
           <Link2 className="h-4 w-4" />
         </button>
 
@@ -424,7 +442,8 @@ function Toolbar({ dark, onToggleDark }: { dark: boolean; onToggleDark: () => vo
         <button
           type="button"
           title="Code block"
-          onClick={() => commands.toggleCodeBlock()}
+          onMouseDown={keepEditorSelection}
+          onClick={() => runWithEditorFocus(() => commands.toggleCodeBlock())}
           className={tbBtn(inCodeBlock, dark)}
         >
           <Terminal className="h-4 w-4" />
@@ -435,7 +454,8 @@ function Toolbar({ dark, onToggleDark }: { dark: boolean; onToggleDark: () => vo
         <button
           type="button"
           title="Bullet list"
-          onClick={() => commands.toggleUnorderedList()}
+          onMouseDown={keepEditorSelection}
+          onClick={() => runWithEditorFocus(() => commands.toggleUnorderedList())}
           className={tbBtn(!!activeStates.unorderedList, dark)}
         >
           <List className="h-4 w-4" />
@@ -443,7 +463,8 @@ function Toolbar({ dark, onToggleDark }: { dark: boolean; onToggleDark: () => vo
         <button
           type="button"
           title="Numbered list"
-          onClick={() => commands.toggleOrderedList()}
+          onMouseDown={keepEditorSelection}
+          onClick={() => runWithEditorFocus(() => commands.toggleOrderedList())}
           className={tbBtn(!!activeStates.orderedList, dark)}
         >
           <ListOrdered className="h-4 w-4" />
@@ -451,7 +472,11 @@ function Toolbar({ dark, onToggleDark }: { dark: boolean; onToggleDark: () => vo
         <button
           type="button"
           title="Indent list"
-          onClick={() => commands.indentList()}
+          onMouseDown={keepEditorSelection}
+          onClick={() => runWithEditorFocus(() => {
+            if (editor) editor.dispatchCommand(INDENT_CONTENT_COMMAND, undefined);
+            else commands.indentList();
+          })}
           className={tbBtn(false, dark)}
         >
           <Indent className="h-4 w-4" />
@@ -459,7 +484,11 @@ function Toolbar({ dark, onToggleDark }: { dark: boolean; onToggleDark: () => vo
         <button
           type="button"
           title="Outdent list"
-          onClick={() => commands.outdentList()}
+          onMouseDown={keepEditorSelection}
+          onClick={() => runWithEditorFocus(() => {
+            if (editor) editor.dispatchCommand(OUTDENT_CONTENT_COMMAND, undefined);
+            else commands.outdentList();
+          })}
           className={tbBtn(false, dark)}
         >
           <Outdent className="h-4 w-4" />
@@ -470,12 +499,13 @@ function Toolbar({ dark, onToggleDark }: { dark: boolean; onToggleDark: () => vo
         <button
           type="button"
           title="Horizontal rule"
-          onClick={() => commands.insertHorizontalRule()}
+          onMouseDown={keepEditorSelection}
+          onClick={() => runWithEditorFocus(() => commands.insertHorizontalRule())}
           className={tbBtn(false, dark)}
         >
           <Minus className="h-4 w-4" />
         </button>
-        <button type="button" title="Insert table" onClick={onInsertTable} className={tbBtn(false, dark)}>
+        <button type="button" title="Insert table" onMouseDown={keepEditorSelection} onClick={onInsertTable} className={tbBtn(false, dark)}>
           <Table2 className="h-4 w-4" />
         </button>
 
@@ -491,16 +521,17 @@ function Toolbar({ dark, onToggleDark }: { dark: boolean; onToggleDark: () => vo
         <button
           type="button"
           title="Insert image from file"
+          onMouseDown={keepEditorSelection}
           onClick={() => imageFileRef.current?.click()}
           className={tbBtn(false, dark)}
         >
           <ImageIcon className="h-4 w-4" />
         </button>
-        <button type="button" title="Insert image from URL" onClick={onInsertImageFromUrl} className={tbBtn(false, dark)}>
+        <button type="button" title="Insert image from URL" onMouseDown={keepEditorSelection} onClick={onInsertImageFromUrl} className={tbBtn(false, dark)}>
           <ImagePlus className="h-4 w-4" />
         </button>
 
-        <button type="button" title="HTML embed" onClick={onInsertHtmlEmbed} className={tbBtn(false, dark)}>
+        <button type="button" title="HTML embed" onMouseDown={keepEditorSelection} onClick={onInsertHtmlEmbed} className={tbBtn(false, dark)}>
           <FileCode2 className="h-4 w-4" />
         </button>
 
@@ -510,6 +541,7 @@ function Toolbar({ dark, onToggleDark }: { dark: boolean; onToggleDark: () => vo
           type="button"
           title="Undo"
           disabled={!activeStates.canUndo}
+          onMouseDown={keepEditorSelection}
           onClick={() => commands.undo()}
           className={tbBtn(false, dark)}
         >
@@ -519,6 +551,7 @@ function Toolbar({ dark, onToggleDark }: { dark: boolean; onToggleDark: () => vo
           type="button"
           title="Redo"
           disabled={!activeStates.canRedo}
+          onMouseDown={keepEditorSelection}
           onClick={() => commands.redo()}
           className={tbBtn(false, dark)}
         >
@@ -530,6 +563,7 @@ function Toolbar({ dark, onToggleDark }: { dark: boolean; onToggleDark: () => vo
         <button
           type="button"
           title="Command palette (⌘K)"
+          onMouseDown={keepEditorSelection}
           onClick={() => commands.showCommandPalette()}
           className={tbBtn(false, dark)}
         >
@@ -538,6 +572,7 @@ function Toolbar({ dark, onToggleDark }: { dark: boolean; onToggleDark: () => vo
         <button
           type="button"
           title={dark ? "Light toolbar" : "Dark toolbar"}
+          onMouseDown={keepEditorSelection}
           onClick={onToggleDark}
           className={tbBtn(false, dark)}
         >
@@ -555,6 +590,7 @@ function Toolbar({ dark, onToggleDark }: { dark: boolean; onToggleDark: () => vo
           <button
             type="button"
             title="Align left"
+            onMouseDown={keepEditorSelection}
             onClick={() => commands.setImageAlignment("left")}
             className={tbBtn(false, dark)}
           >
@@ -563,6 +599,7 @@ function Toolbar({ dark, onToggleDark }: { dark: boolean; onToggleDark: () => vo
           <button
             type="button"
             title="Align center"
+            onMouseDown={keepEditorSelection}
             onClick={() => commands.setImageAlignment("center")}
             className={tbBtn(false, dark)}
           >
@@ -571,6 +608,7 @@ function Toolbar({ dark, onToggleDark }: { dark: boolean; onToggleDark: () => vo
           <button
             type="button"
             title="Align right"
+            onMouseDown={keepEditorSelection}
             onClick={() => commands.setImageAlignment("right")}
             className={tbBtn(false, dark)}
           >
@@ -579,6 +617,7 @@ function Toolbar({ dark, onToggleDark }: { dark: boolean; onToggleDark: () => vo
           <button
             type="button"
             title="Default alignment (inline)"
+            onMouseDown={keepEditorSelection}
             onClick={() => commands.setImageAlignment("none")}
             className={tbBtn(false, dark)}
           >

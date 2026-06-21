@@ -519,7 +519,23 @@ export async function updateOrderStatus(
   return true;
 }
 
-export async function createOrder(payload: any): Promise<boolean> {
+export type StoreOrder = {
+  id: number;
+  customer_name?: string;
+  customer_phone?: string;
+  customer_email?: string;
+  city?: string;
+  address?: string;
+  notes?: string;
+  payment_method?: string;
+  total_price?: number;
+  products?: any[];
+  payment_status?: string;
+  order_status?: string;
+  created_at?: string;
+};
+
+export async function createOrder(payload: any): Promise<StoreOrder> {
   const lines = (Array.isArray(payload.products) ? payload.products : []).map(
     (it: any) => ({
       id: typeof it.id === "number" ? it.id : undefined,
@@ -528,7 +544,7 @@ export async function createOrder(payload: any): Promise<boolean> {
       price: Number(it.price) || 0,
     }),
   );
-  await apiRequest("/store/orders", {
+  return apiRequest<StoreOrder>("/store/orders", {
     method: "POST",
     body: JSON.stringify({
       name: payload.name,
@@ -542,7 +558,6 @@ export async function createOrder(payload: any): Promise<boolean> {
       products: lines,
     }),
   });
-  return true;
 }
 
 export async function fetchCustomers(): Promise<any[]> {
