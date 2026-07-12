@@ -18,9 +18,9 @@ export const metadata: Metadata = {
   title: "EnergyMart",
   description: "EnergyMart storefront — solar products, checkout, and customer accounts.",
   icons: {
-    icon: [{ url: "/em-logo-only.png", type: "image/png" }],
-    shortcut: "/em-logo-only.png",
-    apple: "/em-logo-only.png",
+    icon: [{ url: "/favicon.png", type: "image/png" }],
+    shortcut: "/favicon.png",
+    apple: "/favicon.png",
   },
 };
 

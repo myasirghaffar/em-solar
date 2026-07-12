@@ -25,7 +25,7 @@ export function PwaInstallPrompt() {
       <div className="pointer-events-auto mx-auto flex max-w-lg gap-3 rounded-2xl border border-[#FF7A00]/30 bg-[#0B2A4A] p-4 text-white shadow-[0_16px_48px_rgba(11,42,74,0.35)]">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FF7A00]/15">
           <img
-            src="/favicon.svg"
+            src="/em-logo-only.png"
             alt=""
             className="h-7 w-7"
             width={28}
