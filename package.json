@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "next dev -p 3001",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint"
   },
@@ -54,5 +54,5 @@
     "tsx": "^4.23.0",
     "typescript": "^5"
   },
-  "description": "EnergyMart storefront — Next.js public shop, checkout, customer accounts, and shop admin sharing the em-tools database"
+  "description": "EnergyMart storefront \u2014 Next.js public shop, checkout, customer accounts, and shop admin sharing the em-tools database"
 }
