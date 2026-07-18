@@ -6,11 +6,15 @@
     "node": ">=20"
   },
   "scripts": {
-    "dev": "next dev -p 3001",
     "build": "next build --webpack",
+    "dev": "next dev -p 3001",
     "start": "next start",
     "lint": "eslint",
-    "compress-images": "tsx src/server/scripts/compress-existing-images.ts"
+    "compress-images": "tsx src/server/scripts/compress-existing-images.ts",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.8.0",
@@ -25,6 +29,7 @@
     "@lexical/table": "^0.47.0",
     "@lexical/utils": "^0.47.0",
     "@lexkit/editor": "^0.1.0",
+    "@opennextjs/cloudflare": "^1.20.1",
     "aos": "^2.3.4",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",
@@ -55,7 +60,8 @@
     "eslint-config-next": "16.2.10",
     "tailwindcss": "^4",
     "tsx": "^4.23.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^4.112.0"
   },
   "description": "EnergyMart storefront — Next.js public shop, checkout, customer accounts, and shop admin sharing the em-tools database",
   "allowScripts": {
