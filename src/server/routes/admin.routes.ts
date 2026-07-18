@@ -25,18 +25,20 @@ adminRoutes.use('*', requireAdmin);
 
 adminRoutes.get('/bootstrap', async (c) => {
   const db = createDb(c.env);
-  // Sequential batches keep Supabase pooler usage low on Vercel (DB_POOL_MAX=1).
-  const [products, productCategories, orders] = await Promise.all([
-    catalog.listProductsAdmin(db),
-    catalog.listProductCategoriesAdmin(db),
-    catalog.listOrdersAdmin(db),
-  ]);
-  const [customers, contactMessages, blogs] = await Promise.all([
-    catalog.listCustomersAdmin(db),
-    catalog.listContactMessagesAdmin(db),
-    catalog.listBlogsAdmin(db),
-  ]);
-  const storeAnalytics = await catalog.getAnalyticsAdmin(db);
+  // Sequential queries: concurrent Promise.all + DB_POOL_MAX=1 (or a small
+  // pool) stacks waits and routinely hits the browser's 25s abort.
+  const products = await catalog.listProductsAdmin(db);
+  const productCategories = await catalog.listProductCategoriesAdmin(db);
+  const orders = await catalog.listOrdersAdmin(db);
+  const customers = await catalog.listCustomersAdmin(db);
+  const contactMessages = await catalog.listContactMessagesAdmin(db);
+  const blogs = await catalog.listBlogsAdmin(db);
+  // Reuse already-loaded rows — do not re-query orders/customers/products.
+  const storeAnalytics = catalog.buildAnalyticsFromLoaded(
+    orders,
+    customers.length,
+    products.length,
+  );
 
   const openMessages = contactMessages.filter(
     (row) => row.status === 'new' || row.status === 'unread',
@@ -63,6 +65,19 @@ adminRoutes.get('/bootstrap', async (c) => {
 adminRoutes.get('/products', async (c) => {
   const db = createDb(c.env);
   const data = await catalog.listProductsAdmin(db);
+  return jsonWithRevalidation(c, buildSuccessResponse(data));
+});
+
+adminRoutes.get('/products/:id', async (c) => {
+  const id = Number(c.req.param('id'));
+  if (!Number.isFinite(id) || id < 1) {
+    return c.json(
+      buildErrorResponse(ErrorCodes.VALIDATION_FAILED, HttpStatusCode.BAD_REQUEST, 'Invalid product id'),
+      HttpStatusCode.BAD_REQUEST,
+    );
+  }
+  const db = createDb(c.env);
+  const data = await catalog.getProductAdmin(db, id);
   return jsonWithRevalidation(c, buildSuccessResponse(data));
 });
 

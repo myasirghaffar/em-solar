@@ -69,9 +69,9 @@ export default function AdminDashboard() {
     setLoading(true);
     setAnalyticsError(null);
     try {
-      const { fetchAdminBootstrap } = await import('../../lib/api');
-      const boot = await fetchAdminBootstrap();
-      setAnalytics(normalizeAnalyticsPayload(boot.analytics));
+      const { fetchAnalytics } = await import('../../lib/api');
+      const raw = await fetchAnalytics();
+      setAnalytics(normalizeAnalyticsPayload(raw));
     } catch (err) {
       console.error('Fetch error:', err);
       const msg =

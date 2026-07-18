@@ -39,6 +39,9 @@ export function createPostgresFromDatabaseUrl(
     prepare: false,
     fetch_types: false,
     /** Avoid indefinite hangs when the pooler / network is unreachable. */
-    connect_timeout: 15,
+    connect_timeout: 10,
+    /** Release idle sockets so HMR / leaked clients do not exhaust Supabase. */
+    idle_timeout: 20,
+    max_lifetime: 60 * 5,
   });
 }

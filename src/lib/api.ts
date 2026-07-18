@@ -536,6 +536,15 @@ export async function fetchProductsAdmin(): Promise<any[]> {
   return ensureArray<any>(data).map(normalizeProduct);
 }
 
+/** Single product with attachments (for admin edit). */
+export async function fetchProductAdmin(id: number): Promise<any> {
+  const data = await apiRequest<unknown>(`/admin/products/${id}`, {
+    method: "GET",
+    auth: true,
+  });
+  return normalizeProduct(data);
+}
+
 export async function createProduct(payload: any): Promise<boolean> {
   await apiRequest("/admin/products", {
     method: "POST",

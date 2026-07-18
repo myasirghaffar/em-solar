@@ -97,7 +97,19 @@ export function buildAnalytics(
     yearly: { label: string; sales: number; orders: number }[];
   };
 } {
-  const fo = orders.map((o) => orderToFrontend(o));
+  return buildAnalyticsFromFrontend(
+    orders.map((o) => orderToFrontend(o)),
+    customerCount,
+    productCount,
+  );
+}
+
+/** Analytics from already-mapped order payloads (avoids a second DB round-trip). */
+export function buildAnalyticsFromFrontend(
+  fo: { created_at: string; total_price: number }[],
+  customerCount: number,
+  productCount: number,
+) {
   const year = new Date().getUTCFullYear();
   const totalSales = fo.reduce((s, o) => s + (Number(o.total_price) || 0), 0);
   const monthlySales = Array.from({ length: 12 }, (_, i) =>

@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ApiError } from "../../lib/api";
+import { ApiError, fetchProductAdmin } from "../../lib/api";
+import { compressImageFileToDataUrl } from "../../lib/compress-image-client";
 import { toastError, toastSuccess } from "../../lib/toast";
 import {
   Plus,
@@ -48,7 +49,7 @@ type ProductFormState = {
   status: "active" | "inactive";
 };
 
-const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 const MAX_ATTACHMENT_BYTES = 3 * 1024 * 1024;
 const MAX_HIGHLIGHT_OPTIONS = 4;
 
@@ -63,6 +64,8 @@ function readFileAsDataURL(file: File): Promise<string> {
     r.readAsDataURL(file);
   });
 }
+
+/** Images are resized/JPEG-compressed in the browser before upload. */
 
 function emptyForm(): ProductFormState {
   return {
@@ -203,55 +206,21 @@ export default function AdminProducts() {
     setLoading(true);
     try {
       const {
-        fetchAdminBootstrap,
-        getAdminBootstrapCache,
         fetchProductsAdmin: apiFetchProducts,
         fetchProductCategoriesAdmin,
       } = await import("../../lib/api");
-      const cached = getAdminBootstrapCache();
-      if (cached?.products) {
-        setProducts(Array.isArray(cached.products) ? cached.products : []);
-        if (Array.isArray(cached.productCategories)) {
-          const cats = cached.productCategories;
-          setCategoryOptions(
-            cats
-              .slice()
-              .sort(
-                (a, b) =>
-                  (a.sortOrder ?? 0) - (b.sortOrder ?? 0) ||
-                  a.name.localeCompare(b.name),
-              )
-              .map((c) => ({ value: c.name, label: c.name }))
-              .concat([{ value: CUSTOM_CATEGORY_VALUE, label: "Custom…" }]),
-          );
-        } else {
-          void fetchProductCategoriesAdmin().then((cats) => {
-            setCategoryOptions(
-              (Array.isArray(cats) ? cats : [])
-                .slice()
-                .sort(
-                  (a, b) =>
-                    (a.sortOrder ?? 0) - (b.sortOrder ?? 0) ||
-                    a.name.localeCompare(b.name),
-                )
-                .map((c) => ({ value: c.name, label: c.name }))
-                .concat([{ value: CUSTOM_CATEGORY_VALUE, label: "Custom…" }]),
-            );
-          });
-        }
-        setLoading(false);
-        void apiFetchProducts().then((fresh) => setProducts(Array.isArray(fresh) ? fresh : []));
-        return;
-      }
-      const boot = await fetchAdminBootstrap();
-      setProducts(Array.isArray(boot.products) ? boot.products : []);
-      const cats = Array.isArray(boot.productCategories) ? boot.productCategories : [];
+      const [fresh, cats] = await Promise.all([
+        apiFetchProducts(),
+        fetchProductCategoriesAdmin(),
+      ]);
+      setProducts(Array.isArray(fresh) ? fresh : []);
       setCategoryOptions(
-        cats
+        (Array.isArray(cats) ? cats : [])
           .slice()
           .sort(
             (a, b) =>
-              (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name),
+              (a.sortOrder ?? 0) - (b.sortOrder ?? 0) ||
+              a.name.localeCompare(b.name),
           )
           .map((c) => ({ value: c.name, label: c.name }))
           .concat([{ value: CUSTOM_CATEGORY_VALUE, label: "Custom…" }]),
@@ -310,18 +279,15 @@ export default function AdminProducts() {
     }
   };
 
-  const handleEdit = (product: any) => {
+  const handleEdit = async (product: any) => {
     const knownCategory = categoryOptions.some((o) => o.value === product.category);
-    setEditingProduct(product);
-    setUploadError(null);
-    setAttachmentError(null);
-    setFormData({
+    const seedForm = {
       name: product.name ?? "",
       category: knownCategory
         ? (product.category ?? categoryOptions[0]?.value ?? "Solar Panels")
         : (categoryOptions.find((o) => o.value !== CUSTOM_CATEGORY_VALUE)?.value ??
             "Solar Panels"),
-      categoryMode: knownCategory ? "pick" : "custom",
+      categoryMode: (knownCategory ? "pick" : "custom") as "pick" | "custom",
       customCategory: knownCategory ? "" : String(product.category ?? ""),
       price: String(product.price ?? ""),
       stock: String(product.stock ?? ""),
@@ -332,9 +298,42 @@ export default function AdminProducts() {
       specRows: specsFromProduct(product.specifications),
       attachmentRows: attachmentsFromProduct(product.attachments),
       highlightOptions: highlightsFromProduct(product.highlightOptions),
-      status: product.status === "inactive" ? "inactive" : "active",
-    });
+      status: (product.status === "inactive" ? "inactive" : "active") as
+        | "active"
+        | "inactive",
+    };
+    setEditingProduct(product);
+    setUploadError(null);
+    setAttachmentError(null);
+    setFormData(seedForm);
     setShowModal(true);
+    try {
+      const full = await fetchProductAdmin(product.id);
+      const fullKnown = categoryOptions.some((o) => o.value === full.category);
+      setEditingProduct(full);
+      setFormData({
+        name: full.name ?? "",
+        category: fullKnown
+          ? (full.category ?? categoryOptions[0]?.value ?? "Solar Panels")
+          : (categoryOptions.find((o) => o.value !== CUSTOM_CATEGORY_VALUE)?.value ??
+              "Solar Panels"),
+        categoryMode: fullKnown ? "pick" : "custom",
+        customCategory: fullKnown ? "" : String(full.category ?? ""),
+        price: String(full.price ?? ""),
+        stock: String(full.stock ?? ""),
+        description: full.description ?? "",
+        longDescription: full.longDescription ?? "",
+        images: Array.isArray(full.images) ? [...full.images] : [],
+        brand: full.brand ?? "",
+        specRows: specsFromProduct(full.specifications),
+        attachmentRows: attachmentsFromProduct(full.attachments),
+        highlightOptions: highlightsFromProduct(full.highlightOptions),
+        status: full.status === "inactive" ? "inactive" : "active",
+      });
+    } catch (err) {
+      console.error(err);
+      // Keep list-seeded form so edit still works if detail fetch fails.
+    }
   };
 
   const executeDeleteProduct = async () => {
@@ -503,11 +502,11 @@ export default function AdminProducts() {
         continue;
       }
       if (file.size > MAX_IMAGE_BYTES) {
-        setUploadError(`“${file.name}” is too large (max 2 MB per file).`);
+        setUploadError(`“${file.name}” is too large (max 8 MB per file; images are compressed on upload).`);
         continue;
       }
       try {
-        additions.push(await readFileAsDataURL(file));
+        additions.push(await compressImageFileToDataUrl(file));
       } catch {
         setUploadError(`Could not read “${file.name}”.`);
       }

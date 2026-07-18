@@ -87,6 +87,8 @@ export const products = pgTable('products', {
   brand: varchar('brand', { length: 255 }),
   status: varchar('status', { length: 32 }).notNull().default('active'),
   images: jsonb('images').$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+  /** Denormalized length of `images` — list queries must not detoast the jsonb blob. */
+  imageCount: integer('image_count').notNull().default(0),
   specifications: jsonb('specifications')
     .$type<Record<string, string>>()
     .notNull()

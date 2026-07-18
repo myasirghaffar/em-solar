@@ -9,7 +9,8 @@
     "dev": "next dev -p 3001",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "compress-images": "tsx src/server/scripts/compress-existing-images.ts"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.8.0",
@@ -38,6 +39,7 @@
     "react-dom": "19.2.4",
     "react-toastify": "^11.1.0",
     "recharts": "^3.9.2",
+    "sharp": "^0.35.3",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -47,6 +49,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/sharp": "^0.31.1",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
@@ -54,5 +57,9 @@
     "tsx": "^4.23.0",
     "typescript": "^5"
   },
-  "description": "EnergyMart storefront \u2014 Next.js public shop, checkout, customer accounts, and shop admin sharing the em-tools database"
+  "description": "EnergyMart storefront — Next.js public shop, checkout, customer accounts, and shop admin sharing the em-tools database",
+  "allowScripts": {
+    "sharp@0.34.5": true,
+    "sharp@0.35.3": true
+  }
 }

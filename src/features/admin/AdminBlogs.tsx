@@ -15,6 +15,7 @@ import {
   updateAdminBlog,
   type BlogPost,
 } from "../../lib/api";
+import { compressImageFileToDataUrl } from "../../lib/compress-image-client";
 import { toastError, toastSuccess } from "../../lib/toast";
 import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import { ButtonSpinner } from "../../components/ui/Button";
@@ -45,16 +46,7 @@ const emptyForm = {
   publishedAt: "",
 };
 
-const MAX_COVER_IMAGE_BYTES = 2 * 1024 * 1024;
-
-function readFileAsDataURL(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(r.result as string);
-    r.onerror = () => reject(r.error);
-    r.readAsDataURL(file);
-  });
-}
+const MAX_COVER_IMAGE_BYTES = 8 * 1024 * 1024;
 
 export default function AdminBlogs() {
   const [rows, setRows] = useState<BlogPost[]>([]);
@@ -164,11 +156,11 @@ export default function AdminBlogs() {
       return;
     }
     if (file.size > MAX_COVER_IMAGE_BYTES) {
-      setCoverUploadError(`“${file.name}” is too large (max 2 MB).`);
+      setCoverUploadError(`“${file.name}” is too large (max 8 MB; images are compressed on upload).`);
       return;
     }
     try {
-      const dataUrl = await readFileAsDataURL(file);
+      const dataUrl = await compressImageFileToDataUrl(file);
       setForm((f) => ({ ...f, imageUrl: dataUrl }));
     } catch {
       setCoverUploadError(`Could not read “${file.name}”.`);

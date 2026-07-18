@@ -1,8 +1,10 @@
-import { sql } from 'drizzle-orm';
 import type { ProductRow } from '../db/schema';
 import { products } from '../db/schema';
 
-/** Columns needed for product cards/pages without pulling multi‑MB base64 blobs. */
+/**
+ * Columns for product cards/lists without pulling multi‑MB base64 image blobs.
+ * Attachments are omitted from lists (can be huge data-URLs); load via getProduct* for edit/detail.
+ */
 export const productListColumns = {
   id: products.id,
   name: products.name,
@@ -14,13 +16,16 @@ export const productListColumns = {
   brand: products.brand,
   status: products.status,
   specifications: products.specifications,
-  attachments: products.attachments,
   highlightOptions: products.highlightOptions,
   createdAt: products.createdAt,
   updatedAt: products.updatedAt,
-  imageCount: sql<number>`jsonb_array_length(coalesce(${products.images}, '[]'::jsonb))`.mapWith(
-    Number,
-  ),
+  imageCount: products.imageCount,
+};
+
+/** Detail/edit: includes attachments, still omits raw `images` (use proxy URLs + imageCount). */
+export const productDetailColumns = {
+  ...productListColumns,
+  attachments: products.attachments,
 };
 
 export function productImageProxyUrl(productId: number, index: number): string {
@@ -32,7 +37,10 @@ export function proxyImageUrls(productId: number, imageCount: number): string[] 
   return Array.from({ length: n }, (_, i) => productImageProxyUrl(productId, i));
 }
 
-export type ProductListRow = Omit<ProductRow, 'images'> & { imageCount: number };
+export type ProductListRow = Omit<ProductRow, 'images' | 'attachments'> & {
+  imageCount: number;
+  attachments?: ProductRow['attachments'];
+};
 
 /** Match `/api/store/products/:id/images/:index` (with or without origin). */
 const PROXY_IMAGE_RE =
@@ -49,7 +57,7 @@ export function isProductImageProxyUrl(value: string): boolean {
 
 /**
  * When admin saves a product, keep existing DB base64 for proxy URLs and
- * accept new `data:` / https uploads as-is.
+ * accept new `data:` / https uploads as-is (caller should compress data-URLs).
  */
 export function resolveProductImagesForWrite(
   incoming: string[] | undefined,

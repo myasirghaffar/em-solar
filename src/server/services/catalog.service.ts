@@ -1,4 +1,4 @@
-import { and, asc, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq, sql } from 'drizzle-orm';
 import type { Database } from '../db/client';
 import { ErrorCodes } from '../common/constants/error-codes';
 import { HttpStatusCode } from '../common/constants/http-status';
@@ -18,8 +18,10 @@ import {
 } from '../db/schema';
 import { AppError } from '../lib/app-error';
 import { sendContactMessageEmails } from '../lib/contact-message-email';
+import { compressDataUrlImage, compressProductImages } from '../lib/compress-image';
 import {
   parseDataUrl,
+  productDetailColumns,
   productListColumns,
   proxyImageUrls,
   resolveProductImagesForWrite,
@@ -34,12 +36,13 @@ import {
   productToFrontend,
 } from '../lib/store-mappers';
 import type { Env } from '../types';
-import { buildAnalytics } from './analytics.service';
+import { buildAnalytics, buildAnalyticsFromFrontend } from './analytics.service';
 
 function mapListedProduct(row: ProductListRow) {
-  const { imageCount, ...rest } = row;
+  const { imageCount, attachments, ...rest } = row;
   return productToFrontend({
     ...(rest as ProductRow),
+    attachments: Array.isArray(attachments) ? attachments : [],
     images: proxyImageUrls(row.id, imageCount),
   });
 }
@@ -260,9 +263,21 @@ export function listProductsPublic(db: Database) {
 
 export async function getProductPublic(db: Database, id: number) {
   const [row] = await db
-    .select(productListColumns)
+    .select(productDetailColumns)
     .from(products)
     .where(and(eq(products.id, id), eq(products.status, 'active')))
+    .limit(1);
+  if (!row) {
+    throw new AppError(ErrorCodes.PRODUCT_NOT_FOUND, HttpStatusCode.NOT_FOUND);
+  }
+  return mapListedProduct(row as ProductListRow);
+}
+
+export async function getProductAdmin(db: Database, id: number) {
+  const [row] = await db
+    .select(productDetailColumns)
+    .from(products)
+    .where(eq(products.id, id))
     .limit(1);
   if (!row) {
     throw new AppError(ErrorCodes.PRODUCT_NOT_FOUND, HttpStatusCode.NOT_FOUND);
@@ -275,16 +290,20 @@ export async function getProductImageBytes(db: Database, id: number, index: numb
   if (!Number.isFinite(id) || id < 1 || !Number.isFinite(index) || index < 0) {
     throw new AppError(ErrorCodes.VALIDATION_FAILED, HttpStatusCode.BAD_REQUEST, 'Invalid image');
   }
+  // Bind parameters break `jsonb ->> $n` for array indexes (returns null).
+  // Index is validated above, so a literal is safe.
+  const indexLiteral = sql.raw(String(Math.floor(index)));
   const [row] = await db
-    .select({ images: products.images })
+    .select({
+      src: sql<string | null>`${products.images}->>${indexLiteral}`,
+    })
     .from(products)
     .where(eq(products.id, id))
     .limit(1);
   if (!row) {
     throw new AppError(ErrorCodes.PRODUCT_NOT_FOUND, HttpStatusCode.NOT_FOUND);
   }
-  const images = Array.isArray(row.images) ? row.images : [];
-  const src = images[index];
+  const src = row.src;
   if (typeof src !== 'string' || !src) {
     throw new AppError(ErrorCodes.PRODUCT_NOT_FOUND, HttpStatusCode.NOT_FOUND);
   }
@@ -328,6 +347,8 @@ export async function createProductAdmin(
   },
 ) {
   await ensureCategoryExists(db, payload.category);
+  const images = await compressProductImages(payload.images ?? []);
+  const attachments = payload.attachments ?? [];
   const [row] = await db
     .insert(products)
     .values({
@@ -339,16 +360,32 @@ export async function createProductAdmin(
       longDescription: payload.longDescription || null,
       brand: payload.brand || null,
       status: payload.status ?? 'active',
-      images: payload.images ?? [],
+      images,
+      imageCount: images.length,
       specifications: payload.specifications ?? {},
-      attachments: payload.attachments ?? [],
+      attachments,
       highlightOptions: payload.highlightOptions ?? [],
     })
-    .returning();
+    .returning({
+      id: products.id,
+      name: products.name,
+      category: products.category,
+      price: products.price,
+      stock: products.stock,
+      description: products.description,
+      longDescription: products.longDescription,
+      brand: products.brand,
+      status: products.status,
+      specifications: products.specifications,
+      highlightOptions: products.highlightOptions,
+      createdAt: products.createdAt,
+      updatedAt: products.updatedAt,
+      imageCount: products.imageCount,
+    });
   if (!row) throw new AppError(ErrorCodes.INTERNAL_SERVER_ERROR, HttpStatusCode.INTERNAL_SERVER_ERROR);
   return mapListedProduct({
     ...row,
-    imageCount: Array.isArray(row.images) ? row.images.length : 0,
+    attachments,
   });
 }
 
@@ -370,14 +407,40 @@ export async function updateProductAdmin(
     highlightOptions: string[];
   }>,
 ) {
-  const [existing] = await db.select().from(products).where(eq(products.id, id)).limit(1);
-  if (!existing) {
+  const [existingMeta] = await db
+    .select({ id: products.id })
+    .from(products)
+    .where(eq(products.id, id))
+    .limit(1);
+  if (!existingMeta) {
     throw new AppError(ErrorCodes.PRODUCT_NOT_FOUND, HttpStatusCode.NOT_FOUND);
   }
   if (patch.category !== undefined) {
     await ensureCategoryExists(db, patch.category);
   }
-  const resolvedImages = resolveProductImagesForWrite(patch.images, existing.images);
+
+  let resolvedImages: string[] | undefined;
+  if (patch.images !== undefined) {
+    const [existing] = await db
+      .select({ images: products.images })
+      .from(products)
+      .where(eq(products.id, id))
+      .limit(1);
+    const mapped = resolveProductImagesForWrite(patch.images, existing?.images);
+    resolvedImages = mapped
+      ? await Promise.all(
+          mapped.map(async (img, index) => {
+            const incoming = patch.images?.[index];
+            // Compress only newly uploaded data-URLs; leave proxy-resolved existing blobs alone.
+            if (typeof incoming === 'string' && incoming.startsWith('data:image/')) {
+              return compressDataUrlImage(typeof img === 'string' ? img : incoming);
+            }
+            return img;
+          }),
+        )
+      : undefined;
+  }
+
   const set: Partial<{
     name: string;
     category: string;
@@ -388,6 +451,7 @@ export async function updateProductAdmin(
     brand: string | null;
     status: string;
     images: string[];
+    imageCount: number;
     specifications: Record<string, string>;
     attachments: { title: string; href: string }[];
     highlightOptions: string[];
@@ -401,7 +465,10 @@ export async function updateProductAdmin(
   if (patch.longDescription !== undefined) set.longDescription = patch.longDescription;
   if (patch.brand !== undefined) set.brand = patch.brand;
   if (patch.status !== undefined) set.status = patch.status;
-  if (resolvedImages !== undefined) set.images = resolvedImages;
+  if (resolvedImages !== undefined) {
+    set.images = resolvedImages;
+    set.imageCount = resolvedImages.length;
+  }
   if (patch.specifications !== undefined) set.specifications = patch.specifications;
   if (patch.attachments !== undefined) set.attachments = patch.attachments;
   if (patch.highlightOptions !== undefined) set.highlightOptions = patch.highlightOptions;
@@ -410,12 +477,25 @@ export async function updateProductAdmin(
     .update(products)
     .set(set)
     .where(eq(products.id, id))
-    .returning();
+    .returning({
+      id: products.id,
+      name: products.name,
+      category: products.category,
+      price: products.price,
+      stock: products.stock,
+      description: products.description,
+      longDescription: products.longDescription,
+      brand: products.brand,
+      status: products.status,
+      specifications: products.specifications,
+      highlightOptions: products.highlightOptions,
+      createdAt: products.createdAt,
+      updatedAt: products.updatedAt,
+      attachments: products.attachments,
+      imageCount: products.imageCount,
+    });
   if (!row) throw new AppError(ErrorCodes.PRODUCT_NOT_FOUND, HttpStatusCode.NOT_FOUND);
-  return mapListedProduct({
-    ...row,
-    imageCount: Array.isArray(row.images) ? row.images.length : 0,
-  });
+  return mapListedProduct(row as ProductListRow);
 }
 
 export async function deleteProductAdmin(db: Database, id: number) {
@@ -681,6 +761,15 @@ export async function getAnalyticsAdmin(db: Database) {
   return buildAnalytics(orderRows, customerRows.length, productRows.length);
 }
 
+/** Build analytics from payloads already loaded by /admin/bootstrap. */
+export function buildAnalyticsFromLoaded(
+  ordersFrontend: { created_at: string; total_price: number }[],
+  customerCount: number,
+  productCount: number,
+) {
+  return buildAnalyticsFromFrontend(ordersFrontend, customerCount, productCount);
+}
+
 export function listBlogsPublic(db: Database) {
   return db
     .select()
@@ -726,12 +815,13 @@ export async function createBlogAdmin(
   if (Number.isNaN(publishedAt.getTime())) {
     throw new AppError(ErrorCodes.VALIDATION_FAILED, HttpStatusCode.BAD_REQUEST, 'Invalid published date');
   }
+  const imageUrl = await compressDataUrlImage(payload.imageUrl.trim());
   const [row] = await db
     .insert(blogs)
     .values({
       title: payload.title.trim(),
       tag: (payload.tag ?? '').trim(),
-      imageUrl: payload.imageUrl.trim(),
+      imageUrl,
       excerpt: (payload.excerpt ?? '').trim(),
       body: (payload.body ?? '').trim(),
       isPublished: payload.isPublished ?? true,
@@ -767,12 +857,16 @@ export async function updateBlogAdmin(
       throw new AppError(ErrorCodes.VALIDATION_FAILED, HttpStatusCode.BAD_REQUEST, 'Invalid published date');
     }
   }
+  let imageUrl: string | undefined;
+  if (patch.imageUrl !== undefined) {
+    imageUrl = await compressDataUrlImage(patch.imageUrl.trim());
+  }
   const [row] = await db
     .update(blogs)
     .set({
       ...(patch.title !== undefined ? { title: patch.title.trim() } : {}),
       ...(patch.tag !== undefined ? { tag: patch.tag.trim() } : {}),
-      ...(patch.imageUrl !== undefined ? { imageUrl: patch.imageUrl.trim() } : {}),
+      ...(imageUrl !== undefined ? { imageUrl } : {}),
       ...(patch.excerpt !== undefined ? { excerpt: patch.excerpt.trim() } : {}),
       ...(patch.body !== undefined ? { body: patch.body.trim() } : {}),
       ...(patch.isPublished !== undefined ? { isPublished: patch.isPublished } : {}),
