@@ -40,6 +40,7 @@ export const STATUS_ROUTE_MANIFEST: RouteRow[] = [
   { method: 'PATCH', path: '/users/:id' },
   { method: 'GET', path: '/store/products' },
   { method: 'GET', path: '/store/products/:id' },
+  { method: 'GET', path: '/store/products/:id/images/:index' },
   { method: 'POST', path: '/store/orders' },
   { method: 'POST', path: '/store/consultations' },
   { method: 'POST', path: '/store/contact-messages' },

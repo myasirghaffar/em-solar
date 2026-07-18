@@ -9,7 +9,7 @@ import { AppError } from './lib/app-error';
 import { buildErrorResponse } from './lib/responses';
 import type { AppBindings, AppVariables } from './middleware/auth';
 import { mapDatabaseFaultFromChain } from './lib/map-database-fault';
-import { envWithDatabaseUrl, getConnectionString } from './db/client';
+import { envWithDatabaseUrl, getConnectionString, resetDbClients } from './db/client';
 import { parseDatabaseUrlDiagnostics } from './lib/database-url-diagnostics';
 import { pingDatabase } from './lib/ping-database';
 import { adminRoutes } from './routes/admin.routes';
@@ -111,6 +111,7 @@ app.onError((err, c: Context<{ Bindings: AppBindings; Variables: AppVariables }>
 
   const dbFault = mapDatabaseFaultFromChain(err);
   if (dbFault) {
+    resetDbClients();
     console.error('[database]', dbFault.logLabel, err);
     return c.json(
       buildErrorResponse(dbFault.code, dbFault.statusCode),

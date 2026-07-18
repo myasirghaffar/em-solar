@@ -31,6 +31,31 @@ storeRoutes.get("/products", async (c) => {
   });
 });
 
+storeRoutes.get("/products/:id/images/:index", async (c) => {
+  const id = Number(c.req.param("id"));
+  const index = Number(c.req.param("index"));
+  if (!Number.isFinite(id) || id < 1 || !Number.isFinite(index) || index < 0) {
+    return c.json(
+      buildErrorResponse(
+        ErrorCodes.VALIDATION_FAILED,
+        HttpStatusCode.BAD_REQUEST,
+        "Invalid image",
+      ),
+      HttpStatusCode.BAD_REQUEST,
+    );
+  }
+  const db = createDb(c.env);
+  const { contentType, bytes } = await catalog.getProductImageBytes(db, id, index);
+  return new Response(new Uint8Array(bytes), {
+    status: 200,
+    headers: {
+      "Content-Type": contentType,
+      "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
+      "Content-Length": String(bytes.byteLength),
+    },
+  });
+});
+
 storeRoutes.get("/products/:id", async (c) => {
   const id = Number(c.req.param("id"));
   if (!Number.isFinite(id) || id < 1) {

@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { createDb } from '../db/client';
+import { createDb, resetDbClients } from '../db/client';
 import type { Env } from '../types';
 
 export type DbPingResult =
@@ -12,6 +12,7 @@ export async function pingDatabase(env: Env): Promise<DbPingResult> {
     await db.execute(sql`select 1 as ok`);
     return { ok: true };
   } catch (err) {
+    resetDbClients();
     const e = err as { code?: string; message?: string; name?: string };
     const code = typeof e.code === 'string' ? e.code : 'UNKNOWN';
     const message =

@@ -25,16 +25,18 @@ adminRoutes.use('*', requireAdmin);
 
 adminRoutes.get('/bootstrap', async (c) => {
   const db = createDb(c.env);
-  const [products, productCategories, orders, customers, contactMessages, blogs, storeAnalytics] =
-    await Promise.all([
-      catalog.listProductsAdmin(db),
-      catalog.listProductCategoriesAdmin(db),
-      catalog.listOrdersAdmin(db),
-      catalog.listCustomersAdmin(db),
-      catalog.listContactMessagesAdmin(db),
-      catalog.listBlogsAdmin(db),
-      catalog.getAnalyticsAdmin(db),
-    ]);
+  // Sequential batches keep Supabase pooler usage low on Vercel (DB_POOL_MAX=1).
+  const [products, productCategories, orders] = await Promise.all([
+    catalog.listProductsAdmin(db),
+    catalog.listProductCategoriesAdmin(db),
+    catalog.listOrdersAdmin(db),
+  ]);
+  const [customers, contactMessages, blogs] = await Promise.all([
+    catalog.listCustomersAdmin(db),
+    catalog.listContactMessagesAdmin(db),
+    catalog.listBlogsAdmin(db),
+  ]);
+  const storeAnalytics = await catalog.getAnalyticsAdmin(db);
 
   const openMessages = contactMessages.filter(
     (row) => row.status === 'new' || row.status === 'unread',

@@ -4,6 +4,8 @@ import type { Env } from '@/server/types';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+/** Allow cold Supabase pooler connects on Vercel (Hobby default is too short). */
+export const maxDuration = 60;
 
 function resolveEnv(): Env | null {
   try {

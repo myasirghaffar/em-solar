@@ -62,20 +62,16 @@ export default function AdminOrdersTableSection({ shellHeader }: AdminOrdersTabl
 
   const fetchOrders = async () => {
     try {
-      const { fetchAdminBootstrap, getAdminBootstrapCache, fetchOrders: apiFetchOrders } =
-        await import("../../lib/api");
-      const cached = getAdminBootstrapCache();
-      if (cached?.orders) {
-        setOrders(Array.isArray(cached.orders) ? cached.orders : []);
-        setLoading(false);
-        void apiFetchOrders().then((fresh) => setOrders(Array.isArray(fresh) ? fresh : []));
-        return;
-      }
-      const boot = await fetchAdminBootstrap();
-      setOrders(Array.isArray(boot.orders) ? boot.orders : []);
+      const { fetchOrders: apiFetchOrders } = await import("../../lib/api");
+      const fresh = await apiFetchOrders();
+      setOrders(Array.isArray(fresh) ? fresh : []);
     } catch (err) {
       console.error("Fetch error:", err);
-      toastError("Could not load orders.");
+      toastError(
+        err instanceof Error && err.message
+          ? err.message
+          : "Could not load orders.",
+      );
     } finally {
       setLoading(false);
     }

@@ -14,9 +14,17 @@ import {
   quoteTemplates,
   users,
   type OrderLineItem,
+  type ProductRow,
 } from '../db/schema';
 import { AppError } from '../lib/app-error';
 import { sendContactMessageEmails } from '../lib/contact-message-email';
+import {
+  parseDataUrl,
+  productListColumns,
+  proxyImageUrls,
+  resolveProductImagesForWrite,
+  type ProductListRow,
+} from '../lib/product-images';
 import {
   blogToFrontend,
   consultationToFrontend,
@@ -27,6 +35,14 @@ import {
 } from '../lib/store-mappers';
 import type { Env } from '../types';
 import { buildAnalytics } from './analytics.service';
+
+function mapListedProduct(row: ProductListRow) {
+  const { imageCount, ...rest } = row;
+  return productToFrontend({
+    ...(rest as ProductRow),
+    images: proxyImageUrls(row.id, imageCount),
+  });
+}
 
 function normalizeCategoryName(raw: string): string {
   return String(raw ?? '')
@@ -235,31 +251,63 @@ export async function deleteQuoteTemplateAdmin(db: Database, id: number) {
 
 export function listProductsPublic(db: Database) {
   return db
-    .select()
+    .select(productListColumns)
     .from(products)
     .where(eq(products.status, 'active'))
     .orderBy(desc(products.id))
-    .then((rows) => rows.map(productToFrontend));
+    .then((rows) => rows.map((row) => mapListedProduct(row as ProductListRow)));
 }
 
 export async function getProductPublic(db: Database, id: number) {
   const [row] = await db
-    .select()
+    .select(productListColumns)
     .from(products)
     .where(and(eq(products.id, id), eq(products.status, 'active')))
     .limit(1);
   if (!row) {
     throw new AppError(ErrorCodes.PRODUCT_NOT_FOUND, HttpStatusCode.NOT_FOUND);
   }
-  return productToFrontend(row);
+  return mapListedProduct(row as ProductListRow);
+}
+
+/** Binary response for a single stored product image (data-URL in DB → bytes). */
+export async function getProductImageBytes(db: Database, id: number, index: number) {
+  if (!Number.isFinite(id) || id < 1 || !Number.isFinite(index) || index < 0) {
+    throw new AppError(ErrorCodes.VALIDATION_FAILED, HttpStatusCode.BAD_REQUEST, 'Invalid image');
+  }
+  const [row] = await db
+    .select({ images: products.images })
+    .from(products)
+    .where(eq(products.id, id))
+    .limit(1);
+  if (!row) {
+    throw new AppError(ErrorCodes.PRODUCT_NOT_FOUND, HttpStatusCode.NOT_FOUND);
+  }
+  const images = Array.isArray(row.images) ? row.images : [];
+  const src = images[index];
+  if (typeof src !== 'string' || !src) {
+    throw new AppError(ErrorCodes.PRODUCT_NOT_FOUND, HttpStatusCode.NOT_FOUND);
+  }
+  if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('/')) {
+    throw new AppError(
+      ErrorCodes.VALIDATION_FAILED,
+      HttpStatusCode.BAD_REQUEST,
+      'Image is an external URL; load it directly',
+    );
+  }
+  const parsed = parseDataUrl(src);
+  if (!parsed) {
+    throw new AppError(ErrorCodes.VALIDATION_FAILED, HttpStatusCode.BAD_REQUEST, 'Unsupported image');
+  }
+  return parsed;
 }
 
 export function listProductsAdmin(db: Database) {
   return db
-    .select()
+    .select(productListColumns)
     .from(products)
     .orderBy(desc(products.id))
-    .then((rows) => rows.map(productToFrontend));
+    .then((rows) => rows.map((row) => mapListedProduct(row as ProductListRow)));
 }
 
 export async function createProductAdmin(
@@ -298,7 +346,10 @@ export async function createProductAdmin(
     })
     .returning();
   if (!row) throw new AppError(ErrorCodes.INTERNAL_SERVER_ERROR, HttpStatusCode.INTERNAL_SERVER_ERROR);
-  return productToFrontend(row);
+  return mapListedProduct({
+    ...row,
+    imageCount: Array.isArray(row.images) ? row.images.length : 0,
+  });
 }
 
 export async function updateProductAdmin(
@@ -326,6 +377,7 @@ export async function updateProductAdmin(
   if (patch.category !== undefined) {
     await ensureCategoryExists(db, patch.category);
   }
+  const resolvedImages = resolveProductImagesForWrite(patch.images, existing.images);
   const set: Partial<{
     name: string;
     category: string;
@@ -349,14 +401,21 @@ export async function updateProductAdmin(
   if (patch.longDescription !== undefined) set.longDescription = patch.longDescription;
   if (patch.brand !== undefined) set.brand = patch.brand;
   if (patch.status !== undefined) set.status = patch.status;
-  if (patch.images !== undefined) set.images = patch.images;
+  if (resolvedImages !== undefined) set.images = resolvedImages;
   if (patch.specifications !== undefined) set.specifications = patch.specifications;
   if (patch.attachments !== undefined) set.attachments = patch.attachments;
   if (patch.highlightOptions !== undefined) set.highlightOptions = patch.highlightOptions;
 
-  const [row] = await db.update(products).set(set).where(eq(products.id, id)).returning();
+  const [row] = await db
+    .update(products)
+    .set(set)
+    .where(eq(products.id, id))
+    .returning();
   if (!row) throw new AppError(ErrorCodes.PRODUCT_NOT_FOUND, HttpStatusCode.NOT_FOUND);
-  return productToFrontend(row);
+  return mapListedProduct({
+    ...row,
+    imageCount: Array.isArray(row.images) ? row.images.length : 0,
+  });
 }
 
 export async function deleteProductAdmin(db: Database, id: number) {
@@ -617,7 +676,7 @@ export async function getAnalyticsAdmin(db: Database) {
   const [orderRows, customerRows, productRows] = await Promise.all([
     db.select().from(orders),
     db.select().from(customers),
-    db.select().from(products),
+    db.select({ id: products.id }).from(products),
   ]);
   return buildAnalytics(orderRows, customerRows.length, productRows.length);
 }

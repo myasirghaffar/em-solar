@@ -23,8 +23,18 @@ function isHyperdriveUrl(url: string): boolean {
 function parsePoolMax(env: Env): number {
   const raw = (env.DB_POOL_MAX ?? '').trim();
   const n = raw ? Number(raw) : NaN;
+  // Local Node: small pool for concurrent storefront requests.
+  // On Vercel set DB_POOL_MAX=1 explicitly to avoid exhausting Supabase.
   if (Number.isFinite(n) && n >= 1 && n <= 50) return Math.floor(n);
-  return 10;
+  return 3;
+}
+
+/** Drop cached clients after connection faults so the next request opens a fresh socket. */
+export function resetDbClients(): void {
+  for (const sql of clients.values()) {
+    void sql.end({ timeout: 5 }).catch(() => undefined);
+  }
+  clients.clear();
 }
 
 export function getConnectionString(env: Env): string {

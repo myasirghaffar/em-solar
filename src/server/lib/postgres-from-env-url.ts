@@ -38,7 +38,7 @@ export function createPostgresFromDatabaseUrl(
     max: isHyperdriveHost ? 1 : max,
     prepare: false,
     fetch_types: false,
-    /** Avoid indefinite hangs when the pooler / network is unreachable (esp. local Wrangler). */
+    /** Avoid indefinite hangs when the pooler / network is unreachable. */
     connect_timeout: 15,
   });
 }
