@@ -1,6 +1,7 @@
 "use client";
 
 import { ToastContainer } from "react-toastify";
+import LegacyApiCleanup from "@/components/LegacyApiCleanup";
 import { AuthProvider } from "@/context/AuthContext";
 import { FavoritesProvider } from "@/context/FavoritesContext";
 import { CartProvider } from "@/context/CartContext";
@@ -10,6 +11,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     <AuthProvider>
       <FavoritesProvider>
         <CartProvider>
+          <LegacyApiCleanup />
           {children}
           <ToastContainer
             position="top-right"

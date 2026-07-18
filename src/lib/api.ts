@@ -127,8 +127,12 @@ async function apiRequest<T>(
   retried = false,
 ): Promise<T> {
   const base = getApiBaseUrl();
-  if (!base) {
-    throw new ApiError("CONFIG", "API base URL is not configured", 0);
+  if (!base || /^https?:\/\//i.test(base)) {
+    throw new ApiError(
+      "CONFIG",
+      "API must use same-origin /api (embedded Next.js backend).",
+      0,
+    );
   }
   const headers: Record<string, string> = {
     ...(init.headers as Record<string, string> | undefined),

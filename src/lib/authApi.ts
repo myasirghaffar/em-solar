@@ -100,8 +100,12 @@ async function request<T>(
   init: RequestInit & { accessToken?: string },
 ): Promise<T> {
   const base = getApiBaseUrl();
-  if (!base) {
-    throw new AuthApiError("CONFIG", "API base URL is not configured", 0);
+  if (!base || /^https?:\/\//i.test(base)) {
+    throw new AuthApiError(
+      "CONFIG",
+      "API must use same-origin /api (embedded Next.js backend).",
+      0,
+    );
   }
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -224,8 +228,12 @@ export async function authLogout(accessToken: string): Promise<void> {
 
 export async function authFetchMe(accessToken: string): Promise<AuthUser> {
   const base = getApiBaseUrl();
-  if (!base) {
-    throw new AuthApiError("CONFIG", "API base URL is not configured", 0);
+  if (!base || /^https?:\/\//i.test(base)) {
+    throw new AuthApiError(
+      "CONFIG",
+      "API must use same-origin /api (embedded Next.js backend).",
+      0,
+    );
   }
   const res = await fetch(`${base}/users/me`, {
     method: "GET",
